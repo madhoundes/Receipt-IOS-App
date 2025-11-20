@@ -1,0 +1,7 @@
+{
+  "name": "Receiptfy",
+  "description": "A clean, minimalist receipt tracker inspired by iOS design. Capture, organize, and track your expenses with ease.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
