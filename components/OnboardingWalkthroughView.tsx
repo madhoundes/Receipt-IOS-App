@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, Camera, Receipt, ScanLine, Layers, Tag, BarChart3, Lightbulb, ArrowRight } from 'lucide-react';
 
@@ -113,7 +114,7 @@ const OnboardingWalkthroughView: React.FC<OnboardingWalkthroughViewProps> = ({ o
   };
 
   return (
-    <div className="fixed inset-0 bg-ios-bg z-[100] flex flex-col">
+    <div className="absolute inset-0 bg-ios-bg z-[100] flex flex-col">
       {/* Top Bar */}
       <div className="flex justify-end p-6 pt-12">
         <button 

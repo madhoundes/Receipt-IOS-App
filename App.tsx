@@ -250,6 +250,7 @@ function AppContent() {
                         setCurrentScreen(AppRoute.DETAILS);
                     }}
                     onLaunchCamera={() => setCurrentScreen(AppRoute.CAMERA)}
+                    showBrandLogos={userProfile.showBrandLogos}
                 />
             )}
             {activeTab === 'categories' && (

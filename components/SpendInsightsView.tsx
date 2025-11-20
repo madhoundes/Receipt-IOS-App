@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Receipt } from '../types';
 import { TrendingUp, Store, PieChart, Calendar, Lightbulb, DollarSign, Search, XCircle } from 'lucide-react';
@@ -134,7 +135,8 @@ const SpendInsightsView: React.FC<SpendInsightsViewProps> = ({ receipts, onOpenC
 
   return (
     <div className="flex flex-col h-full bg-ios-bg text-neutral-900">
-      <div className="bg-ios-bg px-4 pt-12 pb-2 sticky top-0 z-20 shadow-sm">
+      {/* Fixed Header */}
+      <div className="bg-ios-bg px-4 pt-12 pb-2 flex-shrink-0 z-20 shadow-sm">
          <h1 className="text-3xl font-bold mb-4 tracking-tight animate-fade-in">Insights</h1>
          
          {/* Search Bar */}

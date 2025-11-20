@@ -1,12 +1,23 @@
 
+export interface ReceiptItem {
+  name: string;
+  qty: number;
+  unitPrice: number;
+  amount: number;
+}
+
 export interface Receipt {
   id: string;
   imageName: string; // URL or base64 data URI
   storeName: string;
   purchaseDate: Date;
   totalAmount: number;
+  subtotal?: number;
   hstAmount?: number;
   hstPercent?: number;
+  currency?: string;
+  items?: ReceiptItem[];
+  paymentMethod?: string;
   category: string;
   subcategory?: string;
   notes?: string;
@@ -21,6 +32,7 @@ export interface UserProfile {
   hstDefaultPercent: number;
   reduceMotion: boolean;
   hapticsEnabled: boolean;
+  showBrandLogos: boolean;
   ocrThreshold: number;
   autoCategorize: boolean;
   autoCrop: boolean;
@@ -31,6 +43,15 @@ export interface UserProfile {
       insights: boolean;
   };
   isPro: boolean;
+}
+
+export interface BrandAsset {
+  name: string;
+  logoUrl?: string;
+  color: string; // Hex code or Tailwind class
+  aliases: string[];
+  sizeTier?: 'compact' | 'wide';
+  padding?: number; // Tailwind spacing unit (e.g., 1, 2)
 }
 
 export enum AppRoute {

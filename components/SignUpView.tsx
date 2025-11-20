@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Mail, Lock, User, ArrowRight, Check } from 'lucide-react';
 
@@ -25,7 +26,7 @@ const SignUpView: React.FC<SignUpViewProps> = ({ onSignUp }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-ios-bg z-[90] flex flex-col px-6 pt-20 pb-10 animate-fade-in">
+    <div className="absolute inset-0 bg-ios-bg z-[90] flex flex-col px-6 pt-20 pb-10 animate-fade-in">
       <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
         
         <div className="mb-10 animate-slide-up">

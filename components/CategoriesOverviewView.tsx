@@ -20,73 +20,73 @@ const getCategoryConfig = (category: string) => {
   switch (category) {
     case "Groceries": 
       return { 
-        icon: <ShoppingBasket size={36} strokeWidth={1.5} />, 
+        icon: <ShoppingBasket size={40} strokeWidth={1.5} />, 
         bg: "bg-green-100", text: "text-green-600", 
         border: "border-green-200" 
       };
     case "Restaurant": 
       return { 
-        icon: <Utensils size={36} strokeWidth={1.5} />, 
+        icon: <Utensils size={40} strokeWidth={1.5} />, 
         bg: "bg-orange-100", text: "text-orange-600", 
         border: "border-orange-200" 
       };
     case "Gas/Fuel": 
       return { 
-        icon: <Fuel size={36} strokeWidth={1.5} />, 
+        icon: <Fuel size={40} strokeWidth={1.5} />, 
         bg: "bg-red-100", text: "text-red-600", 
         border: "border-red-200" 
       };
     case "Pharmacy/Health": 
       return { 
-        icon: <Pill size={36} strokeWidth={1.5} />, 
+        icon: <Pill size={40} strokeWidth={1.5} />, 
         bg: "bg-teal-100", text: "text-teal-600", 
         border: "border-teal-200" 
       };
     case "Household": 
       return { 
-        icon: <Home size={36} strokeWidth={1.5} />, 
+        icon: <Home size={40} strokeWidth={1.5} />, 
         bg: "bg-indigo-100", text: "text-indigo-600", 
         border: "border-indigo-200" 
       };
     case "Electronics": 
       return { 
-        icon: <MonitorSmartphone size={36} strokeWidth={1.5} />, 
+        icon: <MonitorSmartphone size={40} strokeWidth={1.5} />, 
         bg: "bg-zinc-100", text: "text-zinc-600", 
         border: "border-zinc-200" 
       };
     case "Clothing": 
       return { 
-        icon: <Shirt size={36} strokeWidth={1.5} />, 
+        icon: <Shirt size={40} strokeWidth={1.5} />, 
         bg: "bg-pink-100", text: "text-pink-600", 
         border: "border-pink-200" 
       };
     case "Utilities": 
       return { 
-        icon: <Zap size={36} strokeWidth={1.5} />, 
+        icon: <Zap size={40} strokeWidth={1.5} />, 
         bg: "bg-yellow-100", text: "text-yellow-600", 
         border: "border-yellow-200" 
       };
     case "Transport": 
       return { 
-        icon: <Car size={36} strokeWidth={1.5} />, 
+        icon: <Car size={40} strokeWidth={1.5} />, 
         bg: "bg-blue-100", text: "text-blue-600", 
         border: "border-blue-200" 
       };
     case "Entertainment": 
       return { 
-        icon: <Clapperboard size={36} strokeWidth={1.5} />, 
+        icon: <Clapperboard size={40} strokeWidth={1.5} />, 
         bg: "bg-purple-100", text: "text-purple-600", 
         border: "border-purple-200" 
       };
     case "Services": 
       return { 
-        icon: <Wrench size={36} strokeWidth={1.5} />, 
+        icon: <Wrench size={40} strokeWidth={1.5} />, 
         bg: "bg-slate-100", text: "text-slate-600", 
         border: "border-slate-200" 
       };
     default: 
       return { 
-        icon: <Box size={36} strokeWidth={1.5} />, 
+        icon: <Box size={40} strokeWidth={1.5} />, 
         bg: "bg-neutral-100", text: "text-neutral-600", 
         border: "border-neutral-200" 
       };
@@ -178,8 +178,8 @@ const CategoriesOverviewView: React.FC<CategoriesOverviewViewProps> = ({ receipt
 
   return (
     <div className="flex flex-col h-full bg-ios-bg">
-      {/* --- Header --- */}
-      <div className="bg-ios-bg px-4 pt-12 pb-4 sticky top-0 z-20 shadow-sm transition-shadow">
+      {/* --- Header (Fixed) --- */}
+      <div className="bg-ios-bg px-4 pt-12 pb-4 flex-shrink-0 z-20 shadow-sm transition-shadow">
         <h1 className="text-3xl font-bold text-neutral-900 tracking-tight mb-4 animate-fade-in">Categories</h1>
         
         {/* Search */}
@@ -297,7 +297,7 @@ const CategoriesOverviewView: React.FC<CategoriesOverviewViewProps> = ({ receipt
                             )}
 
                             {/* Icon Container - Large & Centered */}
-                            <div className={`w-16 h-16 rounded-2xl mb-3 flex items-center justify-center transition-colors shadow-inner-sm ${config.bg} ${config.text}`}>
+                            <div className={`w-20 h-20 rounded-full mb-3 flex items-center justify-center transition-colors shadow-inner-sm border border-black/5 ${config.bg} ${config.text}`}>
                                 {config.icon}
                             </div>
 

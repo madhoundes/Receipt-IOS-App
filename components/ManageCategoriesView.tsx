@@ -6,7 +6,7 @@ import {
     ShoppingBasket, Utensils, Fuel, Pill, Home, MonitorSmartphone, 
     Shirt, Zap, Car, Clapperboard, Wrench, Box, Briefcase, Coffee, 
     Gift, Heart, Music, Scissors, Smartphone, Smile, Star, Sun, Truck, Umbrella, Watch,
-    ArrowRightLeft, Info, Layers, Tag
+    ArrowRightLeft, Info, Layers, Tag, AlertCircle
 } from 'lucide-react';
 import { CategoryDefinition, Receipt, Subcategory, TaxRule, Visibility, ClassifierBoost } from '../types';
 
@@ -70,6 +70,12 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
         });
     }, [categories, searchText, filterVisibility]);
 
+    // Used for duplicate validation
+    const existingNames = useMemo(() => 
+        categories.map(c => c.name.toLowerCase()), 
+        [categories]
+    );
+
     // --- Handlers ---
 
     const handleSaveCategory = (cat: CategoryDefinition) => {
@@ -118,9 +124,9 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
     const getReceiptCount = (catName: string) => receipts.filter(r => r.category === catName).length;
 
     return (
-        <div className="flex flex-col h-full bg-ios-bg">
-            {/* --- Header --- */}
-            <div className="bg-ios-card px-4 pt-12 pb-4 border-b border-ios-separator/20 sticky top-0 z-20 shadow-sm flex justify-between items-end">
+        <div className="flex flex-col h-full bg-ios-bg relative">
+            {/* --- Static Header (Part of Flex Column) --- */}
+            <div className="bg-ios-card px-4 pt-12 pb-4 border-b border-ios-separator/20 shadow-sm flex justify-between items-end flex-shrink-0 z-20">
                 <div className="flex items-center gap-3">
                     <button onClick={onBack} className="text-ios-blue active:opacity-50">
                         <ArrowLeft size={24} />
@@ -142,8 +148,8 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
                 </button>
             </div>
 
-            {/* --- Filter & Search --- */}
-            <div className="px-4 py-4 bg-ios-bg sticky top-[88px] z-10">
+            {/* --- Static Filter & Search (Part of Flex Column) --- */}
+            <div className="px-4 py-4 bg-ios-bg z-10 border-b border-ios-separator/10 flex-shrink-0">
                 <div className="relative mb-3">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ios-gray" />
                     <input 
@@ -169,8 +175,8 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
                 </div>
             </div>
 
-            {/* --- List --- */}
-            <div className="flex-1 overflow-y-auto px-4 pb-32">
+            {/* --- Scrollable List (Flex 1) --- */}
+            <div className="flex-1 overflow-y-auto px-4 pb-32 no-scrollbar">
                 {displayCategories.map((cat, index) => {
                     const Icon = ICON_MAP[cat.iconName] || Tag;
                     const receiptCount = getReceiptCount(cat.name);
@@ -251,6 +257,7 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
             {editingCategory && (
                 <CategoryEditSheet 
                     category={editingCategory}
+                    existingNames={existingNames}
                     isCreating={isCreating}
                     onSave={handleSaveCategory}
                     onCancel={() => {
@@ -267,9 +274,9 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
 
             {/* --- Merge Sheet --- */}
             {mergingCategory && (
-                <div className="fixed inset-0 z-[70] flex items-end justify-center">
+                <div className="absolute inset-0 z-[70] flex items-end justify-center">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMergingCategory(null)} />
-                    <div className="bg-ios-bg w-full max-w-md rounded-t-[2rem] p-6 animate-slide-up shadow-2xl">
+                    <div className="bg-ios-bg w-full max-w-md rounded-t-[2rem] p-6 animate-slide-up shadow-2xl relative">
                         <div className="mb-6">
                             <h3 className="text-xl font-bold text-neutral-900">Merge "{mergingCategory.name}"</h3>
                             <p className="text-sm text-neutral-500 mt-1">
@@ -307,7 +314,7 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
 
             {/* --- Delete Confirmation --- */}
             {deletingCategory && (
-                <div className="fixed inset-0 z-[80] flex items-center justify-center p-6">
+                <div className="absolute inset-0 z-[80] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeletingCategory(null)} />
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-center animate-scale-in">
                         <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -335,12 +342,31 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
 
 // --- Category Edit Sheet Component ---
 
-const CategoryEditSheet = ({ category, isCreating, onSave, onCancel, onDelete, receiptCount }: any) => {
+const CategoryEditSheet = ({ category, existingNames, isCreating, onSave, onCancel, onDelete, receiptCount }: any) => {
     const [form, setForm] = useState<CategoryDefinition>({ ...category });
     const [newSub, setNewSub] = useState('');
     const [newAlias, setNewAlias] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     const IconComponent = ICON_MAP[form.iconName] || Tag;
+
+    const handleSave = () => {
+        // Validation
+        if (!form.name.trim()) {
+            setError("Category name is required");
+            return;
+        }
+        
+        const nameLower = form.name.trim().toLowerCase();
+        // Check duplicate (exclude self if editing)
+        if (existingNames.includes(nameLower) && nameLower !== category.name.toLowerCase()) {
+            setError("A category with this name already exists");
+            return;
+        }
+
+        setError(null);
+        onSave(form);
+    };
 
     const addSub = () => {
         if (newSub.trim()) {
@@ -357,22 +383,27 @@ const CategoryEditSheet = ({ category, isCreating, onSave, onCancel, onDelete, r
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center">
+        <div className="absolute inset-0 z-[60] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onCancel} />
-            <div className="bg-ios-bg w-full h-[90vh] rounded-t-[2rem] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
+            <div className="bg-ios-bg w-full h-[90vh] rounded-t-[2rem] flex flex-col shadow-2xl animate-slide-up overflow-hidden relative">
                 
                 {/* Sheet Header */}
-                <div className="px-6 py-4 bg-white border-b border-ios-separator/20 flex justify-between items-center">
+                <div className="px-6 py-4 bg-white border-b border-ios-separator/20 flex justify-between items-center flex-shrink-0">
                     <button onClick={onCancel} className="text-ios-blue font-medium">Cancel</button>
                     <h3 className="font-bold text-lg">{isCreating ? 'New Category' : 'Edit Category'}</h3>
                     <button 
-                        onClick={() => onSave(form)} 
-                        disabled={!form.name.trim()}
+                        onClick={handleSave} 
                         className="text-ios-blue font-bold disabled:opacity-50"
                     >
                         Save
                     </button>
                 </div>
+                
+                {error && (
+                    <div className="bg-red-50 text-red-600 px-6 py-3 text-sm font-medium flex items-center gap-2 animate-fade-in flex-shrink-0">
+                        <AlertCircle size={16} /> {error}
+                    </div>
+                )}
 
                 <div className="flex-1 overflow-y-auto p-6 pb-32 space-y-6">
                     
@@ -387,7 +418,7 @@ const CategoryEditSheet = ({ category, isCreating, onSave, onCancel, onDelete, r
                                 <input 
                                     type="text" 
                                     value={form.name}
-                                    onChange={e => setForm({...form, name: e.target.value})}
+                                    onChange={e => { setForm({...form, name: e.target.value}); setError(null); }}
                                     className="w-full text-xl font-bold border-b border-neutral-200 py-1 focus:outline-none focus:border-ios-blue bg-transparent"
                                     placeholder="e.g. Hobbies"
                                 />
@@ -461,14 +492,36 @@ const CategoryEditSheet = ({ category, isCreating, onSave, onCancel, onDelete, r
 
                     {/* Subcategories */}
                     <div className="bg-white rounded-xl p-4 shadow-sm">
-                        <label className="text-xs font-bold text-ios-gray uppercase mb-3 block">Subcategories</label>
+                        <label className="text-xs font-bold text-ios-gray uppercase mb-3 block">Subcategories & Default</label>
+                        <p className="text-[10px] text-neutral-400 mb-3">Select the circle to mark as default.</p>
                         <div className="space-y-2 mb-3">
                             {form.subcategories.map(sub => (
                                 <div key={sub.id} className="flex justify-between items-center bg-neutral-50 p-2 rounded-lg">
-                                    <span className="text-sm font-medium">{sub.name}</span>
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <button 
+                                            onClick={() => setForm({...form, defaultSubcategoryId: form.defaultSubcategoryId === sub.id ? undefined : sub.id})}
+                                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${
+                                                form.defaultSubcategoryId === sub.id 
+                                                ? 'bg-ios-blue border-ios-blue' 
+                                                : 'border-neutral-300 bg-white'
+                                            }`}
+                                        >
+                                            {form.defaultSubcategoryId === sub.id && <div className="w-2 h-2 bg-white rounded-full" />}
+                                        </button>
+                                        <span className="text-sm font-medium truncate">{sub.name}</span>
+                                        {form.defaultSubcategoryId === sub.id && (
+                                            <span className="text-[10px] bg-blue-100 text-ios-blue px-1.5 py-0.5 rounded font-bold uppercase">Default</span>
+                                        )}
+                                    </div>
                                     <button 
-                                        onClick={() => setForm({...form, subcategories: form.subcategories.filter(s => s.id !== sub.id)})}
-                                        className="text-red-500 p-1"
+                                        onClick={() => {
+                                            setForm({
+                                                ...form, 
+                                                subcategories: form.subcategories.filter(s => s.id !== sub.id),
+                                                defaultSubcategoryId: form.defaultSubcategoryId === sub.id ? undefined : form.defaultSubcategoryId
+                                            })
+                                        }}
+                                        className="text-red-500 p-1 hover:bg-red-50 rounded"
                                     >
                                         <X size={14} />
                                     </button>

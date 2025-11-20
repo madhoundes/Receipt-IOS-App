@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Trash2, Share, Edit2, Calendar, Tag, DollarSign, Save, Percent, AlertCircle, ChevronDown, FileText } from 'lucide-react';
 import { Receipt, CATEGORIES, TAXONOMY } from '../types';
@@ -98,7 +99,7 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
 
   return (
     <div 
-        className="flex flex-col h-full bg-ios-bg overflow-hidden"
+        className="flex flex-col h-full bg-ios-bg overflow-hidden relative"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -107,8 +108,8 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
             transition: touchStart === null ? 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none' 
         }}
     >
-      {/* Header */}
-      <div className={`bg-ios-card px-4 pt-12 pb-4 flex justify-between items-center border-b border-ios-separator/20 sticky top-0 z-20 transition-shadow duration-300 ${headerShadow ? 'shadow-md' : 'shadow-sm'}`}>
+      {/* Fixed Header */}
+      <div className={`bg-ios-card px-4 pt-12 pb-4 flex justify-between items-center border-b border-ios-separator/20 z-20 transition-shadow duration-300 flex-shrink-0 ${headerShadow ? 'shadow-md' : 'shadow-sm'}`}>
         <button onClick={onBack} className="text-ios-blue flex items-center gap-1 active:opacity-60 transition-opacity">
           <ArrowLeft size={20} />
           <span className="text-base font-medium">Back</span>
@@ -128,7 +129,7 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
         </div>
       </div>
 
-      {/* Content */}
+      {/* Scrollable Content */}
       <div 
         ref={contentRef}
         onScroll={handleScroll}
@@ -301,7 +302,8 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-ios-card/90 backdrop-blur-lg border-t border-ios-separator/30 z-10 pb-8">
+      {/* Fixed Bottom Action Bar */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-ios-card/90 backdrop-blur-lg border-t border-ios-separator/30 z-20 pb-8">
          {isEditing ? (
             <button 
               onClick={handleSave}

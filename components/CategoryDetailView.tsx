@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { Receipt, TAXONOMY } from '../types';
@@ -33,8 +34,8 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({ category, recei
 
   return (
     <div className="flex flex-col h-full bg-ios-bg">
-      {/* Header */}
-      <div className="bg-ios-card px-4 pt-12 pb-4 flex items-center gap-4 border-b border-ios-separator/20 sticky top-0 z-20 shadow-sm">
+      {/* Header - Fixed */}
+      <div className="bg-ios-card px-4 pt-12 pb-4 flex items-center gap-4 border-b border-ios-separator/20 flex-shrink-0 z-20 shadow-sm">
         <button onClick={onBack} className="text-ios-blue flex items-center gap-1 active:opacity-60">
           <ArrowLeft size={20} />
           <span className="text-base font-medium">Back</span>
@@ -42,8 +43,8 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({ category, recei
         <h1 className="text-lg font-semibold truncate">{category}</h1>
       </div>
 
-      {/* Stats Header */}
-      <div className="bg-ios-bg px-4 py-6">
+      {/* Stats Header - Fixed */}
+      <div className="bg-ios-bg px-4 py-6 flex-shrink-0">
          <div className="flex gap-4">
              <div className="flex-1">
                  <p className="text-xs text-ios-gray font-semibold uppercase">Total Spent</p>
@@ -56,9 +57,9 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({ category, recei
          </div>
       </div>
 
-      {/* Subcategory Filter */}
+      {/* Subcategory Filter - Fixed */}
       {subcategories.length > 0 && (
-          <div className="px-4 pb-4 overflow-x-auto no-scrollbar flex gap-2 sticky top-[88px] z-10 bg-ios-bg/95 backdrop-blur">
+          <div className="px-4 pb-4 overflow-x-auto no-scrollbar flex gap-2 flex-shrink-0 z-10 bg-ios-bg">
             {filterOptions.map(opt => (
                 <button
                     key={opt}
@@ -75,7 +76,7 @@ const CategoryDetailView: React.FC<CategoryDetailViewProps> = ({ category, recei
           </div>
       )}
 
-      {/* List */}
+      {/* List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-4 pb-24 no-scrollbar">
         {displayedReceipts.length === 0 ? (
             <div className="text-center py-12 text-neutral-400">
