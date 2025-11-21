@@ -1,16 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, Camera, Receipt, ScanLine, Layers, Tag, BarChart3, Lightbulb, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Camera, Receipt, ScanLine, Layers, Tag, Lightbulb, Percent, FileText, DollarSign } from 'lucide-react';
 
 interface OnboardingWalkthroughViewProps {
   onComplete: () => void;
 }
 
+interface Slide {
+  id: number | string;
+  title: string;
+  subtitle: string;
+  color: string;
+  illustration: React.ReactNode;
+  footnote?: string;
+}
+
 const OnboardingWalkthroughView: React.FC<OnboardingWalkthroughViewProps> = ({ onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isSkipping, setIsSkipping] = useState(false);
 
-  const slides = [
+  const slides: Slide[] = [
     {
       id: 1,
       title: "Welcome to Receiptfy",
@@ -46,6 +54,40 @@ const OnboardingWalkthroughView: React.FC<OnboardingWalkthroughViewProps> = ({ o
                 </div>
              </div>
           </div>
+        </div>
+      )
+    },
+    {
+      id: 'tax-ready',
+      title: "Tax‑ready & Discounts",
+      subtitle: "Applies Canadian HST defaults (13%) and captures line‑item discounts. Export clean CSV for tax returns.",
+      color: "bg-emerald-100 text-emerald-600",
+      illustration: (
+        <div className="relative w-64 h-64">
+           <div className="absolute inset-0 bg-emerald-50 rounded-full animate-scale-in opacity-50" style={{animationDelay: '200ms'}}></div>
+           <div className="absolute inset-0 flex items-center justify-center animate-slide-up">
+               {/* CSV Doc */}
+               <div className="absolute -right-2 -top-4 bg-white p-3 rounded-xl shadow-sm border border-blue-100 transform rotate-12 z-10">
+                    <FileText size={32} className="text-blue-500" />
+               </div>
+               
+               {/* Main Receipt */}
+               <div className="relative bg-white px-5 py-6 rounded-2xl shadow-xl border border-emerald-100 z-20 flex flex-col items-center gap-2">
+                    <Receipt size={48} className="text-neutral-700" strokeWidth={1.5} />
+                    <div className="w-12 h-2 bg-neutral-100 rounded-full"/>
+                    <div className="w-8 h-2 bg-neutral-100 rounded-full"/>
+                    
+                    {/* Percent Badge */}
+                    <div className="absolute -bottom-3 -right-3 bg-emerald-500 text-white p-2 rounded-full border-4 border-white shadow-sm">
+                        <Percent size={16} strokeWidth={3} />
+                    </div>
+               </div>
+    
+               {/* Dollar Coin */}
+               <div className="absolute -left-4 bottom-8 bg-amber-100 p-2.5 rounded-full border-4 border-white shadow-md z-30">
+                    <DollarSign size={24} className="text-amber-600" />
+               </div>
+           </div>
         </div>
       )
     },
@@ -128,7 +170,7 @@ const OnboardingWalkthroughView: React.FC<OnboardingWalkthroughViewProps> = ({ o
       {/* Carousel */}
       <div className="flex-1 relative overflow-hidden">
         <div 
-            className="absolute inset-0 flex transition-transform duration-500 cubic-bezier(0.2, 0.8, 0.2, 1)"
+            className="absolute inset-0 flex transition-transform duration-500 cubic-bezier(0.2, 0.8, 0.2, 1) motion-reduce:transition-opacity"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
             {slides.map((slide) => (
@@ -139,9 +181,15 @@ const OnboardingWalkthroughView: React.FC<OnboardingWalkthroughViewProps> = ({ o
                     <h2 className="text-3xl font-bold text-neutral-900 text-center mb-3 tracking-tight animate-fade-in">
                         {slide.title}
                     </h2>
-                    <p className="text-lg text-neutral-500 text-center leading-relaxed max-w-xs animate-fade-in" style={{animationDelay: '100ms'}}>
+                    <p className="text-lg text-neutral-500 text-center leading-relaxed max-w-sm animate-fade-in" style={{animationDelay: '100ms'}}>
                         {slide.subtitle}
                     </p>
+                    
+                    {slide.footnote && (
+                        <p className="text-[11px] text-neutral-400 font-medium mt-6 animate-fade-in text-center px-4">
+                            {slide.footnote}
+                        </p>
+                    )}
                 </div>
             ))}
         </div>

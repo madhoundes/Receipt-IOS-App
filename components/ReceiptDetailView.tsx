@@ -75,13 +75,13 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   
+  // We use the hook on the EDITED receipt so that if the user changes the Total,
+  // the subtotal/tax display updates automatically based on the math logic.
   const { computedSubtotal, computedTax, computedPercent, isComputed, isMathValid } = useReceiptMath(isEditing ? editedReceipt : receipt);
 
   // Sync initial edit state when opening
   useEffect(() => {
     if (receipt) {
-       // If values were computed/missing in the original receipt, verify we populate them for the edit form?
-       // Actually, we want to show what is SAVED in the DB. The 'useReceiptMath' handles the display logic.
        setEditedReceipt(receipt); 
        setImageLoading(true);
        setImageError(false);
@@ -133,40 +133,26 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
   };
 
   const handleSave = () => {
-    // If values were computed during edit (e.g. user cleared tax), persist the computed values
+    // Persist the computed values into the saved object
     const finalReceipt: Receipt = {
         ...editedReceipt,
-        subtotal: editedReceipt.subtotal || computedSubtotal,
-        hstAmount: editedReceipt.hstAmount || computedTax,
-        hstPercent: editedReceipt.hstPercent || computedPercent
+        subtotal: computedSubtotal,
+        hstAmount: computedTax,
+        // Ensure we keep a valid tax percent if it exists, otherwise use computed
+        hstPercent: editedReceipt.hstPercent || computedPercent 
     };
     onUpdate(finalReceipt);
     setIsEditing(false);
   };
 
   // --- Edit Logic ---
-  const updateSubtotal = (newSub: number) => {
-      // When Subtotal changes, maintain Tax Rate, update Tax Amount and Total
-      const rate = (editedReceipt.hstPercent || DEFAULT_HST_PERCENT) / 100;
-      const newTax = newSub * rate;
-      const newTotal = newSub + newTax;
-      setEditedReceipt({ ...editedReceipt, subtotal: newSub, hstAmount: newTax, totalAmount: newTotal });
-  };
-
   const updateTotal = (newTotal: number) => {
-      // When Total changes, maintain Tax Rate, backwards calculate Subtotal and Tax
+      // When Total changes, we maintain the Tax Rate to calculate the new subtotal/tax
+      // This keeps the math consistent without forcing the user to edit individual lines.
       const rate = (editedReceipt.hstPercent || DEFAULT_HST_PERCENT) / 100;
       const newSub = newTotal / (1 + rate);
       const newTax = newTotal - newSub;
       setEditedReceipt({ ...editedReceipt, totalAmount: newTotal, subtotal: newSub, hstAmount: newTax });
-  };
-
-  const resetToDefaultTax = () => {
-      const total = editedReceipt.totalAmount;
-      const rate = 0.13;
-      const newSub = total / (1 + rate);
-      const newTax = total - newSub;
-      setEditedReceipt({ ...editedReceipt, hstPercent: 13, subtotal: newSub, hstAmount: newTax });
   };
 
   // --- Share Logic ---
@@ -181,7 +167,6 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
       setShowShareSheet(false);
   };
 
-  const availableSubcategories = TAXONOMY[editedReceipt.category] || [];
   const isManualEntry = editedReceipt.imageName === 'manual_placeholder';
   const brandAsset = getBrandAsset(editedReceipt.storeName);
 
@@ -228,9 +213,17 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
         <div className="flex flex-col gap-6 max-w-md mx-auto animate-slide-up">
           
           {/* Image Section */}
-          <div className="w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md bg-neutral-100 relative group transform-gpu border border-neutral-100">
+          <div className="w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md bg-neutral-100 relative group transform-gpu border border-neutral-100 flex items-center justify-center">
+            {/* Loader - Absolute Positioned & Toggled via Opacity */}
+            <div 
+                className={`absolute inset-0 z-20 flex items-center justify-center bg-neutral-100 transition-opacity duration-300 pointer-events-none ${imageLoading && !isManualEntry && !imageError ? 'opacity-100' : 'opacity-0'}`}
+            >
+                <div className="w-full h-full animate-shimmer bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200 bg-[length:200%_100%]" />
+            </div>
+
+            {/* Content */}
             {isManualEntry ? (
-                 <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-50 text-neutral-400 gap-3">
+                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-50 text-neutral-400 gap-3 z-10">
                     <div className="w-20 h-20 rounded-full bg-neutral-200 flex items-center justify-center">
                          <FileText size={40} className="text-neutral-400 opacity-60" />
                     </div>
@@ -241,26 +234,20 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
                  </div>
             ) : (
                 <>
-                  {imageLoading && !imageError && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 z-10">
-                          <div className="w-full h-full animate-shimmer bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200 bg-[length:200%_100%]" />
-                      </div>
-                  )}
-                  {imageError ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-100 text-neutral-400 gap-2">
+                  {imageError && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-100 text-neutral-400 gap-2 z-10">
                           <AlertCircle size={32} />
                           <span className="text-xs font-medium">Image failed to load</span>
                           <button onClick={() => { setImageError(false); setImageLoading(true); }} className="text-ios-blue text-xs font-bold flex items-center gap-1"><RefreshCw size={10} /> Retry</button>
                       </div>
-                  ) : (
-                      <img 
-                        src={editedReceipt.imageName} 
-                        alt="Receipt" 
-                        className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-                        onLoad={() => setImageLoading(false)}
-                        onError={() => { setImageLoading(false); setImageError(true); }}
-                      />
                   )}
+                  <img 
+                    src={editedReceipt.imageName} 
+                    alt="Receipt" 
+                    className={`w-full h-full object-contain transition-opacity duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                    onLoad={() => setImageLoading(false)}
+                    onError={() => { setImageLoading(false); setImageError(true); }}
+                  />
                 </>
             )}
           </div>
@@ -273,26 +260,10 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
                  </div>
              )}
              <div className="flex-1">
-                {isEditing ? (
-                     <input 
-                        type="text" 
-                        value={editedReceipt.storeName}
-                        onChange={(e) => setEditedReceipt({...editedReceipt, storeName: e.target.value})}
-                        className="text-2xl font-bold w-full bg-transparent border-b border-neutral-200 focus:border-ios-blue outline-none py-1"
-                     />
-                ) : (
-                    <h2 className="text-2xl font-bold text-neutral-900">{editedReceipt.storeName}</h2>
-                )}
-                {isEditing ? (
-                    <input 
-                        type="datetime-local"
-                        value={editedReceipt.purchaseDate.toISOString().slice(0, 16)}
-                        onChange={(e) => setEditedReceipt({...editedReceipt, purchaseDate: new Date(e.target.value)})}
-                        className="text-sm mt-1 bg-neutral-100 rounded px-2 py-1 w-full"
-                    />
-                ) : (
-                    <p className="text-neutral-500 text-sm font-medium">{formatDate(editedReceipt.purchaseDate)}</p>
-                )}
+                {/* Store Name is now strictly display-only */}
+                <h2 className="text-2xl font-bold text-neutral-900">{editedReceipt.storeName}</h2>
+                {/* Date is now strictly display-only */}
+                <p className="text-neutral-500 text-sm font-medium">{formatDate(editedReceipt.purchaseDate)}</p>
              </div>
           </div>
 
@@ -310,36 +281,16 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
                  <div className="flex items-center gap-1.5 text-neutral-500 text-xs font-bold uppercase tracking-wider">
                     <Tag size={12} /> Category
                  </div>
-                 {isEditing ? (
-                    <div className="flex gap-2 flex-1 justify-end max-w-[70%]">
-                        <select 
-                          value={editedReceipt.category}
-                          onChange={(e) => setEditedReceipt({...editedReceipt, category: e.target.value, subcategory: undefined})}
-                          className="text-sm font-medium border rounded px-2 py-1 bg-neutral-50 max-w-[50%]"
-                        >
-                          {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                        </select>
-                        <select 
-                            value={editedReceipt.subcategory || ''}
-                            onChange={(e) => setEditedReceipt({...editedReceipt, subcategory: e.target.value || undefined})}
-                            className="text-sm font-medium border rounded px-2 py-1 bg-neutral-50 max-w-[50%]"
-                        >
-                            <option value="">None</option>
-                            {availableSubcategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                        </select>
-                    </div>
-                 ) : (
-                     <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-md text-sm font-semibold ${editedReceipt.category ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-100 text-neutral-400'}`}>
-                           {editedReceipt.category || 'Uncategorized'}
+                 <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-md text-sm font-semibold ${editedReceipt.category ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-100 text-neutral-400'}`}>
+                       {editedReceipt.category || 'Uncategorized'}
+                    </span>
+                    {editedReceipt.subcategory && (
+                        <span className="text-ios-teal text-sm font-medium flex items-center gap-0.5">
+                            <ChevronDown size={12} className="-rotate-90" /> {editedReceipt.subcategory}
                         </span>
-                        {editedReceipt.subcategory && (
-                            <span className="text-ios-teal text-sm font-medium flex items-center gap-0.5">
-                                <ChevronDown size={12} className="-rotate-90" /> {editedReceipt.subcategory}
-                            </span>
-                        )}
-                     </div>
-                 )}
+                    )}
+                 </div>
              </div>
 
              <div className="h-px bg-neutral-100" />
@@ -347,70 +298,36 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
              {/* Subtotal */}
              <div className="flex justify-between items-center text-sm">
                  <span className="text-neutral-500">Subtotal</span>
-                 {isEditing ? (
-                     <input 
-                        type="number" step="0.01"
-                        value={editedReceipt.subtotal?.toFixed(2) || ''}
-                        onChange={(e) => updateSubtotal(parseFloat(e.target.value) || 0)}
-                        className="w-24 text-right font-medium bg-neutral-50 border rounded px-1"
-                     />
-                 ) : (
-                     <span className={`font-medium ${!editedReceipt.subtotal ? 'text-neutral-400 italic' : 'text-neutral-900'}`}>
-                         ${computedSubtotal.toFixed(2)}
-                     </span>
-                 )}
+                 <span className="font-medium text-neutral-900">
+                     ${computedSubtotal.toFixed(2)}
+                 </span>
              </div>
 
              {/* Tax Row */}
              <div className="flex justify-between items-center text-sm">
                  <div className="flex items-center gap-1 text-neutral-500">
                      <span>Tax</span>
-                     {isEditing ? (
-                        <div className="flex items-center bg-neutral-50 rounded px-1 border ml-1">
-                            <input 
-                                type="number" value={editedReceipt.hstPercent || ''} 
-                                onChange={e => setEditedReceipt({...editedReceipt, hstPercent: parseFloat(e.target.value)})}
-                                className="w-8 text-right bg-transparent outline-none text-xs" 
-                                placeholder="13"
-                            />
-                            <span className="text-xs">%</span>
-                        </div>
-                     ) : (
-                        <span className="text-xs bg-neutral-100 px-1.5 rounded text-neutral-400">
-                            {computedPercent.toFixed(0)}%
-                        </span>
-                     )}
-                     {isEditing && (
-                         <button onClick={resetToDefaultTax} className="ml-2 text-[10px] font-bold text-ios-blue flex items-center gap-0.5 bg-blue-50 px-1.5 py-0.5 rounded hover:bg-blue-100">
-                             <RotateCcw size={8} /> 13%
-                         </button>
-                     )}
-                 </div>
-                 {isEditing ? (
-                     <input 
-                        type="number" step="0.01"
-                        value={editedReceipt.hstAmount?.toFixed(2) || ''}
-                        onChange={(e) => setEditedReceipt({...editedReceipt, hstAmount: parseFloat(e.target.value)})}
-                        className="w-24 text-right font-medium bg-neutral-50 border rounded px-1"
-                     />
-                 ) : (
-                     <span className={`font-medium ${!editedReceipt.hstAmount ? 'text-neutral-400 italic' : 'text-neutral-900'}`}>
-                         ${computedTax.toFixed(2)}
+                     <span className="text-xs bg-neutral-100 px-1.5 rounded text-neutral-400">
+                        {computedPercent.toFixed(0)}%
                      </span>
-                 )}
+                 </div>
+                 <span className="font-medium text-neutral-900">
+                     ${computedTax.toFixed(2)}
+                 </span>
              </div>
 
              <div className="h-px bg-neutral-100" />
 
-             {/* Total */}
+             {/* Total - EDITABLE */}
              <div className="flex justify-between items-end">
                  <span className="text-lg font-bold text-neutral-900">Total</span>
                  {isEditing ? (
                      <input 
                         type="number" step="0.01"
-                        value={editedReceipt.totalAmount.toFixed(2)}
+                        value={editedReceipt.totalAmount || ''}
                         onChange={(e) => updateTotal(parseFloat(e.target.value) || 0)}
-                        className="w-32 text-right text-2xl font-bold bg-transparent border-b border-neutral-200 focus:border-ios-blue outline-none"
+                        className="w-32 text-right text-2xl font-bold bg-blue-50 border-b-2 border-ios-blue text-ios-blue focus:outline-none rounded px-1"
+                        autoFocus
                      />
                  ) : (
                      <span className="text-3xl font-bold text-neutral-900 tracking-tight">
@@ -432,31 +349,22 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
              {/* Payment Method */}
              <div>
                  <label className="text-xs font-bold text-ios-gray uppercase mb-1 block">Payment Method</label>
-                 {isEditing ? (
-                     <input 
-                        type="text" placeholder="e.g. VISA 1234"
-                        value={editedReceipt.paymentMethod || ''}
-                        onChange={e => setEditedReceipt({...editedReceipt, paymentMethod: e.target.value})}
-                        className="w-full bg-neutral-50 border rounded px-3 py-2 text-sm"
-                     />
-                 ) : (
-                     <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                         <CreditCardIcon method={editedReceipt.paymentMethod} />
-                         <span>{editedReceipt.paymentMethod || "Not detected"}</span>
-                     </div>
-                 )}
+                 <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
+                     <CreditCardIcon method={editedReceipt.paymentMethod} />
+                     <span>{editedReceipt.paymentMethod || "Not detected"}</span>
+                 </div>
              </div>
 
              <div className="h-px bg-neutral-100" />
 
-             {/* Notes */}
+             {/* Notes - EDITABLE */}
              <div>
                  <label className="text-xs font-bold text-ios-gray uppercase mb-1 block">Notes</label>
                  {isEditing ? (
                      <textarea 
                         value={editedReceipt.notes || ''}
                         onChange={e => setEditedReceipt({...editedReceipt, notes: e.target.value})}
-                        className="w-full bg-neutral-50 border rounded px-3 py-2 text-sm h-24 resize-none"
+                        className="w-full bg-neutral-50 border-2 border-ios-blue/20 focus:border-ios-blue rounded px-3 py-2 text-sm h-24 resize-none focus:outline-none"
                         placeholder="Add details..."
                      />
                  ) : (
