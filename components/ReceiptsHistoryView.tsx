@@ -1,7 +1,9 @@
+
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, ChevronRight, Receipt as ReceiptIcon, Plus, Camera, Loader2, XCircle, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Search, ChevronRight, Receipt as ReceiptIcon, Plus, Camera, Loader2, XCircle, ChevronDown, ChevronUp, FileText, Download } from 'lucide-react';
 import { Receipt } from '../types';
 import { getBrandAsset } from '../constants';
+import { generateCSV, downloadFile } from '../exportUtils';
 
 interface ReceiptsHistoryViewProps {
   receipts: Receipt[];
@@ -38,12 +40,12 @@ const BrandAvatar = ({ storeName, showLogos, size = "md" }: { storeName: string,
         const isWide = asset.sizeTier === 'wide';
         
         // Padding Logic:
-        // Standard: p-3 (12px)
-        // Wide logos: p-4 (16px) - Increased padding prevents wide logos from hitting edges too hard visually
-        // Configurable via asset.padding override
+        // Standard: p-3 (12px) for most logos to be large and clear.
+        // Wide logos: p-3.5 (14px) or p-4 (16px) - Increased padding prevents wide wordmarks from hitting edges too hard visually.
+        // Asset padding override takes precedence if defined.
         const paddingClass = asset.padding 
             ? `p-${asset.padding}` 
-            : (isWide && size !== 'sm' ? "p-4" : "p-3");
+            : (isWide && size !== 'sm' ? "p-3.5" : "p-3");
 
         // Show Logo Image
         if (showLogos && asset.logoUrl) {
@@ -112,6 +114,15 @@ const ReceiptsHistoryView: React.FC<ReceiptsHistoryViewProps> = ({ receipts, onS
       setExpandedId(prev => prev === id ? null : id);
   };
 
+  // Export Handler
+  const handleExport = () => {
+      if (filteredReceipts.length === 0) return;
+      const csvData = generateCSV(filteredReceipts);
+      const dateStr = new Date().toISOString().split('T')[0];
+      downloadFile(csvData, `Receipts_Export_${dateStr}.csv`, 'text/csv');
+      if (navigator.vibrate) navigator.vibrate([10, 30]);
+  };
+
   // Pull to Refresh Handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (containerRef.current && containerRef.current.scrollTop === 0) {
@@ -144,9 +155,20 @@ const ReceiptsHistoryView: React.FC<ReceiptsHistoryViewProps> = ({ receipts, onS
       <div className="bg-ios-bg px-4 pt-12 pb-2 flex-shrink-0 z-20 shadow-sm transition-shadow">
         <div className="flex justify-between items-end mb-4">
             <h1 className="text-3xl font-bold text-neutral-900 tracking-tight animate-fade-in">History</h1>
-            <button onClick={onLaunchCamera} className="w-9 h-9 rounded-full bg-ios-teal text-white flex items-center justify-center shadow-sm ios-btn-press">
-                <Plus size={22} />
-            </button>
+            <div className="flex gap-2">
+                {filteredReceipts.length > 0 && (
+                    <button 
+                        onClick={handleExport}
+                        className="w-9 h-9 rounded-full bg-neutral-200 text-neutral-700 flex items-center justify-center shadow-sm active:bg-neutral-300 transition-colors"
+                        aria-label="Export CSV"
+                    >
+                        <Download size={20} />
+                    </button>
+                )}
+                <button onClick={onLaunchCamera} className="w-9 h-9 rounded-full bg-ios-teal text-white flex items-center justify-center shadow-sm ios-btn-press">
+                    <Plus size={22} />
+                </button>
+            </div>
         </div>
         <div className="relative animate-scale-in origin-left">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Search size={16} className="text-ios-gray" /></div>

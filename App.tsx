@@ -12,6 +12,7 @@ import CategoryDetailView from './components/CategoryDetailView';
 import SpendInsightsView from './components/SpendInsightsView';
 import OnboardingWalkthroughView from './components/OnboardingWalkthroughView';
 import SignUpView from './components/SignUpView';
+import LoginView from './components/LoginView';
 import ProfileAccountView from './components/ProfileAccountView';
 import ManageCategoriesView from './components/ManageCategoriesView';
 
@@ -61,7 +62,8 @@ function AppContent() {
     if (!hasOnboarded) {
         setCurrentScreen(AppRoute.ONBOARDING);
     } else if (!hasAccount) {
-        setCurrentScreen(AppRoute.SIGNUP);
+        // Default to Login for returning users, user can switch to SignUp
+        setCurrentScreen(AppRoute.LOGIN);
     }
   }, []);
 
@@ -106,7 +108,7 @@ function AppContent() {
       setReceipts([]);
       setUserProfile(DEFAULT_USER_PROFILE);
       localStorage.removeItem('receiptfy_account');
-      setCurrentScreen(AppRoute.SIGNUP);
+      setCurrentScreen(AppRoute.LOGIN);
   };
 
   const handleDeleteAllData = () => {
@@ -157,7 +159,7 @@ function AppContent() {
     setCurrentScreen(AppRoute.SIGNUP);
   };
 
-  const handleSignUpComplete = () => {
+  const handleAuthComplete = () => {
     if (!TESTING_MODE) {
       localStorage.setItem('receiptfy_account', 'true');
     }
@@ -173,7 +175,27 @@ function AppContent() {
         return <OnboardingWalkthroughView onComplete={handleOnboardingComplete} />;
     }
     if (currentScreen === AppRoute.SIGNUP) {
-        return <SignUpView onSignUp={handleSignUpComplete} />;
+        return (
+            <SignUpView 
+                onSignUp={handleAuthComplete} 
+                onNavigateToLogin={() => {
+                    triggerHaptic('light');
+                    setCurrentScreen(AppRoute.LOGIN);
+                }}
+            />
+        );
+    }
+    if (currentScreen === AppRoute.LOGIN) {
+        return (
+            <LoginView 
+                onLogin={handleAuthComplete} 
+                onGuest={handleAuthComplete}
+                onNavigateToSignup={() => {
+                    triggerHaptic('light');
+                    setCurrentScreen(AppRoute.SIGNUP);
+                }}
+            />
+        );
     }
 
     // 2. Overlays (Camera)
@@ -277,9 +299,10 @@ function AppContent() {
                     onUpdateProfile={handleUpdateProfile}
                     onSignOut={handleSignOut}
                     onDeleteAllData={handleDeleteAllData}
-                    onExportData={(format) => alert(`Exporting as ${format}...`)}
+                    onExportData={(format) => {}} // Handled internally now via props
                     onManageCategories={handleManageCategories}
                     receiptCount={receipts.length}
+                    receipts={receipts} // PASSING RECEIPTS HERE
                 />
             )}
         </div>
@@ -293,6 +316,7 @@ function AppContent() {
     currentScreen !== AppRoute.CATEGORY_DETAILS &&
     currentScreen !== AppRoute.ONBOARDING &&
     currentScreen !== AppRoute.SIGNUP &&
+    currentScreen !== AppRoute.LOGIN &&
     currentScreen !== AppRoute.MANAGE_CATEGORIES;
 
   return (

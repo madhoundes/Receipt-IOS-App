@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, User, ArrowRight, Check } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight } from 'lucide-react';
 
 interface SignUpViewProps {
   onSignUp: () => void;
+  onNavigateToLogin?: () => void;
 }
 
-const SignUpView: React.FC<SignUpViewProps> = ({ onSignUp }) => {
+const SignUpView: React.FC<SignUpViewProps> = ({ onSignUp, onNavigateToLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
@@ -100,7 +101,12 @@ const SignUpView: React.FC<SignUpViewProps> = ({ onSignUp }) => {
         </form>
 
         <div className="mt-auto text-center text-sm text-neutral-400 animate-fade-in" style={{animationDelay: '500ms'}}>
-            <p>By signing up, you agree to our Terms of Service and Privacy Policy.</p>
+            <p className="mb-4">By signing up, you agree to our Terms of Service and Privacy Policy.</p>
+            {onNavigateToLogin && (
+                <p className="pt-4 border-t border-neutral-200/50">
+                    Already have an account? <button onClick={onNavigateToLogin} className="text-ios-blue font-semibold hover:underline">Log In</button>
+                </p>
+            )}
         </div>
 
       </div>

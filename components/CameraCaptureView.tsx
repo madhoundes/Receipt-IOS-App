@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Zap, Image as ImageIcon, RotateCcw, ArrowRight, Loader2, Check, Calendar, DollarSign, Tag, ChevronDown, AlertTriangle, Lightbulb, FileText, Info, Volume2, VolumeX } from 'lucide-react';
+import { X, Zap, Image as ImageIcon, RotateCcw, ArrowRight, Loader2, Check, Calendar, DollarSign, Tag, ChevronDown, AlertTriangle, Lightbulb, FileText, Info, Volume2, VolumeX, ScanLine } from 'lucide-react';
 import { Receipt } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 import CategoryPickerView, { CategorySuggestion } from './CategoryPickerView';
@@ -617,6 +617,76 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
              <div className="w-12 flex flex-col items-center gap-1"></div>
         </div>
       </div>
+
+      {/* TIPS MODAL */}
+      {showTips && (
+        <div className="absolute inset-0 z-[100] flex items-end justify-center">
+          <div 
+             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" 
+             onClick={() => { triggerHaptic('light'); setShowTips(false); }} 
+          />
+          <div className="bg-ios-bg w-full max-w-md rounded-t-[2rem] p-6 pb-10 animate-slide-up shadow-2xl relative z-10 text-neutral-900">
+            <div className="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-6 opacity-50" />
+            
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-neutral-900">Scanning Tips</h3>
+              <button 
+                onClick={() => { triggerHaptic('light'); setShowTips(false); }}
+                className="p-2 bg-neutral-200/80 rounded-full text-neutral-500 hover:bg-neutral-300 active:scale-90 transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-6 mb-8">
+               <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center shrink-0 text-yellow-600">
+                     <Lightbulb size={20} fill="currentColor" className="text-yellow-500" />
+                  </div>
+                  <div>
+                     <h4 className="font-semibold text-base mb-1">Lighting is Key</h4>
+                     <p className="text-sm text-neutral-500 leading-snug">Ensure the receipt is well-lit. Turn on the flash <Zap size={12} className="inline" /> if needed.</p>
+                  </div>
+               </div>
+
+               <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 text-blue-600">
+                     <ScanLine size={20} />
+                  </div>
+                  <div>
+                     <h4 className="font-semibold text-base mb-1">Frame it Right</h4>
+                     <p className="text-sm text-neutral-500 leading-snug">Fit the entire receipt within the edges. Keep it flat.</p>
+                  </div>
+               </div>
+               
+               <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0 text-red-600">
+                     <AlertTriangle size={20} />
+                  </div>
+                  <div>
+                     <h4 className="font-semibold text-base mb-1">Avoid Glare</h4>
+                     <p className="text-sm text-neutral-500 leading-snug">Watch out for shiny thermal paper glare that hides text.</p>
+                  </div>
+               </div>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-neutral-200 pt-6">
+               <button 
+                  onClick={() => { triggerHaptic('medium'); setShowTips(false); fileInputRef.current?.click(); }}
+                  className="w-full py-3.5 bg-white border border-neutral-200 rounded-xl font-semibold text-ios-blue flex items-center justify-center gap-2 shadow-sm active:bg-neutral-50"
+               >
+                  <ImageIcon size={18} /> Import from Photos
+               </button>
+               <button 
+                  onClick={() => { triggerHaptic('medium'); setShowTips(false); handleManualEntry(); }}
+                  className="w-full py-3.5 bg-white border border-neutral-200 rounded-xl font-semibold text-neutral-700 flex items-center justify-center gap-2 shadow-sm active:bg-neutral-50"
+               >
+                  <FileText size={18} /> Enter Manually
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

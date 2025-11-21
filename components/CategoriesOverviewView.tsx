@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Receipt, TAXONOMY } from '../types';
 import { 
@@ -17,76 +18,77 @@ type DateRangeType = 'month' | '30days' | 'year' | 'all';
 
 // --- Configuration ---
 const getCategoryConfig = (category: string) => {
+  const iconSize = 48;
   switch (category) {
     case "Groceries": 
       return { 
-        icon: <ShoppingBasket size={40} strokeWidth={1.5} />, 
+        icon: <ShoppingBasket size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-green-100", text: "text-green-600", 
         border: "border-green-200" 
       };
     case "Restaurant": 
       return { 
-        icon: <Utensils size={40} strokeWidth={1.5} />, 
+        icon: <Utensils size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-orange-100", text: "text-orange-600", 
         border: "border-orange-200" 
       };
     case "Gas/Fuel": 
       return { 
-        icon: <Fuel size={40} strokeWidth={1.5} />, 
+        icon: <Fuel size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-red-100", text: "text-red-600", 
         border: "border-red-200" 
       };
     case "Pharmacy/Health": 
       return { 
-        icon: <Pill size={40} strokeWidth={1.5} />, 
+        icon: <Pill size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-teal-100", text: "text-teal-600", 
         border: "border-teal-200" 
       };
     case "Household": 
       return { 
-        icon: <Home size={40} strokeWidth={1.5} />, 
+        icon: <Home size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-indigo-100", text: "text-indigo-600", 
         border: "border-indigo-200" 
       };
     case "Electronics": 
       return { 
-        icon: <MonitorSmartphone size={40} strokeWidth={1.5} />, 
+        icon: <MonitorSmartphone size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-zinc-100", text: "text-zinc-600", 
         border: "border-zinc-200" 
       };
     case "Clothing": 
       return { 
-        icon: <Shirt size={40} strokeWidth={1.5} />, 
+        icon: <Shirt size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-pink-100", text: "text-pink-600", 
         border: "border-pink-200" 
       };
     case "Utilities": 
       return { 
-        icon: <Zap size={40} strokeWidth={1.5} />, 
+        icon: <Zap size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-yellow-100", text: "text-yellow-600", 
         border: "border-yellow-200" 
       };
     case "Transport": 
       return { 
-        icon: <Car size={40} strokeWidth={1.5} />, 
+        icon: <Car size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-blue-100", text: "text-blue-600", 
         border: "border-blue-200" 
       };
     case "Entertainment": 
       return { 
-        icon: <Clapperboard size={40} strokeWidth={1.5} />, 
+        icon: <Clapperboard size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-purple-100", text: "text-purple-600", 
         border: "border-purple-200" 
       };
     case "Services": 
       return { 
-        icon: <Wrench size={40} strokeWidth={1.5} />, 
+        icon: <Wrench size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-slate-100", text: "text-slate-600", 
         border: "border-slate-200" 
       };
     default: 
       return { 
-        icon: <Box size={40} strokeWidth={1.5} />, 
+        icon: <Box size={iconSize} strokeWidth={1.5} />, 
         bg: "bg-neutral-100", text: "text-neutral-600", 
         border: "border-neutral-200" 
       };

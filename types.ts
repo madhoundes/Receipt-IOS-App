@@ -55,6 +55,7 @@ export interface BrandAsset {
 }
 
 export enum AppRoute {
+  LOGIN = 'login',
   CAMERA = 'camera',
   HISTORY = 'history',
   DETAILS = 'details',

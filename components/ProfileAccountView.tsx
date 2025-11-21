@@ -6,7 +6,8 @@ import {
     X, Check, Smartphone, Moon, Sliders, Layers, Info, Lock, Percent, Globe,
     Image as ImageIcon, RotateCcw, AlertCircle, Store
 } from 'lucide-react';
-import { UserProfile } from '../types';
+import { UserProfile, Receipt } from '../types';
+import { generateCSV, downloadFile } from '../exportUtils';
 
 interface ProfileAccountViewProps {
     userProfile: UserProfile;
@@ -15,7 +16,7 @@ interface ProfileAccountViewProps {
     onDeleteAllData: () => void;
     onExportData: (format: 'csv' | 'json') => void;
     onManageCategories: () => void; 
-    receiptCount: number; 
+    receipts: Receipt[]; // Updated prop
 }
 
 // --- Avatar Camera Component ---
@@ -105,13 +106,14 @@ const AvatarCameraView = ({ onCapture, onCancel }: { onCapture: (img: string) =>
 };
 
 const ProfileAccountView: React.FC<ProfileAccountViewProps> = ({ 
-    userProfile, onUpdateProfile, onSignOut, onDeleteAllData, onExportData, onManageCategories, receiptCount
+    userProfile, onUpdateProfile, onSignOut, onDeleteAllData, onExportData, onManageCategories, receipts
 }) => {
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [editForm, setEditForm] = useState({ name: userProfile.name, email: userProfile.email, avatar: userProfile.avatar });
     const [showPhotoOptions, setShowPhotoOptions] = useState(false);
     const [showCamera, setShowCamera] = useState(false);
+    const [showExportSheet, setShowExportSheet] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const toggleHaptic = (enabled: boolean) => {
@@ -150,6 +152,35 @@ const ProfileAccountView: React.FC<ProfileAccountViewProps> = ({
             processSelectedImage(e.target.files[0]);
             setShowPhotoOptions(false);
         }
+    };
+
+    // Export Handlers
+    const handleExportCSV = (range: 'all' | 'month') => {
+        let exportData = receipts;
+        if (range === 'month') {
+            const now = new Date();
+            exportData = receipts.filter(r => 
+                r.purchaseDate.getMonth() === now.getMonth() && 
+                r.purchaseDate.getFullYear() === now.getFullYear()
+            );
+        }
+        if (exportData.length === 0) {
+            alert("No receipts found for selected range.");
+            return;
+        }
+        const csv = generateCSV(exportData);
+        downloadFile(csv, `Receiptfy_Export_${range}.csv`, 'text/csv');
+        setShowExportSheet(false);
+    };
+
+    const handleExportJSON = () => {
+        const json = JSON.stringify({
+            profile: userProfile,
+            receipts: receipts,
+            exportedAt: new Date().toISOString()
+        }, null, 2);
+        downloadFile(json, `Receiptfy_Backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+        setShowExportSheet(false);
     };
 
     const ListItem = ({ icon: Icon, color, label, value, onClick, isDestructive = false, hasToggle = false, toggleValue = false, onToggle = () => {} }: any) => (
@@ -250,12 +281,12 @@ const ProfileAccountView: React.FC<ProfileAccountViewProps> = ({
                     <div className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600"><Database size={18} className="text-white" /></div>
-                            <div><span className="block text-[16px] font-medium text-neutral-900">Storage Used</span><span className="block text-xs text-neutral-400">{(receiptCount * 0.15).toFixed(1)} MB estimated</span></div>
+                            <div><span className="block text-[16px] font-medium text-neutral-900">Storage Used</span><span className="block text-xs text-neutral-400">{(receipts.length * 0.15).toFixed(1)} MB estimated</span></div>
                         </div>
                         <button onClick={() => alert('Cleared cache')} className="text-ios-blue text-sm font-medium">Clear Cache</button>
                     </div>
                     <div className="h-px bg-ios-separator/30 ml-14" />
-                    <ListItem icon={Download} color="bg-emerald-500" label="Export Data" value="CSV, JSON" onClick={() => onExportData('csv')} />
+                    <ListItem icon={Download} color="bg-emerald-500" label="Export Data" value="CSV, JSON" onClick={() => setShowExportSheet(true)} />
                     <div className="h-px bg-ios-separator/30 ml-14" />
                     <ListItem icon={Trash2} color="bg-red-100" label="Delete All Receipts" isDestructive onClick={() => setShowDeleteConfirm(true)} />
                 </div>
@@ -309,6 +340,34 @@ const ProfileAccountView: React.FC<ProfileAccountViewProps> = ({
                             <button onClick={() => { setShowCamera(true); setShowPhotoOptions(false); }} className="w-full p-4 text-center text-ios-blue font-medium text-lg active:bg-neutral-100 transition-colors">Take Headshot</button>
                         </div>
                         <button onClick={() => setShowPhotoOptions(false)} className="w-full p-4 bg-white rounded-xl text-ios-blue font-bold text-lg shadow-lg active:bg-neutral-100 transition-colors">Cancel</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Export Sheet */}
+            {showExportSheet && (
+                <div className="absolute inset-0 z-[70] flex items-end justify-center">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowExportSheet(false)} />
+                    <div className="bg-ios-bg w-full max-w-md rounded-t-[2rem] p-6 animate-slide-up shadow-2xl relative">
+                        <div className="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-6 opacity-50" />
+                        <h3 className="text-xl font-bold text-neutral-900 mb-2">Export Data</h3>
+                        <p className="text-neutral-500 mb-6 text-sm">Choose format and range.</p>
+                        
+                        <div className="space-y-3">
+                            <button onClick={() => handleExportCSV('all')} className="w-full p-4 bg-white rounded-xl flex items-center justify-between font-medium text-neutral-900 shadow-sm active:bg-neutral-50">
+                                <span>Export CSV (All Time)</span>
+                                <Download size={18} className="text-ios-blue" />
+                            </button>
+                            <button onClick={() => handleExportCSV('month')} className="w-full p-4 bg-white rounded-xl flex items-center justify-between font-medium text-neutral-900 shadow-sm active:bg-neutral-50">
+                                <span>Export CSV (This Month)</span>
+                                <Download size={18} className="text-ios-blue" />
+                            </button>
+                             <button onClick={handleExportJSON} className="w-full p-4 bg-white rounded-xl flex items-center justify-between font-medium text-neutral-900 shadow-sm active:bg-neutral-50">
+                                <span>Export JSON Backup</span>
+                                <Database size={18} className="text-ios-teal" />
+                            </button>
+                        </div>
+                        <button onClick={() => setShowExportSheet(false)} className="w-full mt-6 py-3.5 bg-neutral-200 rounded-xl font-semibold text-neutral-900">Cancel</button>
                     </div>
                 </div>
             )}

@@ -34,8 +34,7 @@ export const BRAND_REGISTRY: Record<string, BrandAsset> = {
     color: "#000000", 
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg", 
     aliases: ["apple store", "apple inc"],
-    sizeTier: 'compact',
-    padding: 2
+    sizeTier: 'compact'
   },
   "starbucks": { 
     name: "Starbucks", 
@@ -49,16 +48,14 @@ export const BRAND_REGISTRY: Record<string, BrandAsset> = {
     color: "#E31837", 
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/5/59/Costco_Wholesale_logo_2010-10-26.svg", 
     aliases: ["costco wholesale", "costco canada"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "walmart": { 
     name: "Walmart", 
     color: "#0071CE", 
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/0/0b/Walmart_logo_%282025%3B_Alt%29.svg", 
     aliases: ["walmart supercentre", "walmart canada", "wal-mart"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "shell": { 
     name: "Shell", 
@@ -93,8 +90,7 @@ export const BRAND_REGISTRY: Record<string, BrandAsset> = {
     color: "#00674b",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Whole_Foods_Market_201x_logo.svg",
     aliases: ["whole foods market"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   // --- Canadian Retailers ---
   "foodbasics": {
@@ -102,56 +98,50 @@ export const BRAND_REGISTRY: Record<string, BrandAsset> = {
     color: "#7AB800",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/b/b5/Food_Basics_logo.svg",
     aliases: ["foodbasics", "food basics inc"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "farmboy": {
     name: "Farm Boy",
     color: "#C41230",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/en/5/51/Farm_Boy_logo.svg",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/en/7/77/Farm_Boy_logo.svg",
     aliases: ["farmboy", "farm boy inc"],
     sizeTier: 'wide',
-    padding: 2
+    padding: 2.5
   },
   "winners": {
     name: "Winners",
     color: "#005696",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/7/70/Winners_Logo.svg",
     aliases: ["winners homesense", "winners"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "nofrills": {
     name: "No Frills",
     color: "#FFD200",
     logoUrl: "https://upload.wikimedia.org/wikipedia/en/2/23/No_Frills_logo.svg",
     aliases: ["nofrills", "loblaw no frills", "no frills"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "loblaws": {
     name: "Loblaws",
     color: "#E75300",
     logoUrl: "https://upload.wikimedia.org/wikipedia/en/e/e2/Loblaws.svg",
     aliases: ["loblaws inc", "loblaws supermarket", "loblaw"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "dollarama": {
     name: "Dollarama",
     color: "#32CD32",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Dollarama_logo.svg",
     aliases: ["dollarama inc", "dollarama"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "dollartree": {
     name: "Dollar Tree",
     color: "#00994D",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d4/Dollar_Tree_logo.svg",
     aliases: ["dollartree"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "esso": {
     name: "Esso",
@@ -165,56 +155,49 @@ export const BRAND_REGISTRY: Record<string, BrandAsset> = {
     color: "#F15D22",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d4/Pioneer_Energy_logo.svg",
     aliases: ["pioneer gas", "pioneer energy"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "timhortons": {
     name: "Tim Hortons",
     color: "#DD1021",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/5/57/Tim_Hortons_logo.svg",
     aliases: ["tims", "tim hortons", "tim horton's"],
-    sizeTier: 'compact',
-    padding: 1
+    sizeTier: 'compact'
   },
   "gianttiger": {
     name: "Giant Tiger",
     color: "#FFCC00",
     logoUrl: "https://upload.wikimedia.org/wikipedia/en/2/28/Giant_Tiger_logo.svg",
     aliases: ["gianttiger", "giant tiger"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "canadiantire": {
     name: "Canadian Tire",
     color: "#DA291C",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/4/43/Canadian_Tire_logo.svg",
     aliases: ["canadiantire", "canadian tire", "ct", "canadian tire corp"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "homedepot": {
     name: "Home Depot",
     color: "#F96302",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/5/5f/TheHomeDepot.svg",
     aliases: ["homedepot", "the home depot"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "metro": {
     name: "Metro",
     color: "#DA291C",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/9/93/Metro_Inc._logo.svg",
     aliases: ["metro inc", "metro supermarket"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   },
   "bestbuy": {
     name: "Best Buy",
     color: "#0046BE",
     logoUrl: "https://upload.wikimedia.org/wikipedia/commons/f/f5/Best_Buy_Logo.svg",
     aliases: ["bestbuy", "best buy canada"],
-    sizeTier: 'wide',
-    padding: 2
+    sizeTier: 'wide'
   }
 };
 
@@ -317,10 +300,15 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   }
 ];
 
+// REALISTIC RECEIPT IMAGES
+const RECEIPT_URL_1 = "https://img.freepik.com/free-vector/realistic-receipt-template_23-2147938550.jpg?semt=ais_hybrid&w=740&q=80";
+const RECEIPT_URL_2 = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/ReceiptSwiss.jpg/250px-ReceiptSwiss.jpg";
+const RECEIPT_URL_3 = "https://static.vecteezy.com/system/resources/thumbnails/008/363/349/small/paper-cash-sell-receipt-vector.jpg";
+
 export const MOCK_RECEIPTS: Receipt[] = [
   {
     id: '1',
-    imageName: 'https://picsum.photos/400/600?random=1',
+    imageName: RECEIPT_URL_1,
     storeName: 'Best Buy',
     purchaseDate: daysAgo(2),
     totalAmount: 249.99,
@@ -338,11 +326,11 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '2',
-    imageName: 'https://picsum.photos/400/600?random=2',
+    imageName: RECEIPT_URL_2,
     storeName: 'Farm Boy',
     purchaseDate: daysAgo(5),
     totalAmount: 54.50,
-    hstAmount: 0,
+    hstAmount: 0, // Intentionally missing to test auto-calc if non-taxable
     category: 'Groceries',
     subcategory: 'Produce',
     items: [
@@ -356,12 +344,11 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '3',
-    imageName: 'https://picsum.photos/400/600?random=3',
+    imageName: RECEIPT_URL_3,
     storeName: 'Tim Hortons',
     purchaseDate: daysAgo(0), // Today
     totalAmount: 8.45,
-    hstAmount: 0.97,
-    hstPercent: 13,
+    // Missing Subtotal/Tax to test auto-calc
     category: 'Restaurant',
     subcategory: 'Cafe',
     items: [
@@ -373,7 +360,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '4',
-    imageName: 'https://picsum.photos/400/600?random=4',
+    imageName: RECEIPT_URL_1,
     storeName: 'Uber',
     purchaseDate: daysAgo(8),
     totalAmount: 24.90,
@@ -389,7 +376,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '5',
-    imageName: 'https://picsum.photos/400/600?random=5',
+    imageName: RECEIPT_URL_2,
     storeName: 'Esso',
     purchaseDate: daysAgo(12),
     totalAmount: 65.00,
@@ -400,7 +387,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '6',
-    imageName: 'https://picsum.photos/400/600?random=6',
+    imageName: RECEIPT_URL_3,
     storeName: 'Dollarama',
     purchaseDate: daysAgo(3),
     totalAmount: 14.50,
@@ -415,7 +402,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '7',
-    imageName: 'https://picsum.photos/400/600?random=7',
+    imageName: RECEIPT_URL_1,
     storeName: 'Walmart',
     purchaseDate: daysAgo(15),
     totalAmount: 142.20,
@@ -428,7 +415,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '8',
-    imageName: 'https://picsum.photos/400/600?random=8',
+    imageName: RECEIPT_URL_2,
     storeName: 'Netflix',
     purchaseDate: daysAgo(20),
     totalAmount: 16.99,
@@ -439,7 +426,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '9',
-    imageName: 'https://picsum.photos/400/600?random=9',
+    imageName: RECEIPT_URL_3,
     storeName: 'Loblaws',
     purchaseDate: daysAgo(1),
     totalAmount: 89.50,
@@ -453,7 +440,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '10',
-    imageName: 'https://picsum.photos/400/600?random=10',
+    imageName: RECEIPT_URL_1,
     storeName: 'No Frills',
     purchaseDate: daysAgo(6),
     totalAmount: 42.15,
@@ -468,7 +455,7 @@ export const MOCK_RECEIPTS: Receipt[] = [
   },
   {
     id: '11',
-    imageName: 'https://picsum.photos/400/600?random=11',
+    imageName: RECEIPT_URL_2,
     storeName: 'Costco',
     purchaseDate: daysAgo(4),
     totalAmount: 215.97,
