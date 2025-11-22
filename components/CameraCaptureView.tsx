@@ -4,6 +4,7 @@ import { X, Zap, Image as ImageIcon, RotateCcw, ArrowRight, Loader2, Check, Cale
 import { Receipt } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 import CategoryPickerView, { CategorySuggestion } from './CategoryPickerView';
+import { BRAND_REGISTRY, normalizeStoreName, getBrandAsset } from '../constants';
 
 interface CameraCaptureViewProps {
   onCancel: () => void;
@@ -65,7 +66,12 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
     hstPercent: 0,
     items: [],
     paymentMethod: "",
-    rawText: ""
+    rawText: "",
+    brandId: undefined,
+    brandDisplayMode: 'text',
+    logoDetected: false,
+    logoConfidence: 0,
+    logoBounds: undefined
   });
 
   // ----------------------------------------------------------------
@@ -234,6 +240,31 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
   };
 
   // ----------------------------------------------------------------
+  // Brand Matching Logic
+  // ----------------------------------------------------------------
+  const identifyBrand = (extractedName: string): { brandId?: string, matchedName: string } => {
+    const normalized = normalizeStoreName(extractedName);
+    
+    // Search Registry
+    for (const [key, asset] of Object.entries(BRAND_REGISTRY)) {
+        // Check key/name match
+        if (normalizeStoreName(asset.name) === normalized || key === normalized) {
+            return { brandId: key, matchedName: asset.name };
+        }
+        // Check aliases
+        if (asset.aliases.some(alias => normalizeStoreName(alias) === normalized)) {
+            return { brandId: key, matchedName: asset.name };
+        }
+        // Partial match (safer)
+        if (normalized.includes(normalizeStoreName(asset.name)) || normalizeStoreName(asset.name).includes(normalized)) {
+             return { brandId: key, matchedName: asset.name };
+        }
+    }
+
+    return { brandId: undefined, matchedName: extractedName };
+  };
+
+  // ----------------------------------------------------------------
   // OCR Processing
   // ----------------------------------------------------------------
   const classifyReceipt = (storeName: string, rawText: string): { suggestions: CategorySuggestion[], bestGuess: CategorySuggestion } => {
@@ -292,7 +323,12 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
             items: [{ name: "Item 1", qty: 1, unitPrice: 12.99, amount: 12.99 }],
             paymentMethod: "VISA 1234",
             notes: "",
-            rawText: "Mock Data"
+            rawText: "Mock Data",
+            brandId: undefined,
+            brandDisplayMode: 'text',
+            logoDetected: false,
+            logoConfidence: 0,
+            logoBounds: undefined
         });
         setViewState('review');
         return;
@@ -306,16 +342,29 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
         contents: {
           parts: [
             { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-            { text: `Analyze this receipt image carefully. Extract the following structured data:
-              - storeName: The name of the merchant.
-              - purchaseDate: ISO 8601 date format.
+            { text: `Analyze this receipt image. Extract structured data. 
+              Important: Identify the merchant name carefully. If it is a well-known brand (e.g., Costco, Walmart, Starbucks, Shell, Uber), return the standard brand name.
+              
+              BRAND LOGO DETECTION:
+              - Check if the merchant's official logo or stylized wordmark is clearly visible on the receipt.
+              - Set 'logoDetected' to true ONLY if there is a distinct graphical logo or branded font.
+              - Set 'logoConfidence' (0.0 to 1.0) for this visual detection.
+              - Set 'logoBounds' [ymin, xmin, ymax, xmax] for the logo area.
+              - If it is plain text, set 'logoDetected' to false.
+
+              Fields:
+              - storeName: Standardized merchant name.
+              - purchaseDate: ISO 8601 format.
               - totalAmount: Grand total.
               - subtotal: Amount before tax.
-              - hstAmount: Total tax amount.
-              - hstPercent: Estimated tax percentage (e.g. 13).
-              - items: Array of line items with name, quantity (default 1), unitPrice, and line total amount.
-              - paymentMethod: e.g. 'VISA **** 1234' or 'Cash'.
-              If extraction fails for specific fields, use null. Return JSON.` 
+              - hstAmount: Total tax.
+              - hstPercent: Tax rate (e.g. 13).
+              - items: Line items with name, qty, unitPrice, amount.
+              - paymentMethod: e.g. 'VISA **** 1234'.
+              - logoDetected: Boolean.
+              - logoConfidence: Number.
+              - logoBounds: Array of 4 numbers.
+              Return JSON.` 
             }
           ]
         },
@@ -331,6 +380,9 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
                     hstAmount: { type: Type.NUMBER, nullable: true },
                     hstPercent: { type: Type.NUMBER, nullable: true },
                     paymentMethod: { type: Type.STRING, nullable: true },
+                    logoDetected: { type: Type.BOOLEAN, nullable: true },
+                    logoConfidence: { type: Type.NUMBER, nullable: true },
+                    logoBounds: { type: Type.ARRAY, items: { type: Type.NUMBER }, nullable: true },
                     items: {
                         type: Type.ARRAY,
                         items: {
@@ -364,10 +416,21 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
             return;
         }
 
-        const { suggestions, bestGuess } = classifyReceipt(data.storeName || "", "");
+        // Identify Brand against Registry
+        const extractedStoreName = data.storeName || "";
+        const brandInfo = identifyBrand(extractedStoreName);
         
+        const { suggestions, bestGuess } = classifyReceipt(brandInfo.matchedName, "");
+        
+        // Strict Logo Detection Logic
+        // Only show logo if Vision detected it with high confidence (>= 0.75) AND we have a matching brand asset.
+        // Otherwise fall back to text.
+        const isLogoVisuallyConfident = data.logoDetected === true && (data.logoConfidence || 0) >= 0.75;
+        const hasBrandAsset = !!brandInfo.brandId;
+        const finalDisplayMode = (hasBrandAsset && isLogoVisuallyConfident) ? 'logo' : 'text';
+
         setParsedData({
-            storeName: data.storeName || "",
+            storeName: brandInfo.matchedName, // Use standardized name
             purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : new Date(),
             totalAmount: data.totalAmount || 0,
             subtotal: data.subtotal || 0,
@@ -378,7 +441,12 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
             hstAmount: data.hstAmount || 0,
             hstPercent: data.hstPercent || 0,
             items: data.items || [],
-            paymentMethod: data.paymentMethod || ""
+            paymentMethod: data.paymentMethod || "",
+            brandId: brandInfo.brandId,
+            brandDisplayMode: finalDisplayMode,
+            logoDetected: data.logoDetected,
+            logoConfidence: data.logoConfidence,
+            logoBounds: data.logoBounds
         });
         setCategorySuggestions(suggestions);
         triggerHaptic('success');
@@ -407,7 +475,8 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
       setParsedData({
           storeName: "", purchaseDate: new Date(), totalAmount: 0, subtotal: 0,
           category: "Other", subcategory: undefined, notes: "", hstAmount: 0, hstPercent: 0,
-          items: [], paymentMethod: "", rawText: ""
+          items: [], paymentMethod: "", rawText: "", brandId: undefined, brandDisplayMode: 'text',
+          logoDetected: false, logoConfidence: 0, logoBounds: undefined
       });
       setCapturedImage('manual_placeholder'); 
       setViewState('review');
@@ -467,20 +536,42 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 pb-32 no-scrollbar">
-                    <div className="w-full h-48 bg-neutral-900 rounded-xl overflow-hidden mb-6 shadow-sm shrink-0 flex justify-center items-center animate-scale-in">
+                    <div className="w-full h-48 bg-neutral-900 rounded-xl overflow-hidden mb-6 shadow-sm shrink-0 flex justify-center items-center animate-scale-in relative">
                         {isManual ? (
                             <div className="flex flex-col items-center gap-2 text-neutral-500">
                                 <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center"><FileText size={32} className="text-neutral-600" /></div>
                                 <span className="text-sm font-medium">Manual Entry</span>
                             </div>
                         ) : (
-                            <img src={capturedImage!} alt="Captured" className="h-full object-contain" />
+                            <>
+                                <img src={capturedImage!} alt="Captured" className="h-full object-contain" />
+                                {/* Logo Detection Overlay */}
+                                {parsedData.logoDetected && parsedData.logoConfidence && (
+                                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur text-white text-[10px] px-2 py-1 rounded-md flex items-center gap-1 z-10">
+                                        <ScanLine size={10} className={parsedData.logoConfidence >= 0.75 ? "text-green-400" : "text-yellow-400"} />
+                                        <span>Logo Match {(parsedData.logoConfidence * 100).toFixed(0)}%</span>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 
                     <div className="space-y-6 animate-fade-in">
                         <div className="bg-white p-4 rounded-xl shadow-sm ios-active">
-                            <label className="text-xs font-semibold text-ios-gray uppercase">Store Name</label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-xs font-semibold text-ios-gray uppercase">Store Name</label>
+                                {/* Brand Identity Badge - Strict Mode */}
+                                <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm flex items-center gap-1 ${parsedData.brandDisplayMode === 'logo' ? 'bg-ios-blue text-white' : 'bg-neutral-100 text-neutral-500'}`}>
+                                    {parsedData.brandDisplayMode === 'logo' ? (
+                                        <>
+                                            <ImageIcon size={10} />
+                                            <span>LOGO DETECTED</span>
+                                        </>
+                                    ) : (
+                                        <span>TEXT ONLY</span>
+                                    )}
+                                </div>
+                            </div>
                             <input 
                                 type="text" 
                                 value={parsedData.storeName}
@@ -513,7 +604,7 @@ const CameraCaptureView: React.FC<CameraCaptureViewProps> = ({ onCancel, onCaptu
 
                         <div className="bg-white p-4 rounded-xl shadow-sm ios-active">
                             <div className="flex items-center gap-1 mb-2 text-ios-gray"><Tag size={14} /><label className="text-xs font-semibold uppercase">Category</label></div>
-                            <button onClick={() => setShowCategoryPicker(true)} className="w-full flex items-center justify-between bg-neutral-50 p-3 rounded-lg border border-neutral-100">
+                            <button onClick={() => setShowCategoryPicker(true)} className="w-full flex items-center justify-between bg-neutral-5 p-3 rounded-lg border border-neutral-100">
                                 <div className="flex flex-col items-start">
                                     <span className="text-lg font-medium text-neutral-900">{parsedData.category}</span>
                                     {parsedData.subcategory && <span className="text-sm text-ios-teal font-medium">{parsedData.subcategory}</span>}

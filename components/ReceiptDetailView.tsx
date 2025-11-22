@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Trash2, Share, Edit2, Calendar, Tag, DollarSign, Save, Percent, AlertCircle, ChevronDown, FileText, Copy, Image as ImageIcon, FileSpreadsheet, X, AlertTriangle, RotateCcw, RefreshCw } from 'lucide-react';
 import { Receipt, CATEGORIES, TAXONOMY } from '../types';
 import { generateCSV, generateReceiptSummary, downloadFile, shareText } from '../exportUtils';
-import { getBrandAsset } from '../constants';
+import { getBrandAsset, BRAND_REGISTRY } from '../constants';
 
 interface ReceiptDetailViewProps {
   receipt: Receipt | null;
@@ -168,7 +168,14 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
   };
 
   const isManualEntry = editedReceipt.imageName === 'manual_placeholder';
-  const brandAsset = getBrandAsset(editedReceipt.storeName);
+  
+  // Resolve Brand Asset using Brand ID first, then fallback
+  let brandAsset = null;
+  if (editedReceipt.brandId && BRAND_REGISTRY[editedReceipt.brandId]) {
+      brandAsset = BRAND_REGISTRY[editedReceipt.brandId];
+  } else {
+      brandAsset = getBrandAsset(editedReceipt.storeName);
+  }
 
   return (
     <div 
@@ -212,7 +219,7 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
       <div ref={contentRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 pb-32 no-scrollbar">
         <div className="flex flex-col gap-6 max-w-md mx-auto animate-slide-up">
           
-          {/* Image Section */}
+          {/* Image Section - Fixed Aspect Ratio & Layout Stability */}
           <div className="w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md bg-neutral-100 relative group transform-gpu border border-neutral-100 flex items-center justify-center">
             {/* Loader - Absolute Positioned & Toggled via Opacity */}
             <div 
@@ -255,8 +262,14 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
           {/* Header Info */}
           <div className="flex items-center gap-4 px-2">
              {brandAsset && (
-                 <div className="w-14 h-14 rounded-full bg-white shadow-sm border border-neutral-100 flex items-center justify-center overflow-hidden p-2">
-                     <img src={brandAsset.logoUrl} alt={brandAsset.name} className="w-full h-full object-contain" />
+                 <div className="w-14 h-14 rounded-full bg-white shadow-sm border border-neutral-100 flex items-center justify-center overflow-hidden p-2 shrink-0">
+                     {brandAsset.logoUrl && editedReceipt.brandDisplayMode !== 'text' ? (
+                         <img src={brandAsset.logoUrl} alt={brandAsset.name} className="w-full h-full object-contain" />
+                     ) : (
+                         <div className="w-full h-full rounded-full flex items-center justify-center font-bold text-white" style={{backgroundColor: brandAsset.color}}>
+                             {brandAsset.name.slice(0, 2).toUpperCase()}
+                         </div>
+                     )}
                  </div>
              )}
              <div className="flex-1">
@@ -298,9 +311,11 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
              {/* Subtotal */}
              <div className="flex justify-between items-center text-sm">
                  <span className="text-neutral-500">Subtotal</span>
-                 <span className="font-medium text-neutral-900">
-                     ${computedSubtotal.toFixed(2)}
-                 </span>
+                 {isEditing ? (
+                      <span className="font-medium text-neutral-400">${computedSubtotal.toFixed(2)}</span>
+                 ) : (
+                      <span className="font-medium text-neutral-900">${computedSubtotal.toFixed(2)}</span>
+                 )}
              </div>
 
              {/* Tax Row */}
@@ -311,9 +326,11 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
                         {computedPercent.toFixed(0)}%
                      </span>
                  </div>
-                 <span className="font-medium text-neutral-900">
-                     ${computedTax.toFixed(2)}
-                 </span>
+                 {isEditing ? (
+                      <span className="font-medium text-neutral-400">${computedTax.toFixed(2)}</span>
+                 ) : (
+                      <span className="font-medium text-neutral-900">${computedTax.toFixed(2)}</span>
+                 )}
              </div>
 
              <div className="h-px bg-neutral-100" />
@@ -351,7 +368,7 @@ const ReceiptDetailView: React.FC<ReceiptDetailViewProps> = ({ receipt, onBack, 
                  <label className="text-xs font-bold text-ios-gray uppercase mb-1 block">Payment Method</label>
                  <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
                      <CreditCardIcon method={editedReceipt.paymentMethod} />
-                     <span>{editedReceipt.paymentMethod || "Not detected"}</span>
+                     <span className={isEditing ? "text-neutral-400" : ""}>{editedReceipt.paymentMethod || "Not detected"}</span>
                  </div>
              </div>
 

@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, ChevronRight, Receipt as ReceiptIcon, Plus, Camera, Loader2, XCircle, ChevronDown, ChevronUp, FileText, Download } from 'lucide-react';
 import { Receipt } from '../types';
-import { getBrandAsset } from '../constants';
+import { getBrandAsset, BRAND_REGISTRY } from '../constants';
 import { generateCSV, downloadFile } from '../exportUtils';
 
 interface ReceiptsHistoryViewProps {
@@ -13,9 +13,16 @@ interface ReceiptsHistoryViewProps {
 }
 
 // --- Brand Avatar Component ---
-const BrandAvatar = ({ storeName, showLogos, size = "md" }: { storeName: string, showLogos: boolean, size?: "sm" | "md" | "lg" }) => {
-    const asset = getBrandAsset(storeName);
-    const initials = storeName.slice(0, 2).toUpperCase();
+const BrandAvatar = ({ receipt, showLogos, size = "md" }: { receipt: Pick<Receipt, 'storeName' | 'brandId' | 'brandDisplayMode'>, showLogos: boolean, size?: "sm" | "md" | "lg" }) => {
+    // Resolve Asset
+    let asset = null;
+    if (receipt.brandId && BRAND_REGISTRY[receipt.brandId]) {
+        asset = BRAND_REGISTRY[receipt.brandId];
+    } else {
+        asset = getBrandAsset(receipt.storeName);
+    }
+
+    const initials = receipt.storeName.slice(0, 2).toUpperCase();
     
     // Size definitions (Unified Circular Standard)
     // sm: 32px (Tight spots)
@@ -48,19 +55,23 @@ const BrandAvatar = ({ storeName, showLogos, size = "md" }: { storeName: string,
             : (isWide && size !== 'sm' ? "p-3.5" : "p-3");
 
         // Show Logo Image
-        if (showLogos && asset.logoUrl) {
+        // CRITICAL: Only show logo if user preference enabled AND brandDisplayMode is explicitly 'logo'
+        // This respects strict detection rules.
+        const shouldShowLogo = showLogos && asset.logoUrl && receipt.brandDisplayMode === 'logo';
+
+        if (shouldShowLogo) {
             return (
-                <div className={containerClass} role="img" aria-label={`Brand: ${storeName}`}>
-                    <img src={asset.logoUrl} alt={storeName} className={`w-full h-full object-contain ${paddingClass}`} />
+                <div className={containerClass} role="img" aria-label={`Brand: ${receipt.storeName}`}>
+                    <img src={asset.logoUrl} alt={receipt.storeName} className={`w-full h-full object-contain ${paddingClass}`} />
                 </div>
             );
         }
-        // Fallback: Brand Color with Initials
+        // Fallback: Brand Color with Initials (Text Badge)
         return (
             <div 
                 className={`${containerDims} rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-sm`}
                 style={{ backgroundColor: asset.color }}
-                role="img" aria-label={`Brand: ${storeName}`}
+                role="img" aria-label={`Brand: ${receipt.storeName}`}
             >
                 <span className={textDims}>{initials}</span>
             </div>
@@ -223,7 +234,7 @@ const ReceiptsHistoryView: React.FC<ReceiptsHistoryViewProps> = ({ receipts, onS
                                             className="w-full flex items-center px-3 py-3 hover:bg-neutral-50 ios-active text-left group min-h-[80px]"
                                         >
                                             {/* Brand Logo / Avatar */}
-                                            <BrandAvatar storeName={receipt.storeName} showLogos={showBrandLogos} />
+                                            <BrandAvatar receipt={receipt} showLogos={showBrandLogos} />
                                             
                                             <div className="flex-1 ml-4 min-w-0">
                                                 <div className="flex items-center justify-between mb-0.5">

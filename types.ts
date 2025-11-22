@@ -22,6 +22,13 @@ export interface Receipt {
   subcategory?: string;
   notes?: string;
   rawText?: string;
+  // Brand Identity
+  brandId?: string;
+  brandDisplayMode?: 'logo' | 'text';
+  // Logo Detection Metadata
+  logoDetected?: boolean;
+  logoConfidence?: number;
+  logoBounds?: number[]; // [ymin, xmin, ymax, xmax]
 }
 
 export interface UserProfile {
