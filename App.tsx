@@ -156,7 +156,7 @@ function AppContent() {
     if (!TESTING_MODE) {
       localStorage.setItem('receiptfy_onboarded', 'true');
     }
-    setCurrentScreen(AppRoute.SIGNUP);
+    setCurrentScreen(AppRoute.LOGIN);
   };
 
   const handleAuthComplete = () => {
@@ -299,10 +299,9 @@ function AppContent() {
                     onUpdateProfile={handleUpdateProfile}
                     onSignOut={handleSignOut}
                     onDeleteAllData={handleDeleteAllData}
-                    onExportData={(format) => {}} // Handled internally now via props
+                    onExportData={(format) => alert(`Exporting as ${format}...`)}
                     onManageCategories={handleManageCategories}
-                    receiptCount={receipts.length}
-                    receipts={receipts} // PASSING RECEIPTS HERE
+                    receipts={receipts}
                 />
             )}
         </div>

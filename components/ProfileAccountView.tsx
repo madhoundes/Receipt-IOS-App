@@ -378,7 +378,7 @@ const ProfileAccountView: React.FC<ProfileAccountViewProps> = ({
                 <div className="absolute inset-0 z-[70] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowDeleteConfirm(false)} />
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-scale-in text-center">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><Trash2 size={24} className="text-red-600" /></div>
+                        <div className="w-12 h-1.5 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><Trash2 size={24} className="text-red-600" /></div>
                         <h3 className="text-xl font-bold text-neutral-900 mb-2">Delete All Receipts?</h3>
                         <p className="text-neutral-500 mb-6 text-sm leading-relaxed">This action cannot be undone. All your receipt images and data will be permanently removed from this device.</p>
                         <div className="flex gap-3">

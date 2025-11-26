@@ -1,4 +1,3 @@
-
 export interface ReceiptItem {
   name: string;
   qty: number;
@@ -8,9 +7,9 @@ export interface ReceiptItem {
 
 export interface Receipt {
   id: string;
-  imageName: string; // URL or base64 data URI
+  imageName: string; // Local File System URI
   storeName: string;
-  purchaseDate: Date;
+  purchaseDate: string; // ISO String for cleaner serialization in AsyncStorage
   totalAmount: number;
   subtotal?: number;
   hstAmount?: number;
@@ -55,27 +54,13 @@ export interface UserProfile {
 export interface BrandAsset {
   name: string;
   logoUrl?: string;
-  color: string; // Hex code or Tailwind class
+  color: string;
   aliases: string[];
   sizeTier?: 'compact' | 'wide';
-  padding?: number; // Tailwind spacing unit (e.g., 1, 2)
+  padding?: number; 
 }
 
-export enum AppRoute {
-  LOGIN = 'login',
-  CAMERA = 'camera',
-  HISTORY = 'history',
-  DETAILS = 'details',
-  CATEGORIES_OVERVIEW = 'categories_overview',
-  CATEGORY_DETAILS = 'category_details',
-  INSIGHTS = 'insights',
-  PROFILE = 'profile',
-  MANAGE_CATEGORIES = 'manage_categories',
-  ONBOARDING = 'onboarding',
-  SIGNUP = 'signup',
-}
-
-// --- Category Management Types ---
+// --- Category Management ---
 
 export type Visibility = 'visible' | 'hidden' | 'archived';
 export type ClassifierBoost = 'none' | 'low' | 'medium' | 'high';
@@ -94,7 +79,7 @@ export interface CategoryDefinition {
   id: string;
   name: string;
   iconName: string;
-  color: string; // Tailwind class suffix e.g. 'red-500' or hex
+  color: string; // Tailwind class suffix logic mapped to Hex in Native
   visibility: Visibility;
   aliases: string[];
   keywords: string[];
@@ -120,5 +105,3 @@ export const TAXONOMY: Record<string, string[]> = {
   "Services": ["Repair", "Professional", "Cleaning"],
   "Other": ["General"]
 };
-
-export const CATEGORIES = Object.keys(TAXONOMY);

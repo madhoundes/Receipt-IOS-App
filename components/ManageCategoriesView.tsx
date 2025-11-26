@@ -317,7 +317,7 @@ const ManageCategoriesView: React.FC<ManageCategoriesViewProps> = ({
                 <div className="absolute inset-0 z-[80] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeletingCategory(null)} />
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-center animate-scale-in">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-12 h-1.5 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <AlertTriangle size={24} className="text-red-600" />
                         </div>
                         <h3 className="text-xl font-bold text-neutral-900 mb-2">Delete Category?</h3>
@@ -551,18 +551,16 @@ const CategoryEditSheet = ({ category, existingNames, isCreating, onSave, onCanc
                         
                         <div className="flex flex-wrap gap-2 mb-3">
                             {form.aliases.map((alias, i) => (
-                                <span key={i} className="bg-teal-50 text-teal-700 text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-teal-100">
+                                <span key={i} className="bg-teal-50 text-teal-700 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
                                     {alias}
-                                    <button onClick={() => setForm({...form, aliases: form.aliases.filter((_, idx) => idx !== i)})}>
-                                        <X size={12} />
-                                    </button>
+                                    <button onClick={() => setForm({...form, aliases: form.aliases.filter(a => a !== alias)})}><X size={12} /></button>
                                 </span>
                             ))}
                         </div>
-                        <div className="flex gap-2">
+                         <div className="flex gap-2">
                             <input 
                                 type="text" 
-                                placeholder="Add merchant alias (e.g. Starbucks)..." 
+                                placeholder="Add keyword alias..." 
                                 value={newAlias}
                                 onChange={e => setNewAlias(e.target.value)}
                                 className="flex-1 bg-neutral-100 rounded-lg px-3 py-2 text-sm outline-none"
@@ -570,67 +568,58 @@ const CategoryEditSheet = ({ category, existingNames, isCreating, onSave, onCanc
                             />
                             <button onClick={addAlias} className="bg-neutral-100 p-2 rounded-lg text-ios-teal font-medium"><Plus size={20} /></button>
                         </div>
-                        
-                        <div className="mt-4 pt-3 border-t border-neutral-100 flex justify-between items-center">
-                            <span className="text-sm font-medium">Auto-Detect Boost</span>
-                            <div className="flex bg-neutral-100 rounded-lg p-1">
-                                {(['none', 'low', 'medium', 'high'] as const).map(lvl => (
-                                    <button
-                                        key={lvl}
-                                        onClick={() => setForm({...form, classifierBoost: lvl})}
-                                        className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-all ${form.classifierBoost === lvl ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-400'}`}
-                                    >
-                                        {lvl}
-                                    </button>
-                                ))}
-                            </div>
+
+                         <div className="mt-4 pt-4 border-t border-ios-separator/50 flex justify-between items-center">
+                            <span className="text-sm font-medium">Classifier Priority</span>
+                             <select 
+                                value={form.classifierBoost}
+                                onChange={(e) => setForm({...form, classifierBoost: e.target.value as ClassifierBoost})}
+                                className="bg-neutral-100 rounded-lg px-2 py-1 text-xs font-medium outline-none border-none"
+                            >
+                                <option value="none">Normal</option>
+                                <option value="low">Low Boost</option>
+                                <option value="medium">Medium Boost</option>
+                                <option value="high">High Boost</option>
+                            </select>
                         </div>
                     </div>
 
                     {/* Tax Rules */}
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
-                        <label className="text-xs font-bold text-ios-gray uppercase mb-3 block">Tax Rules</label>
-                        <div className="flex gap-2 mb-4">
-                            {(['add', 'included', 'none'] as const).map(mode => (
+                     <div className="bg-white rounded-xl p-4 shadow-sm">
+                         <label className="text-xs font-bold text-ios-gray uppercase mb-3 block">Tax Behavior</label>
+                         <div className="flex gap-2">
+                            {(['included', 'add', 'none'] as const).map(mode => (
                                 <button
                                     key={mode}
                                     onClick={() => setForm({...form, taxRule: { ...form.taxRule, mode }})}
-                                    className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase border ${
+                                    className={`flex-1 py-2 rounded-lg text-xs font-semibold capitalize border ${
                                         form.taxRule.mode === mode 
-                                        ? 'bg-ios-blue text-white border-ios-blue' 
-                                        : 'bg-white text-neutral-500 border-neutral-200'
+                                        ? 'bg-neutral-800 text-white border-neutral-800' 
+                                        : 'bg-white text-neutral-600 border-neutral-200'
                                     }`}
                                 >
-                                    {mode === 'add' ? '+ Tax' : mode}
+                                    {mode}
                                 </button>
                             ))}
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-neutral-600">Override Default Rate</span>
-                            <div className="flex items-center gap-2">
-                                <input 
-                                    type="number" 
-                                    placeholder="Default" 
-                                    value={form.taxRule.percentOverride || ''}
-                                    onChange={e => setForm({...form, taxRule: { ...form.taxRule, percentOverride: parseFloat(e.target.value) || undefined }})}
-                                    className="w-20 bg-neutral-100 rounded-lg px-2 py-1 text-right outline-none"
-                                />
-                                <span className="text-sm text-neutral-400">%</span>
-                            </div>
-                        </div>
-                    </div>
+                         </div>
+                         <p className="text-[10px] text-neutral-400 mt-2">
+                             {form.taxRule.mode === 'included' && "Tax is included in the price (e.g. Gas)."}
+                             {form.taxRule.mode === 'add' && "Tax is added on top (Retail)."}
+                             {form.taxRule.mode === 'none' && "No tax is applied (Basic Groceries)."}
+                         </p>
+                     </div>
 
-                    {/* Delete */}
+                    {/* Delete Zone */}
                     {!isCreating && (
-                        <button 
-                            onClick={onDelete}
-                            className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-semibold flex items-center justify-center gap-2 mt-4"
-                        >
-                            <Trash2 size={18} /> Delete Category
-                        </button>
+                        <div className="pt-6">
+                            <button 
+                                onClick={onDelete}
+                                className="w-full py-3 rounded-xl border border-red-200 text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
+                            >
+                                Delete Category
+                            </button>
+                        </div>
                     )}
-                    
-                    <div className="h-8" />
                 </div>
             </div>
         </div>

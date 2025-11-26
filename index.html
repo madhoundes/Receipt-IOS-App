@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -29,6 +30,7 @@
             },
             fontFamily: {
               sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+              mono: ['SF Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
             },
             animation: {
               'slide-in-right': 'slideInRight 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards',
@@ -36,6 +38,7 @@
               'fade-in': 'fadeIn 0.3s ease-out forwards',
               'scale-in': 'scaleIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
               'shimmer': 'shimmer 2s linear infinite',
+              'receipt-print': 'receiptPrint 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
             },
             keyframes: {
               slideInRight: {
@@ -57,6 +60,10 @@
               shimmer: {
                 '0%': { backgroundPosition: '-1000px 0' },
                 '100%': { backgroundPosition: '1000px 0' },
+              },
+              receiptPrint: {
+                '0%': { opacity: '0', transform: 'translateY(-20px) scale(0.98)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
               }
             }
           }
@@ -82,9 +89,9 @@
       
       /* iOS Micro-interactions */
       .ios-active:active {
-        transform: scale(0.96);
-        opacity: 0.8;
-        transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.15s;
+        transform: scale(0.98);
+        opacity: 0.9;
+        transition: transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.1s;
       }
       
       .ios-btn-press:active {
@@ -92,22 +99,69 @@
         transition: transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
       }
 
-      /* Smooth page transitions */
-      .page-container {
-        will-change: transform;
+      /* --- Realistic Receipt Styles --- */
+      .receipt-card {
+        position: relative;
+        background-color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+        /* Subtle paper texture pattern */
+        background-image: radial-gradient(#f0f0f0 1px, transparent 1px);
+        background-size: 24px 24px;
       }
-      
-      /* Skeleton Loading */
-      .skeleton {
-        background: #f6f7f8;
-        background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
-        background-repeat: no-repeat;
-        background-size: 1000px 100%; 
-        animation: shimmer 2s infinite linear forwards; 
+
+      /* Serrated/Jagged Edge Bottom */
+      .receipt-serrated-edge {
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background-image: radial-gradient(circle at 8px -4px, transparent 8px, #ffffff 8.5px);
+        background-size: 16px 16px;
+        background-repeat: repeat-x;
+        background-position: -8px 0;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));
+        z-index: 10;
+      }
+
+      /* Monospaced receipt font specifically for numbers */
+      .font-receipt {
+        font-family: 'Courier New', Courier, monospace;
+        letter-spacing: -0.5px;
+      }
+
+      /* Dashed Divider simulating print separator */
+      .receipt-divider {
+        border-top: 1.5px dashed #d4d4d4;
+        margin: 0.75rem 0;
+        width: 100%;
+      }
+
+      /* Barcode Pattern CSS */
+      .barcode-strip {
+        height: 24px;
+        width: 100%;
+        background-image: linear-gradient(90deg, 
+            #333 0%, #333 2%, 
+            transparent 2%, transparent 4%, 
+            #333 4%, #333 5%,
+            transparent 5%, transparent 7%,
+            #333 7%, #333 10%,
+            transparent 10%, transparent 11%,
+            #333 11%, #333 15%,
+            transparent 15%, transparent 18%,
+            #333 18%, #333 22%,
+            transparent 22%, transparent 24%,
+            #333 24%, #333 25%,
+            transparent 25%, transparent 28%,
+            #333 28%, #333 35%
+        );
+        background-size: 100% 100%;
+        opacity: 0.6;
       }
 
       @media (prefers-reduced-motion) {
-        .animate-slide-in-right, .animate-slide-up, .ios-active:active, .ios-btn-press:active {
+        .animate-slide-in-right, .animate-slide-up, .ios-active:active, .ios-btn-press:active, .animate-receipt-print {
           animation: none !important;
           transform: none !important;
           transition: none !important;
@@ -122,7 +176,22 @@
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "expo-haptics": "https://aistudiocdn.com/expo-haptics@^15.0.7",
+    "expo-file-system": "https://aistudiocdn.com/expo-file-system@^19.0.19",
+    "expo-sharing": "https://aistudiocdn.com/expo-sharing@^14.0.7",
+    "@react-native-async-storage/async-storage": "https://aistudiocdn.com/@react-native-async-storage/async-storage@^2.2.0",
+    "react-native": "https://aistudiocdn.com/react-native@^0.82.1",
+    "react-native-svg": "https://aistudiocdn.com/react-native-svg@^15.15.0",
+    "expo-camera": "https://aistudiocdn.com/expo-camera@^17.0.9",
+    "expo-image-manipulator": "https://aistudiocdn.com/expo-image-manipulator@^14.0.7",
+    "expo-av": "https://aistudiocdn.com/expo-av@^16.0.7",
+    "lucide-react-native": "https://aistudiocdn.com/lucide-react-native@^0.554.0",
+    "react-native-safe-area-context": "https://aistudiocdn.com/react-native-safe-area-context@^5.6.2",
+    "react-native-reanimated": "https://aistudiocdn.com/react-native-reanimated@^4.1.5",
+    "@react-navigation/bottom-tabs": "https://aistudiocdn.com/@react-navigation/bottom-tabs@^7.8.6",
+    "@react-navigation/native-stack": "https://aistudiocdn.com/@react-navigation/native-stack@^7.8.0",
+    "@react-navigation/native": "https://aistudiocdn.com/@react-navigation/native@^7.1.21"
   }
 }
 </script>
