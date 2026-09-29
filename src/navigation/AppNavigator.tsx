@@ -9,6 +9,7 @@ import { THEME } from '../constants';
 import ReceiptsHistoryScreen from '../screens/ReceiptsHistoryScreen';
 import CameraCaptureScreen from '../screens/CameraCaptureScreen';
 import ReceiptDetailScreen from '../screens/ReceiptDetailScreen';
+import TaxSummaryScreen from '../screens/TaxSummaryScreen';
 // Stubs for other screens
 const CategoriesScreen = () => <></>;
 const InsightsScreen = () => <></>;
@@ -65,6 +66,11 @@ export default function AppNavigator() {
             name="ReceiptDetail" 
             component={ReceiptDetailScreen} 
             options={{ presentation: 'card', animation: 'slide_from_right' }} 
+        />
+        <Stack.Screen
+            name="TaxSummary"
+            component={TaxSummaryScreen}
+            options={{ presentation: 'card', animation: 'slide_from_right' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

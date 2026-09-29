@@ -1,17 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Plus, Receipt as ReceiptIcon, MapPin, ChevronDown } from 'lucide-react-native';
+import { Search, Plus, Receipt as ReceiptIcon, MapPin, ChevronDown, ChevronRight, Percent } from 'lucide-react-native';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { useReceipts } from '../context/ReceiptContext';
 import { BrandAvatar } from '../components/BrandAvatar';
 import { THEME } from '../constants';
 import { Receipt } from '../types';
+import { summarizeTax, formatCents } from '../utils/tax';
 
 export default function ReceiptsHistoryScreen({ navigation }: any) {
-  const { receipts, userProfile } = useReceipts();
+  const { receipts, userProfile, categories } = useReceipts();
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const monthTax = useMemo(
+    () => summarizeTax(receipts, categories, userProfile.hstDefaultPercent, 'month', new Date()),
+    [receipts, categories, userProfile.hstDefaultPercent]
+  );
 
   const filtered = useMemo(() => {
     return receipts.filter(r => r.storeName.toLowerCase().includes(search.toLowerCase()));
@@ -109,6 +115,26 @@ export default function ReceiptsHistoryScreen({ navigation }: any) {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+            <TouchableOpacity
+                style={styles.taxCard}
+                onPress={() => navigation.navigate('TaxSummary')}
+                accessibilityRole="button"
+                accessibilityLabel={`HST this month ${formatCents(monthTax.hstCents)}`}
+            >
+                <View style={styles.taxIcon}>
+                    <Percent size={20} color="#B4480A" />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.taxLabel}>HST this month</Text>
+                    <Text style={styles.taxValue}>{formatCents(monthTax.hstCents)}</Text>
+                </View>
+                {monthTax.needsReview.length > 0 && (
+                    <Text style={styles.reviewPill}>{monthTax.needsReview.length} to review</Text>
+                )}
+                <ChevronRight size={18} color={THEME.colors.gray} />
+            </TouchableOpacity>
+        }
         ListEmptyComponent={
             <View style={styles.emptyState}>
                 <Text style={styles.emptyText}>No receipts found.</Text>
@@ -127,6 +153,11 @@ const styles = StyleSheet.create({
   searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(142, 142, 147, 0.12)', marginHorizontal: 16, padding: 10, borderRadius: 12, marginBottom: 10 },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 17 },
   listContent: { paddingBottom: 100 },
+  taxCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 14, marginHorizontal: 16, marginBottom: 16 },
+  taxIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FDEBDD', alignItems: 'center', justifyContent: 'center' },
+  taxLabel: { fontSize: 13, fontWeight: '600', color: '#55555C' },
+  taxValue: { fontSize: 20, fontWeight: '700', fontFamily: 'Courier', color: '#111114' },
+  reviewPill: { fontSize: 12, fontWeight: '700', color: '#7A2A06', backgroundColor: '#FFF4E5', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, overflow: 'hidden' },
   cardContainer: { marginHorizontal: 16, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
   card: { backgroundColor: 'white', borderRadius: 12, overflow: 'hidden', paddingBottom: 12 },
   cardHeader: { flexDirection: 'row', padding: 16, alignItems: 'center' },
