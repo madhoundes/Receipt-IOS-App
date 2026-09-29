@@ -14,6 +14,8 @@ export interface Receipt {
   subtotal?: number;
   hstAmount?: number;
   hstPercent?: number;
+  /** The user confirmed the tax amount after OCR, including "no tax on this receipt". */
+  taxReviewed?: boolean;
   currency?: string;
   items?: ReceiptItem[];
   paymentMethod?: string;

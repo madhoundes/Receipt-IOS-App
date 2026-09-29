@@ -1,71 +1,96 @@
 import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
-import { Clock, Grid, BarChart3, User } from 'lucide-react-native';
-import { THEME } from '../constants';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { Clock, LayoutGrid, BarChart3, User } from 'lucide-react-native';
+import { useAuth } from '../context/AuthContext';
+import { useReceipts } from '../context/ReceiptContext';
+import { colors, fonts } from '../theme';
 
-// Screens
+import LaunchScreen from '../screens/auth/LaunchScreen';
+import OnboardingScreen from '../screens/auth/OnboardingScreen';
+import SignUpScreen from '../screens/auth/SignUpScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 import ReceiptsHistoryScreen from '../screens/ReceiptsHistoryScreen';
 import CameraCaptureScreen from '../screens/CameraCaptureScreen';
 import ReceiptDetailScreen from '../screens/ReceiptDetailScreen';
-// Stubs for other screens
-const CategoriesScreen = () => <></>;
-const InsightsScreen = () => <></>;
-const ProfileScreen = () => <></>;
+import TaxSummaryScreen from '../screens/TaxSummaryScreen';
+import ScanResultScreen from '../screens/ScanResultScreen';
+import ScanSavedScreen from '../screens/ScanSavedScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import InsightsScreen from '../screens/InsightsScreen';
+import CategoriesScreen from '../screens/categories/CategoriesScreen';
+import CategoryDetailScreen from '../screens/categories/CategoryDetailScreen';
+import ManageCategoriesScreen from '../screens/categories/ManageCategoriesScreen';
+import EditCategoryScreen from '../screens/categories/EditCategoryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.bg, primary: colors.accent } };
 
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: THEME.colors.blue,
-        tabBarInactiveTintColor: THEME.colors.gray,
-        tabBarStyle: { borderTopWidth: 0.5, borderTopColor: '#E5E5E5' }
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
+        tabBarStyle: { borderTopColor: '#D8D8DE' },
       }}
     >
-      <Tab.Screen 
-        name="History" 
-        component={ReceiptsHistoryScreen} 
-        options={{ tabBarIcon: ({color}) => <Clock color={color} size={24} /> }} 
-      />
-      <Tab.Screen 
-        name="Categories" 
-        component={CategoriesScreen} 
-        options={{ tabBarIcon: ({color}) => <Grid color={color} size={24} /> }} 
-      />
-      <Tab.Screen 
-        name="Insights" 
-        component={InsightsScreen} 
-        options={{ tabBarIcon: ({color}) => <BarChart3 color={color} size={24} /> }} 
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ tabBarIcon: ({color}) => <User color={color} size={24} /> }} 
-      />
+      <Tab.Screen name="History" component={ReceiptsHistoryScreen} options={{ tabBarIcon: ({ color }) => <Clock color={color} size={24} /> }} />
+      <Tab.Screen name="Categories" component={CategoriesScreen} options={{ tabBarIcon: ({ color }) => <LayoutGrid color={color} size={24} /> }} />
+      <Tab.Screen name="Insights" component={InsightsScreen} options={{ tabBarIcon: ({ color }) => <BarChart3 color={color} size={24} /> }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: ({ color }) => <User color={color} size={24} /> }} />
     </Tab.Navigator>
   );
 }
 
 export default function AppNavigator() {
+  const { loading, user, hasOnboarded } = useAuth();
+  const { loading: dataLoading } = useReceipts();
+
+  if (loading || dataLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color="#FFFFFF" />
+      </View>
+    );
+  }
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Main" component={MainTabs} />
-        <Stack.Screen 
-            name="CameraModal" 
-            component={CameraCaptureScreen} 
-            options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} 
-        />
-        <Stack.Screen 
-            name="ReceiptDetail" 
-            component={ReceiptDetailScreen} 
-            options={{ presentation: 'card', animation: 'slide_from_right' }} 
-        />
+    <NavigationContainer theme={navTheme}>
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+        {user ? (
+          <>
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="CameraModal" component={CameraCaptureScreen} options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="ScanResult" component={ScanResultScreen} options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
+            <Stack.Screen name="ScanSaved" component={ScanSavedScreen} options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
+            <Stack.Screen name="ReceiptDetail" component={ReceiptDetailScreen} />
+            <Stack.Screen name="TaxSummary" component={TaxSummaryScreen} />
+            <Stack.Screen name="CategoryDetail" component={CategoryDetailScreen} />
+            <Stack.Screen name="ManageCategories" component={ManageCategoriesScreen} />
+            <Stack.Screen name="EditCategory" component={EditCategoryScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          </>
+        ) : hasOnboarded ? (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Launch" component={LaunchScreen} />
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

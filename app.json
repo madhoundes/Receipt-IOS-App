@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Receiptfy",
+    "slug": "receiptfy",
+    "scheme": "receiptfy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#0062CC"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.receiptfy.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Receiptfy uses the camera to scan your receipts.",
+        "NSPhotoLibraryUsageDescription": "Receiptfy imports receipt photos from your library."
+      }
+    },
+    "android": {
+      "package": "com.receiptfy.app",
+      "permissions": ["CAMERA"]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        { "cameraPermission": "Receiptfy uses the camera to scan your receipts." }
+      ],
+      [
+        "expo-image-picker",
+        { "photosPermission": "Receiptfy imports receipt photos from your library." }
+      ],
+      "expo-font"
+    ]
+  }
+}

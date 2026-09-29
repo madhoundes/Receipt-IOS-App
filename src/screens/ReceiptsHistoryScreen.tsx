@@ -1,151 +1,175 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, SectionList, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Plus, Receipt as ReceiptIcon, MapPin, ChevronDown } from 'lucide-react-native';
-import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
+import { Search, Share, ChevronRight, Percent, Camera, X } from 'lucide-react-native';
 import { useReceipts } from '../context/ReceiptContext';
-import { BrandAvatar } from '../components/BrandAvatar';
-import { THEME } from '../constants';
-import { Receipt } from '../types';
+import { CategoryIcon } from '../components/CategoryIcon';
+import { summarizeTax, formatCents, toCents } from '../utils/tax';
+import { shareCSV } from '../utils/nativeUtils';
+import { colors, fonts, radius, type } from '../theme';
+import type { Receipt } from '../types';
+
+const DAY = 86400000;
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+/** Today / This week / This month / older months, newest first. */
+const sectionFor = (iso: string, now: Date) => {
+  const d = new Date(iso);
+  const days = Math.round((startOfDay(now) - startOfDay(d)) / DAY);
+  if (days <= 0) return 'Today';
+  if (days < 7) return 'This week';
+  if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) return 'Earlier this month';
+  return d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
+};
+
+const matches = (r: Receipt, q: string) => {
+  const hay = [r.storeName, r.category, r.subcategory, r.notes, r.totalAmount.toFixed(2)].filter(Boolean).join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(term => hay.includes(term));
+};
 
 export default function ReceiptsHistoryScreen({ navigation }: any) {
-  const { receipts, userProfile } = useReceipts();
+  const { receipts, userProfile, categories } = useReceipts();
   const [search, setSearch] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    return receipts.filter(r => r.storeName.toLowerCase().includes(search.toLowerCase()));
+  const monthTax = useMemo(
+    () => summarizeTax(receipts, categories, userProfile.hstDefaultPercent, 'month', new Date()),
+    [receipts, categories, userProfile.hstDefaultPercent]
+  );
+
+  const sections = useMemo(() => {
+    const now = new Date();
+    const list = [...receipts].filter(r => !search || matches(r, search))
+      .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+    const map = new Map<string, Receipt[]>();
+    for (const r of list) {
+      const key = sectionFor(r.purchaseDate, now);
+      map.set(key, [...(map.get(key) ?? []), r]);
+    }
+    return [...map.entries()].map(([title, data]) => ({ title, data }));
   }, [receipts, search]);
 
-  const renderItem = ({ item, index }: { item: Receipt, index: number }) => {
-    const isExpanded = expandedId === item.id;
-    
-    return (
-      <Animated.View 
-        entering={FadeInDown.delay(index * 50)} 
-        layout={Layout.springify()}
-        style={styles.cardContainer}
-      >
-        <TouchableOpacity 
-            activeOpacity={0.95} 
-            onPress={() => setExpandedId(isExpanded ? null : item.id)}
-            style={styles.card}
-        >
-            {/* Header */}
-            <View style={styles.cardHeader}>
-                <BrandAvatar receipt={item} showLogos={userProfile.showBrandLogos} />
-                <View style={styles.headerText}>
-                    <Text style={styles.storeName}>{item.storeName}</Text>
-                    <Text style={styles.dateText}>{new Date(item.purchaseDate).toLocaleDateString()}</Text>
-                </View>
-                <View style={{alignItems: 'flex-end'}}>
-                    <Text style={styles.totalText}>${item.totalAmount.toFixed(2)}</Text>
-                    <Text style={styles.categoryBadge}>{item.category}</Text>
-                </View>
-            </View>
-
-            {/* Paper Divider (Dashed Line) */}
-            <View style={styles.divider}>
-                {Array.from({length: 30}).map((_, i) => (
-                    <View key={i} style={styles.dash} />
-                ))}
-            </View>
-
-            {/* Unfold Content */}
-            {isExpanded && (
-                <Animated.View entering={FadeInDown} style={styles.detailsContainer}>
-                    <View style={styles.metaRow}>
-                        <MapPin size={12} color={THEME.colors.gray} />
-                        <Text style={styles.metaText}>ID: {item.id.slice(-6)}</Text>
-                    </View>
-                    
-                    <View style={styles.mathRow}>
-                       <Text style={styles.mathLabel}>Tax ({item.hstPercent || 13}%)</Text>
-                       <Text style={styles.mathValue}>${(item.hstAmount || 0).toFixed(2)}</Text>
-                    </View>
-                    
-                    <TouchableOpacity 
-                        onPress={() => navigation.navigate('ReceiptDetail', { receiptId: item.id })}
-                        style={styles.viewBtn}
-                    >
-                        <Text style={styles.viewBtnText}>View Digital Copy</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            )}
-            
-            {/* Serrated Bottom */}
-            <View style={styles.serratedEdge} />
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
+  const empty = receipts.length === 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>History</Text>
-        <TouchableOpacity 
-            style={styles.addBtn} 
-            onPress={() => navigation.navigate('CameraModal')}
-        >
-            <Plus color="white" size={24} />
-        </TouchableOpacity>
+        <Text style={type.largeTitle}>History</Text>
+        {!empty && (
+          <Pressable
+            onPress={() => shareCSV(sections.flatMap(s => s.data), 'receipts.csv')}
+            style={styles.headerBtn} accessibilityRole="button" accessibilityLabel="Export CSV"
+          >
+            <Share size={20} color={colors.accent} />
+          </Pressable>
+        )}
       </View>
 
-      <View style={styles.searchContainer}>
-        <Search size={20} color={THEME.colors.gray} />
-        <TextInput 
-            style={styles.searchInput} 
-            placeholder="Search receipts..." 
-            value={search}
-            onChangeText={setSearch}
-            placeholderTextColor={THEME.colors.gray}
+      <View style={styles.search}>
+        <Search size={17} color={colors.textMuted} />
+        <TextInput
+          value={search} onChangeText={setSearch} placeholder="Search store, amount, category…"
+          placeholderTextColor={colors.textMuted} style={styles.searchInput} accessibilityLabel="Search receipts"
+          returnKeyType="search" clearButtonMode="while-editing"
         />
+        {!!search && (
+          <Pressable onPress={() => setSearch('')} accessibilityLabel="Clear search" hitSlop={8}><X size={16} color={colors.textMuted} /></Pressable>
+        )}
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-            <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No receipts found.</Text>
+      {empty ? (
+        <View style={styles.empty}>
+          <View style={styles.emptyArt}>
+            <View style={styles.emptyPaper}>
+              <View style={[styles.line, { width: 30, backgroundColor: '#D1D1D6' }]} />
+              <View style={[styles.line, { width: 40 }]} /><View style={[styles.line, { width: 34 }]} /><View style={[styles.line, { width: 38 }]} />
             </View>
-        }
-      />
+          </View>
+          <Text style={styles.emptyTitle}>No receipts yet</Text>
+          <Text style={styles.emptyText}>Capture your first receipt using the camera button.</Text>
+          <Pressable style={styles.emptyBtn} onPress={() => navigation.navigate('CameraModal')} accessibilityRole="button">
+            <Camera size={20} color="#FFFFFF" /><Text style={styles.emptyBtnText}>Open Camera</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={r => r.id}
+          stickySectionHeadersEnabled={false}
+          contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
+          ListHeaderComponent={!search ? (
+            <Pressable style={styles.taxCard} onPress={() => navigation.navigate('TaxSummary')} accessibilityRole="button"
+              accessibilityLabel={`HST this month ${formatCents(monthTax.hstCents)}`}>
+              <View style={styles.taxIcon}><Percent size={20} color="#B4480A" /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.taxLabel}>HST this month</Text>
+                <Text style={styles.taxValue}>{formatCents(monthTax.hstCents)}</Text>
+              </View>
+              {monthTax.needsReview.length > 0 && <Text style={styles.pill}>{monthTax.needsReview.length} to review</Text>}
+              <ChevronRight size={18} color="#AEAEB2" />
+            </Pressable>
+          ) : null}
+          ListEmptyComponent={<Text style={styles.noResults}>No receipts match “{search}”.</Text>}
+          renderSectionHeader={({ section }) => <Text style={[type.sectionLabel, styles.sectionTitle]}>{section.title}</Text>}
+          renderItem={({ item, index, section }) => (
+            <Pressable
+              onPress={() => navigation.navigate('ReceiptDetail', { receiptId: item.id })}
+              style={({ pressed }) => [
+                styles.row, index === 0 && styles.rowFirst, index === section.data.length - 1 && styles.rowLast,
+                index > 0 && styles.rowBorder, pressed && { backgroundColor: '#F7F7FA' },
+              ]}
+              accessibilityRole="button"
+            >
+              <CategoryIcon category={item.category} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.store} numberOfLines={1}>{item.storeName}</Text>
+                <Text style={styles.meta} numberOfLines={1}>{item.category}{item.subcategory ? ` · ${item.subcategory}` : ''}</Text>
+              </View>
+              <Text style={styles.amount}>{formatCents(toCents(item.totalAmount))}</Text>
+              <ChevronRight size={16} color="#AEAEB2" />
+            </Pressable>
+          )}
+        />
+      )}
+
+      <Pressable style={styles.fab} onPress={() => navigation.navigate('CameraModal')} accessibilityRole="button" accessibilityLabel="Scan a receipt">
+        <Camera size={28} color="#FFFFFF" />
+      </Pressable>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: THEME.colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10 },
-  title: { fontSize: 32, fontWeight: 'bold', color: 'black' },
-  addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: THEME.colors.teal, justifyContent: 'center', alignItems: 'center', shadowColor:'#000', shadowOpacity:0.1, shadowRadius:4 },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(142, 142, 147, 0.12)', marginHorizontal: 16, padding: 10, borderRadius: 12, marginBottom: 10 },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 17 },
-  listContent: { paddingBottom: 100 },
-  cardContainer: { marginHorizontal: 16, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
-  card: { backgroundColor: 'white', borderRadius: 12, overflow: 'hidden', paddingBottom: 12 },
-  cardHeader: { flexDirection: 'row', padding: 16, alignItems: 'center' },
-  headerText: { flex: 1, marginLeft: 12 },
-  storeName: { fontSize: 16, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  dateText: { color: THEME.colors.gray, fontSize: 12, marginTop: 2 },
-  totalText: { fontSize: 18, fontWeight: '700', fontFamily: 'Courier' }, // Courier simulates monospaced receipt font
-  categoryBadge: { fontSize: 10, fontWeight: '600', color: THEME.colors.gray, backgroundColor: '#F2F2F7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4, overflow: 'hidden' },
-  divider: { flexDirection: 'row', justifyContent: 'space-between', overflow: 'hidden', paddingHorizontal: 16, height: 1 },
-  dash: { width: 4, height: 1, backgroundColor: '#E5E5E5' },
-  detailsContainer: { padding: 16, paddingTop: 8 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  metaText: { fontSize: 10, color: THEME.colors.gray, marginLeft: 4 },
-  mathRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  mathLabel: { fontSize: 12, fontFamily: 'Courier', color: THEME.colors.gray },
-  mathValue: { fontSize: 12, fontFamily: 'Courier', color: 'black' },
-  viewBtn: { marginTop: 12, backgroundColor: 'black', padding: 10, borderRadius: 8, alignItems: 'center' },
-  viewBtnText: { color: 'white', fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
-  serratedEdge: { height: 6, width: '100%', position: 'absolute', bottom: 0, backgroundColor: 'white' }, // Simplified; in production use SVG
-  emptyState: { padding: 40, alignItems: 'center' },
-  emptyText: { color: THEME.colors.gray }
+  container: { flex: 1, backgroundColor: colors.bg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, height: 56 },
+  headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, marginHorizontal: 16, marginTop: 8, marginBottom: 8, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
+  searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
+  list: { paddingHorizontal: 16, paddingBottom: 120 },
+  taxCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, marginTop: 8 },
+  taxIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.taxSoft, alignItems: 'center', justifyContent: 'center' },
+  taxLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textSecondary },
+  taxValue: { fontFamily: fonts.monoBold, fontSize: 20, color: colors.text },
+  pill: { fontFamily: fonts.bold, fontSize: 12, color: colors.warnText, backgroundColor: colors.warnBg, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, overflow: 'hidden' },
+  sectionTitle: { marginTop: 20, marginBottom: 8, paddingHorizontal: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, paddingHorizontal: 14, paddingVertical: 12 },
+  rowFirst: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
+  rowLast: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
+  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  store: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
+  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  amount: { fontFamily: fonts.mono, fontSize: 16, color: colors.text },
+  noResults: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+  fab: {
+    position: 'absolute', right: 20, bottom: 20, width: 60, height: 60, borderRadius: 30, backgroundColor: colors.accent,
+    alignItems: 'center', justifyContent: 'center', shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 14, shadowOffset: { width: 0, height: 10 }, elevation: 6,
+  },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 8, paddingBottom: 80 },
+  emptyArt: { width: 150, height: 150, borderRadius: 75, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  emptyPaper: { width: 64, height: 80, borderRadius: 10, backgroundColor: '#FFFFFF', padding: 12, gap: 6, transform: [{ rotate: '-6deg' }] },
+  line: { height: 4, borderRadius: 2, backgroundColor: '#ECECF0' },
+  emptyTitle: { fontFamily: fonts.extrabold, fontSize: 22, color: colors.text },
+  emptyText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center' },
+  emptyBtn: { marginTop: 14, height: 52, paddingHorizontal: 24, borderRadius: radius.lg, backgroundColor: colors.accent, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  emptyBtnText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
 });

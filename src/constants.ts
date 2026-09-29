@@ -88,7 +88,7 @@ export const getBrandAsset = (storeName: string): BrandAsset | null => {
 export const DEFAULT_USER_PROFILE: UserProfile = {
   name: "Guest User",
   email: "guest@receiptfy.app",
-  currency: "USD",
+  currency: "CAD",
   hstDefaultPercent: 13,
   reduceMotion: false,
   hapticsEnabled: true,
@@ -108,19 +108,75 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
 // Default Categories with Native Color Mapping
 export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   {
-    id: 'cat_1', name: "Groceries", iconName: "ShoppingBasket", color: "#22c55e", visibility: 'visible',
-    aliases: [], keywords: ["milk"], subcategories: [{id: 's1', name: "Food Retail"}],
+    id: 'cat_1', name: "Groceries", iconName: "ShoppingBasket", color: "#12805C", visibility: 'visible',
+    aliases: ["Supermarket", "Food Market"], keywords: ["milk", "bread", "eggs", "organic"],
+    subcategories: [{ id: 's1', name: "Food Retail" }, { id: 's2', name: "Produce" }, { id: 's3', name: "Dairy" }, { id: 's4', name: "Bakery" }],
     taxRule: { mode: 'none' }, isPinned: true, orderIndex: 0, classifierBoost: 'high'
   },
   {
-    id: 'cat_2', name: "Restaurant", iconName: "Utensils", color: "#f97316", visibility: 'visible',
-    aliases: [], keywords: [], subcategories: [],
+    id: 'cat_2', name: "Restaurant", iconName: "Utensils", color: "#B4480A", visibility: 'visible',
+    aliases: ["Diner", "Bistro", "Eatery"], keywords: ["tip", "server", "menu", "table"],
+    subcategories: [{ id: 's5', name: "Fast Food" }, { id: 's6', name: "Dine-In" }, { id: 's7', name: "Cafe" }],
     taxRule: { mode: 'add' }, isPinned: true, orderIndex: 1, classifierBoost: 'medium'
   },
   {
-    id: 'cat_3', name: "Gas/Fuel", iconName: "Fuel", color: "#ef4444", visibility: 'visible',
-    aliases: [], keywords: [], subcategories: [],
+    id: 'cat_3', name: "Gas/Fuel", iconName: "Fuel", color: "#B42318", visibility: 'visible',
+    aliases: ["Petrol", "Station"], keywords: ["pump", "litre", "unleaded"],
+    subcategories: [{ id: 's8', name: "Gasoline" }, { id: 's9', name: "Diesel" }, { id: 's10', name: "EV Charging" }],
     taxRule: { mode: 'included' }, isPinned: false, orderIndex: 2, classifierBoost: 'high'
   },
-  // ... others mapped similarly
+  {
+    id: 'cat_4', name: "Pharmacy/Health", iconName: "Pill", color: "#0E7C8C", visibility: 'visible',
+    aliases: ["Drugstore", "Chemist"], keywords: ["rx", "prescription", "vitamin"],
+    subcategories: [{ id: 's11', name: "Medication" }, { id: 's12', name: "Personal Care" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 3, classifierBoost: 'medium'
+  },
+  {
+    id: 'cat_5', name: "Household", iconName: "Home", color: "#3949AB", visibility: 'visible',
+    aliases: ["Home Goods"], keywords: ["decor", "furniture", "kitchen"],
+    subcategories: [{ id: 's13', name: "Supplies" }, { id: 's14', name: "Decor" }, { id: 's15', name: "Furniture" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 4, classifierBoost: 'low'
+  },
+  {
+    id: 'cat_6', name: "Electronics", iconName: "MonitorSmartphone", color: "#0062CC", visibility: 'visible',
+    aliases: [], keywords: [],
+    subcategories: [{ id: 's16', name: "Gadgets" }, { id: 's17', name: "Computers" }, { id: 's18', name: "Accessories" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 5, classifierBoost: 'low'
+  },
+  {
+    id: 'cat_7', name: "Clothing", iconName: "Shirt", color: "#B0266E", visibility: 'visible',
+    aliases: [], keywords: [],
+    subcategories: [{ id: 's19', name: "Apparel" }, { id: 's20', name: "Footwear" }, { id: 's21', name: "Accessories" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 6, classifierBoost: 'low'
+  },
+  {
+    id: 'cat_8', name: "Utilities", iconName: "Zap", color: "#8A6100", visibility: 'visible',
+    aliases: [], keywords: [],
+    subcategories: [{ id: 's22', name: "Internet" }, { id: 's23', name: "Mobile" }, { id: 's24', name: "Electricity" }, { id: 's25', name: "Water" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 7, classifierBoost: 'medium'
+  },
+  {
+    id: 'cat_9', name: "Transport", iconName: "Car", color: "#4A34B8", visibility: 'visible',
+    aliases: [], keywords: [],
+    subcategories: [{ id: 's26', name: "Transit" }, { id: 's27', name: "Rideshare" }, { id: 's28', name: "Parking" }],
+    taxRule: { mode: 'included' }, isPinned: false, orderIndex: 8, classifierBoost: 'low'
+  },
+  {
+    id: 'cat_10', name: "Entertainment", iconName: "Clapperboard", color: "#7E2BA8", visibility: 'visible',
+    aliases: [], keywords: [],
+    subcategories: [{ id: 's29', name: "Movies" }, { id: 's30', name: "Events" }, { id: 's31', name: "Games" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 9, classifierBoost: 'low'
+  },
+  {
+    id: 'cat_11', name: "Services", iconName: "Wrench", color: "#475467", visibility: 'visible',
+    aliases: [], keywords: [],
+    subcategories: [{ id: 's32', name: "Repair" }, { id: 's33', name: "Professional" }, { id: 's34', name: "Cleaning" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 10, classifierBoost: 'low'
+  },
+  {
+    id: 'cat_12', name: "Other", iconName: "Box", color: "#55555C", visibility: 'visible',
+    aliases: ["General", "Misc"], keywords: [],
+    subcategories: [{ id: 's35', name: "General" }],
+    taxRule: { mode: 'add' }, isPinned: false, orderIndex: 11, classifierBoost: 'none'
+  },
 ];
