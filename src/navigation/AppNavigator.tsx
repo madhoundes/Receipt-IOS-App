@@ -19,10 +19,12 @@ import TaxSummaryScreen from '../screens/TaxSummaryScreen';
 import ScanResultScreen from '../screens/ScanResultScreen';
 import ScanSavedScreen from '../screens/ScanSavedScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import { comingSoon } from '../screens/ComingSoonScreen';
-
-const CategoriesScreen = comingSoon('Categories');
-const InsightsScreen = comingSoon('Insights');
+import EditProfileScreen from '../screens/EditProfileScreen';
+import InsightsScreen from '../screens/InsightsScreen';
+import CategoriesScreen from '../screens/categories/CategoriesScreen';
+import CategoryDetailScreen from '../screens/categories/CategoryDetailScreen';
+import ManageCategoriesScreen from '../screens/categories/ManageCategoriesScreen';
+import EditCategoryScreen from '../screens/categories/EditCategoryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -71,6 +73,10 @@ export default function AppNavigator() {
             <Stack.Screen name="ScanSaved" component={ScanSavedScreen} options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="ReceiptDetail" component={ReceiptDetailScreen} />
             <Stack.Screen name="TaxSummary" component={TaxSummaryScreen} />
+            <Stack.Screen name="CategoryDetail" component={CategoryDetailScreen} />
+            <Stack.Screen name="ManageCategories" component={ManageCategoriesScreen} />
+            <Stack.Screen name="EditCategory" component={EditCategoryScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           </>
         ) : hasOnboarded ? (
           <>

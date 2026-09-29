@@ -13,6 +13,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithApple: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
+  updateProfile: (changes: { name: string; email: string }) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -49,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn: async (email, password) => setUser(await auth.signIn(email, password)),
     signInWithApple: async () => setUser(await auth.signInWithApple()),
     sendPasswordReset: email => auth.sendPasswordReset(email),
+    updateProfile: async changes => setUser(await auth.updateProfile(changes)),
     signOut: async () => { await auth.signOut(); setUser(null); },
   }), [loading, user, hasOnboarded, completeOnboarding]);
 

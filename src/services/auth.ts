@@ -18,6 +18,7 @@ export interface AuthService {
   signIn(email: string, password: string): Promise<AuthUser>;
   signInWithApple(): Promise<AuthUser>;
   sendPasswordReset(email: string): Promise<void>;
+  updateProfile(changes: { name: string; email: string }): Promise<AuthUser>;
   signOut(): Promise<void>;
 }
 
@@ -68,6 +69,16 @@ const mockAuthService: AuthService = {
   async sendPasswordReset(email) {
     await delay(600);
     if (!isValidEmail(email)) throw new AuthError('Enter a valid email address.');
+  },
+  async updateProfile({ name, email }) {
+    await delay(400);
+    if (!name.trim()) throw new AuthError('Enter your name.');
+    if (!isValidEmail(email)) throw new AuthError('Enter a valid email address.');
+    const raw = await AsyncStorage.getItem(SESSION_KEY);
+    if (!raw) throw new AuthError('You are signed out.');
+    const user: AuthUser = { ...(JSON.parse(raw) as AuthUser), name: name.trim(), email: email.trim().toLowerCase() };
+    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    return user;
   },
   async signOut() {
     await AsyncStorage.removeItem(SESSION_KEY);

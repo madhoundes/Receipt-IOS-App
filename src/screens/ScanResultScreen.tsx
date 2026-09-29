@@ -29,8 +29,9 @@ export default function ScanResultScreen({ route, navigation }: any) {
   const [tab, setTab] = useState<'original' | 'digital'>(photoUri ? 'original' : 'digital');
   const [store, setStore] = useState(result?.storeName ?? '');
   const [date, setDate] = useState(result?.purchaseDate.slice(0, 10) ?? todayISO());
-  const [category, setCategory] = useState(result?.category ?? 'Other');
-  const [subcategory, setSubcategory] = useState(result?.subcategory);
+  // With auto-categorize off, the user always picks the category.
+  const [category, setCategory] = useState(result && userProfile.autoCategorize ? result.category : 'Other');
+  const [subcategory, setSubcategory] = useState(userProfile.autoCategorize ? result?.subcategory : undefined);
   const [subtotal, setSubtotal] = useState(toInput(result?.subtotal));
   const [hst, setHst] = useState(toInput(result?.hstAmount));
   const [hstPercent, setHstPercent] = useState(result?.hstPercent != null ? String(result.hstPercent) : '');

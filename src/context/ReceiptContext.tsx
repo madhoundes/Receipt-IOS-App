@@ -4,6 +4,7 @@ import { Receipt, UserProfile, CategoryDefinition } from '../types';
 import { DEFAULT_USER_PROFILE, DEFAULT_CATEGORIES } from '../constants';
 import { config } from '../config';
 import { buildDemoReceipts } from '../data/demoReceipts';
+import { setHapticsEnabled } from '../utils/nativeUtils';
 
 interface ReceiptContextType {
   receipts: Receipt[];
@@ -14,6 +15,13 @@ interface ReceiptContextType {
   updateProfile: (p: UserProfile) => void;
   categories: CategoryDefinition[];
   updateCategories: (c: CategoryDefinition[]) => void;
+  /** Save a category; renaming it also moves its receipts to the new name. */
+  saveCategory: (c: CategoryDefinition, previousName?: string) => void;
+  /** Move every receipt from `source` to `target`, then remove `source`. */
+  mergeCategory: (sourceId: string, targetId: string) => void;
+  /** Remove a category; its receipts move to "Other". */
+  deleteCategory: (id: string) => void;
+  deleteAllReceipts: () => void;
   loading: boolean;
 }
 
@@ -74,13 +82,41 @@ export const ReceiptProvider: React.FC<{ children: React.ReactNode }> = ({ child
     persist('profile', p);
   };
 
+  useEffect(() => setHapticsEnabled(userProfile.hapticsEnabled), [userProfile.hapticsEnabled]);
+
+  const moveReceipts = (from: string, to: string, subcategory?: string) =>
+    setAndPersistReceipts(prev => prev.map(r => r.category === from ? { ...r, category: to, subcategory: subcategory ?? r.subcategory } : r));
+
+  const saveCategory = (c: CategoryDefinition, previousName?: string) => {
+    const exists = categories.some(x => x.id === c.id);
+    updateCategories(exists ? categories.map(x => x.id === c.id ? c : x) : [...categories, { ...c, orderIndex: categories.length }]);
+    if (previousName && previousName !== c.name) moveReceipts(previousName, c.name);
+  };
+
+  const mergeCategory = (sourceId: string, targetId: string) => {
+    const source = categories.find(c => c.id === sourceId), target = categories.find(c => c.id === targetId);
+    if (!source || !target || source.id === target.id) return;
+    const defaultSub = target.subcategories.find(s => s.id === target.defaultSubcategoryId)?.name ?? target.subcategories[0]?.name;
+    moveReceipts(source.name, target.name, defaultSub);
+    updateCategories(categories.filter(c => c.id !== sourceId));
+  };
+
+  const deleteCategory = (id: string) => {
+    const cat = categories.find(c => c.id === id);
+    if (!cat || cat.name === 'Other') return;
+    moveReceipts(cat.name, 'Other', 'General');
+    updateCategories(categories.filter(c => c.id !== id));
+  };
+
+  const deleteAllReceipts = () => setAndPersistReceipts(() => []);
+
   const updateCategories = (c: CategoryDefinition[]) => {
     setCategories(c);
     persist('categories', c);
   };
 
   return (
-    <ReceiptContext.Provider value={{ receipts, addReceipt, updateReceipt, deleteReceipt, userProfile, updateProfile, categories, updateCategories, loading }}>
+    <ReceiptContext.Provider value={{ receipts, addReceipt, updateReceipt, deleteReceipt, userProfile, updateProfile, categories, updateCategories, saveCategory, mergeCategory, deleteCategory, deleteAllReceipts, loading }}>
       {children}
     </ReceiptContext.Provider>
   );

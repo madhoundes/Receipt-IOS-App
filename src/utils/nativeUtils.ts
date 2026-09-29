@@ -5,9 +5,13 @@ import * as Sharing from 'expo-sharing';
 import { Receipt } from '../types';
 import { normalizeStoreName } from '../constants';
 
+let hapticsEnabled = true;
+/** Mirrors the "Haptic Feedback" setting so every call site respects it. */
+export const setHapticsEnabled = (on: boolean) => { hapticsEnabled = on; };
+
 export const triggerHaptic = (style: 'light' | 'medium' | 'heavy' | 'success' | 'error') => {
   // Haptics don't exist on web, and a failed buzz should never break a tap.
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'web' || !hapticsEnabled) return;
   const run = () => {
     switch (style) {
       case 'light': return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -82,4 +86,16 @@ export const confirmAction = (title: string, message: string | undefined, confir
     { text: 'Cancel', style: 'cancel' },
     { text: confirmLabel, style: 'destructive', onPress: onConfirm },
   ]);
+};
+
+/** Writes a JSON backup of the given data and opens the share sheet. */
+export const shareJSON = async (data: unknown, filename: string) => {
+  const path = `${FileSystem.documentDirectory}${filename}`;
+  try {
+    await FileSystem.writeAsStringAsync(path, JSON.stringify(data, null, 2), { encoding: FileSystem.EncodingType.UTF8 });
+    await Sharing.shareAsync(path, { mimeType: 'application/json', dialogTitle: 'Export Backup' });
+  } catch (error) {
+    console.error('Error sharing JSON:', error);
+    triggerHaptic('error');
+  }
 };
