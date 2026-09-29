@@ -1,3 +1,4 @@
+import { Alert, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -5,13 +6,18 @@ import { Receipt } from '../types';
 import { normalizeStoreName } from '../constants';
 
 export const triggerHaptic = (style: 'light' | 'medium' | 'heavy' | 'success' | 'error') => {
-  switch (style) {
-    case 'light': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); break;
-    case 'medium': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); break;
-    case 'heavy': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); break;
-    case 'success': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); break;
-    case 'error': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); break;
-  }
+  // Haptics don't exist on web, and a failed buzz should never break a tap.
+  if (Platform.OS === 'web') return;
+  const run = () => {
+    switch (style) {
+      case 'light': return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      case 'medium': return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      case 'heavy': return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      case 'success': return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      case 'error': return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+  run().catch(() => {});
 };
 
 const escapeCSV = (val: string | number | undefined | null): string => {
@@ -66,3 +72,14 @@ export const shareImage = async (imageUri: string) => {
         console.error(e);
     }
 }
+/** Destructive confirmation that also works in the web preview, where Alert is a no-op. */
+export const confirmAction = (title: string, message: string | undefined, confirmLabel: string, onConfirm: () => void) => {
+  if (Platform.OS === 'web') {
+    if (window.confirm(message ? `${title}\n\n${message}` : title)) onConfirm();
+    return;
+  }
+  Alert.alert(title, message, [
+    { text: 'Cancel', style: 'cancel' },
+    { text: confirmLabel, style: 'destructive', onPress: onConfirm },
+  ]);
+};

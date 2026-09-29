@@ -138,6 +138,7 @@ export default function CameraCaptureScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },
+  btn: { marginTop: 16, alignSelf: 'center', backgroundColor: 'white', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 22 },
   camera: { flex: 1 },
   uiContainer: { flex: 1, justifyContent: 'space-between' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', padding: 20 },

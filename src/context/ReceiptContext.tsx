@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Receipt, UserProfile, CategoryDefinition } from '../types';
 import { DEFAULT_USER_PROFILE, DEFAULT_CATEGORIES } from '../constants';
+import { config } from '../config';
+import { buildDemoReceipts } from '../data/demoReceipts';
 
 interface ReceiptContextType {
   receipts: Receipt[];
@@ -33,6 +35,7 @@ export const ReceiptProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ]);
         
         if (r) setReceipts(JSON.parse(r));
+        else if (config.seedDemoData) setReceipts(buildDemoReceipts());
         if (p) setUserProfile(JSON.parse(p));
         if (c) setCategories(JSON.parse(c));
       } catch (e) {
@@ -50,23 +53,21 @@ export const ReceiptProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (e) { console.error(e); }
   };
 
-  const addReceipt = (newReceipt: Receipt) => {
-    const updated = [newReceipt, ...receipts];
-    setReceipts(updated);
-    persist('receipts', updated);
+  // Functional updates so back-to-back edits don't overwrite each other.
+  const setAndPersistReceipts = (update: (prev: Receipt[]) => Receipt[]) => {
+    setReceipts(prev => {
+      const next = update(prev);
+      persist('receipts', next);
+      return next;
+    });
   };
 
-  const updateReceipt = (updated: Receipt) => {
-    const list = receipts.map(r => r.id === updated.id ? updated : r);
-    setReceipts(list);
-    persist('receipts', list);
-  };
+  const addReceipt = (newReceipt: Receipt) => setAndPersistReceipts(prev => [newReceipt, ...prev]);
 
-  const deleteReceipt = (id: string) => {
-    const list = receipts.filter(r => r.id !== id);
-    setReceipts(list);
-    persist('receipts', list);
-  };
+  const updateReceipt = (updated: Receipt) =>
+    setAndPersistReceipts(prev => prev.map(r => r.id === updated.id ? updated : r));
+
+  const deleteReceipt = (id: string) => setAndPersistReceipts(prev => prev.filter(r => r.id !== id));
 
   const updateProfile = (p: UserProfile) => {
     setUserProfile(p);
