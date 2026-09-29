@@ -21,11 +21,11 @@ npx tsc --noEmit        # type-check
 |---|---|
 | Launch → 5-slide walkthrough → Sign Up / Log In | Built, validated forms, mock auth |
 | Returning users | Skip the walkthrough and land on Log In |
-| History | Receipt list, search, "HST this month" card |
+| History | Grouped by Today / This week / month, search, CSV export, "HST this month" card, empty state |
+| Scan flow | Camera (tips, flash, import, manual entry, permission screen) → Analyzing → Scan Result with **Original** / **Digital copy** tabs → Saved. Original photo is copied into app storage. Totals check with one-tap fixes for missing or mismatched HST |
 | HST Summary | Week / month / quarter / year totals, chart, by-category, fix receipts whose tax wasn't read, CSV export |
 | Receipt Detail | Items, subtotal / HST / total, tax review banner, notes, share, CSV, delete |
 | Profile | Account info, sign out |
-| Camera | Captures a photo; OCR is still a stub (see below) |
 | Categories, Insights | Placeholders; designed, not built yet |
 
 ## Where to plug in the real services
@@ -35,8 +35,8 @@ npx tsc --noEmit        # type-check
 | **Auth** | `src/services/auth.ts` | Implement the `AuthService` interface (email, Apple, password reset, sign out) and point `auth` at it. Screens only use `useAuth()` from `src/context/AuthContext.tsx`. |
 | **Sign in with Apple** | `auth.signInWithApple()` | Add `expo-apple-authentication`; Apple requires it when other social logins exist. |
 | **Receipt storage** | `src/context/ReceiptContext.tsx` | Today: AsyncStorage on the device, not tied to a user. Move to your backend and scope data per user. |
-| **OCR** | `src/screens/CameraCaptureScreen.tsx` (`handleCapture`) | Currently returns a hard-coded receipt. The legacy web app called Gemini (`legacy-web/components/CameraCaptureView.tsx`); call OCR from your server, not from the app, so the API key stays private. |
-| **Receipt photos** | `imageName` on each receipt | Currently a local file URI. Upload to storage and save the URL. |
+| **OCR** | `src/services/ocr.ts` | Implement `OcrService.scanReceipt(imageUri)`. The mock rotates through three sample results (clean read, tax not printed, numbers that don't add up) so every state can be demoed. The legacy web app called Gemini (`legacy-web/components/CameraCaptureView.tsx`); call OCR from your server so the API key stays private. |
+| **Receipt photos** | `src/utils/photos.ts` | Originals are copied to the app's documents folder (`receipts/<id>.jpg`) and deleted with the receipt. Upload to your storage and save the URL. |
 | **Demo data** | `src/config.ts` → `seedDemoData` | Turn off for production. |
 | **App identity** | `app.json` | `bundleIdentifier` / `package` are placeholders (`com.receiptfy.app`). Add icon and splash images. |
 
@@ -52,7 +52,8 @@ src/
   services/auth.ts           AuthService interface + mock
   utils/tax.ts               HST rules and period totals (unit-tested)
   screens/auth/              Launch, Onboarding, SignUp, Login
-  screens/                   History, Camera, ReceiptDetail, TaxSummary, Profile
+  screens/                   History, Camera, ScanResult, ScanSaved, ReceiptDetail, TaxSummary, Profile
+  services/ocr.ts            OcrService interface + mock
   data/demoReceipts.ts       sample receipts
 ```
 

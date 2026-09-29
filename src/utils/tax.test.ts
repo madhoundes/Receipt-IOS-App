@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Receipt, CategoryDefinition } from '../types.ts';
-import { resolveReceiptTax, summarizeTax, getPeriodRange, shiftPeriod, formatCents } from './tax.ts';
+import { resolveReceiptTax, summarizeTax, getPeriodRange, shiftPeriod, formatCents, checkTotals } from './tax.ts';
 
 const category = (name: string, mode: 'included' | 'add' | 'none'): CategoryDefinition => ({
   id: name, name, iconName: '', color: '', visibility: 'visible', aliases: [], keywords: [],
@@ -116,4 +116,16 @@ test('quarter and year ranges', () => {
 test('shifting a month from the 31st does not skip months', () => {
   const next = shiftPeriod('month', new Date(2026, 0, 31), 1);
   assert.equal(next.getMonth(), 1);
+});
+
+test('totals check passes when subtotal plus tax equals total', () => {
+  assert.deepEqual(checkTotals(7.48, 0.97, 8.45), { ok: true, diffCents: 0 });
+});
+
+test('totals check reports the gap when numbers disagree', () => {
+  assert.deepEqual(checkTotals(39.99, 4.52, 45.19), { ok: false, diffCents: 68 });
+});
+
+test('totals check is skipped when a value is missing', () => {
+  assert.equal(checkTotals(undefined, 0.97, 8.45), null);
 });

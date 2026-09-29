@@ -16,6 +16,8 @@ import ReceiptsHistoryScreen from '../screens/ReceiptsHistoryScreen';
 import CameraCaptureScreen from '../screens/CameraCaptureScreen';
 import ReceiptDetailScreen from '../screens/ReceiptDetailScreen';
 import TaxSummaryScreen from '../screens/TaxSummaryScreen';
+import ScanResultScreen from '../screens/ScanResultScreen';
+import ScanSavedScreen from '../screens/ScanSavedScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { comingSoon } from '../screens/ComingSoonScreen';
 
@@ -65,6 +67,8 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="CameraModal" component={CameraCaptureScreen} options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="ScanResult" component={ScanResultScreen} options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
+            <Stack.Screen name="ScanSaved" component={ScanSavedScreen} options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="ReceiptDetail" component={ReceiptDetailScreen} />
             <Stack.Screen name="TaxSummary" component={TaxSummaryScreen} />
           </>

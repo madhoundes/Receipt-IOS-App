@@ -228,3 +228,16 @@ export const summarizeTax = (
     buckets,
   };
 };
+
+export interface TotalsCheck {
+  ok: boolean;
+  /** total − (subtotal + tax), in cents. */
+  diffCents: number;
+}
+
+/** Does subtotal + tax equal the total, to the cent? Missing parts can't be checked. */
+export const checkTotals = (subtotal?: number, tax?: number, total?: number): TotalsCheck | null => {
+  if (subtotal == null || tax == null || total == null) return null;
+  const diffCents = toCents(total) - toCents(subtotal) - toCents(tax);
+  return { ok: diffCents === 0, diffCents };
+};

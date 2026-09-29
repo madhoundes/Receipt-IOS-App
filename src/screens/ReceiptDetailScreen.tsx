@@ -6,6 +6,7 @@ import { useReceipts } from '../context/ReceiptContext';
 import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
 import { resolveReceiptTax, formatCents, toCents } from '../utils/tax';
 import { confirmAction, shareCSV, triggerHaptic } from '../utils/nativeUtils';
+import { deleteReceiptPhoto } from '../utils/photos';
 import { colors, fonts, radius, type } from '../theme';
 import type { Receipt } from '../types';
 
@@ -58,6 +59,7 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
   const confirmDelete = () =>
     confirmAction('Delete Receipt?', 'This removes the receipt and its photo. This action cannot be undone.', 'Delete', () => {
       triggerHaptic('medium');
+      deleteReceiptPhoto(receipt.imageName);
       deleteReceipt(receipt.id);
       navigation.goBack();
     });
