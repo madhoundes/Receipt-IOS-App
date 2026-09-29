@@ -66,12 +66,12 @@ export default function EditCategoryScreen({ route, navigation }: any) {
 
   const doDelete = () => confirmAction('Delete Category?',
     receiptCount ? `Its ${receiptCount} receipt${receiptCount === 1 ? '' : 's'} will move to Other. This action cannot be undone.` : 'This action cannot be undone.',
-    'Delete', () => { deleteCategory(form.id); navigation.navigate('ManageCategories'); });
+    'Delete', () => { deleteCategory(form.id); navigation.navigate('ManageCategories', undefined, { pop: true }); });
 
   const doMerge = (target: CategoryDefinition) => {
     setMergeOpen(false);
     confirmAction(`Merge into ${target.name}?`, `${receiptCount} receipt${receiptCount === 1 ? '' : 's'} will move to ${target.name}, and ${form.name} will be removed.`,
-      'Merge', () => { mergeCategory(form.id, target.id); navigation.navigate('ManageCategories'); });
+      'Merge', () => { mergeCategory(form.id, target.id); navigation.navigate('ManageCategories', undefined, { pop: true }); });
   };
 
   return (

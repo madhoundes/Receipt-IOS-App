@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
@@ -39,7 +39,8 @@ function MainTabs() {
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
-        tabBarStyle: { borderTopColor: '#D8D8DE' },
+        // The web tab bar is too short for a 24px icon plus label; native sizing is fine.
+        tabBarStyle: { borderTopColor: '#D8D8DE', ...(Platform.OS === 'web' && { height: 58 }) },
       }}
     >
       <Tab.Screen name="History" component={ReceiptsHistoryScreen} options={{ tabBarIcon: ({ color }) => <Clock color={color} size={24} /> }} />

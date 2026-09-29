@@ -19,18 +19,29 @@
     },
     "android": {
       "package": "com.receiptfy.app",
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA"
+      ]
     },
     "plugins": [
       [
         "expo-camera",
-        { "cameraPermission": "Receiptfy uses the camera to scan your receipts." }
+        {
+          "cameraPermission": "Receiptfy uses the camera to scan your receipts."
+        }
       ],
       [
         "expo-image-picker",
-        { "photosPermission": "Receiptfy imports receipt photos from your library." }
+        {
+          "photosPermission": "Receiptfy imports receipt photos from your library."
+        }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-image",
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-splash-screen",
+      "expo-status-bar"
     ]
   }
 }

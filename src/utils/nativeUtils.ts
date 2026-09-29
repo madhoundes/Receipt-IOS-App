@@ -1,6 +1,6 @@
 import { Alert, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Receipt } from '../types';
 import { normalizeStoreName } from '../constants';

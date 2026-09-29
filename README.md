@@ -2,11 +2,20 @@
 
 Snap a receipt, read the total and HST with OCR, keep the original photo, and see HST totals by week, month, quarter or year for tax time.
 
-This is an **Expo (SDK 51) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
+This is an **Expo (SDK 57) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
 
 The earlier web version (Vite + Gemini) lives in `legacy-web/` for reference only; it is not part of the app build.
 
 ## Run it
+
+### On your iPhone with Expo Go
+
+1. Install **Expo Go** from the App Store (it runs SDK 57 projects).
+2. On your computer (Node 20+): clone this repo, then `npm install` and `npx expo start`.
+3. A QR code appears in the terminal. Scan it with the iPhone **Camera** app and tap the banner to open it in Expo Go.
+4. Phone and computer on different networks (or office Wi-Fi that blocks it)? Use `npx expo start --tunnel`.
+
+### Developer commands
 
 ```bash
 npm install

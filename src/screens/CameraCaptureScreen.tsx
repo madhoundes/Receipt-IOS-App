@@ -66,7 +66,7 @@ export default function CameraCaptureScreen({ navigation }: any) {
 
   const importPhoto = async () => {
     setTips(false);
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
     if (!res.canceled && res.assets[0]) await analyze(res.assets[0].uri);
   };
 
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   sideText: { fontFamily: fonts.semibold, fontSize: 11, color: '#C7C7CC' },
   shutter: { width: 80, height: 80, borderRadius: 40, borderWidth: 4, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   shutterInner: { width: 62, height: 62, borderRadius: 31, backgroundColor: '#FFFFFF' },
-  analyzing: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,8,10,0.82)', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 40 },
+  analyzing: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(8,8,10,0.82)', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 40 },
   spinnerRing: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, borderColor: '#5FD3E0', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   analyzingTitle: { fontFamily: fonts.bold, fontSize: 20, color: '#FFFFFF' },
   analyzingSub: { fontFamily: fonts.regular, fontSize: 15, color: '#C7C7CC' },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   permPrimaryText: { fontFamily: fonts.bold, fontSize: 17, color: '#0B2A55' },
   permSecondary: { alignSelf: 'stretch', height: 50, alignItems: 'center', justifyContent: 'center' },
   permSecondaryText: { fontFamily: fonts.semibold, fontSize: 16, color: '#FFFFFF' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 40, gap: 16 },
   grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

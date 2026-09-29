@@ -22,7 +22,7 @@ export default function EditProfileScreen({ navigation }: any) {
   const [saving, setSaving] = useState(false);
 
   const pick = async (source: 'camera' | 'library') => {
-    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.7 };
+    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.7 };
     if (source === 'camera') {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) { setError('Camera access is needed to take a headshot.'); return; }

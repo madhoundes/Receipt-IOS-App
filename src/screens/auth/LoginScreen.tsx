@@ -82,7 +82,7 @@ export default function LoginScreen({ navigation }: any) {
             icon={<AppleIcon color="#FFFFFF" />} />
 
           <View style={{ flex: 1, minHeight: 32 }} />
-          <Pressable onPress={() => navigation.navigate('SignUp')} accessibilityRole="link" style={styles.switch}>
+          <Pressable onPress={() => navigation.navigate('SignUp', undefined, { pop: true })} accessibilityRole="link" style={styles.switch}>
             <Text style={styles.switchText}>New to Receiptfy? <Text style={styles.link}>Create an account</Text></Text>
           </Pressable>
         </ScrollView>

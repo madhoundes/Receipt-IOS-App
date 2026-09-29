@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   signOut: { height: 52, borderRadius: radius.lg, backgroundColor: colors.card, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   signOutText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.danger },
   version: { fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, textAlign: 'center' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,10,14,0.45)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(10,10,14,0.45)' },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 40, gap: 16 },
   grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
   exportRow: { minHeight: 60, borderRadius: radius.lg, backgroundColor: colors.card, paddingHorizontal: 16, justifyContent: 'center' },

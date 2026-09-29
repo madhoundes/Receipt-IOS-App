@@ -71,7 +71,7 @@ export default function SignUpScreen({ navigation }: any) {
 
           <View style={{ flex: 1, minHeight: 32 }} />
           <Text style={styles.terms}>By signing up, you agree to our Terms of Service and Privacy Policy.</Text>
-          <Pressable onPress={() => navigation.navigate('Login')} accessibilityRole="link" style={styles.switch}>
+          <Pressable onPress={() => navigation.navigate('Login', undefined, { pop: true })} accessibilityRole="link" style={styles.switch}>
             <Text style={styles.switchText}>Already have an account? <Text style={styles.link}>Log In</Text></Text>
           </Pressable>
         </ScrollView>
