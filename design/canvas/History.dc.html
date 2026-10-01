@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Receipts History</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#0B7A55}a:hover{color:#08603F}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F2F2F7; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #111113; -webkit-font-smoothing: antialiased">
+<div style="padding: 59px 16px 120px; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h1 style="margin: 0; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.4px">Receipts</h1>
+<button type="button" aria-label="Sort and filter" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; color: #111113; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16 M7 12h10 M10 17h4"></path></svg></button>
+</div>
+
+<a href="SearchResults.dc.html" style="height: 36px; border-radius: 10px; background: rgba(118,118,128,0.12); display: flex; align-items: center; gap: 6px; padding: 0 8px; color: #6C6C70; text-decoration: none; font-size: 17px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 1 0 0-13z M15.3 15.3 20.5 20.5"></path></svg>Search stores, items, amounts</a>
+
+<div style="display: flex; gap: 8px; overflow: hidden; margin-right: -16px">
+<span style="height: 32px; padding: 0 14px; border-radius: 16px; background: #111113; color: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 600; flex-shrink: 0">All</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 500; flex-shrink: 0">Grocery</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 500; flex-shrink: 0">Gas</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 500; flex-shrink: 0">Digital</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 500; flex-shrink: 0">Dining</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 500; flex-shrink: 0">Office</span>
+</div>
+
+<div style="display: flex; justify-content: space-between; padding: 8px 16px 0; font-size: 13px; color: #6C6C70"><span>SEPTEMBER 2026</span><span style="font-variant-numeric: tabular-nums">HST $184.37</span></div>
+<div style="background: #FFFFFF; border-radius: 14px; overflow: hidden">
+<sc-for list="{{sep}}" as="r" hint-placeholder-count="5">
+<a href="ReceiptDetail.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; text-decoration: none; color: #111113; border-bottom: {{r.line}}">
+<span title="Merchant logo slot" style="width: 42px; height: 42px; border-radius: 21px; background: {{r.tint}}; color: {{r.color}}; border: 0.5px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; font-size: 15px; font-weight: 700; letter-spacing: -0.2px">{{r.mono}}<span style="position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; color: {{r.color}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.d}}"></path></svg></span></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 17px; font-weight: 600">{{r.store}}</span><span style="font-size: 15px; color: #6C6C70">{{r.meta}}</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px"><span style="font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums">{{r.amount}}</span><span style="font-size: 13px; font-weight: 600; color: #B35C00; font-variant-numeric: tabular-nums">HST {{r.hst}}</span></span>
+</a>
+</sc-for>
+</div>
+
+<div style="display: flex; justify-content: space-between; padding: 8px 16px 0; font-size: 13px; color: #6C6C70"><span>AUGUST 2026</span><span style="font-variant-numeric: tabular-nums">HST $257.10</span></div>
+<div style="background: #FFFFFF; border-radius: 14px; overflow: hidden">
+<sc-for list="{{aug}}" as="r" hint-placeholder-count="2">
+<a href="ReceiptDetail.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; text-decoration: none; color: #111113; border-bottom: {{r.line}}">
+<span title="Merchant logo slot" style="width: 42px; height: 42px; border-radius: 21px; background: {{r.tint}}; color: {{r.color}}; border: 0.5px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; font-size: 15px; font-weight: 700; letter-spacing: -0.2px">{{r.mono}}<span style="position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; color: {{r.color}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.d}}"></path></svg></span></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 17px; font-weight: 600">{{r.store}}</span><span style="font-size: 15px; color: #6C6C70">{{r.meta}}</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px"><span style="font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums">{{r.amount}}</span><span style="font-size: 13px; font-weight: 600; color: #B35C00; font-variant-numeric: tabular-nums">HST {{r.hst}}</span></span>
+</a>
+</sc-for>
+</div>
+</div>
+
+<nav aria-label="Tabs" style="position: absolute; left: 16px; right: 16px; bottom: 26px; display: flex; gap: 10px; align-items: center"><div style="flex-grow: 1; height: 62px; border-radius: 31px; background: rgba(255,255,255,0.78); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 0.5px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; padding: 4px; box-sizing: border-box"><a href="Home.dc.html" style="flex: 1; height: 54px; color: #111113; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7V20a.5.5 0 0 1-.5.5h-5v-6H9v6H4a.5.5 0 0 1-.5-.5z"></path></svg><span style="font-size: 10px; font-weight: 500">Home</span></a><a href="History.dc.html" aria-current="page" style="flex: 1; height: 54px; border-radius: 27px; background: rgba(11,122,85,0.12); color: #0B7A55; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z M9 7.5h6 M9 11h6 M9 14.5h3.5"></path></svg><span style="font-size: 10px; font-weight: 600">Receipts</span></a><a href="CategoriesTab.dc.html" style="flex: 1; height: 54px; color: #111113; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z"></path></svg><span style="font-size: 10px; font-weight: 500">Categories</span></a><a href="Reports.dc.html" style="flex: 1; height: 54px; color: #111113; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5 5 19 M7 4.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z M17 14.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z"></path></svg><span style="font-size: 10px; font-weight: 500">HST</span></a></div><a href="Scan.dc.html" aria-label="Scan a receipt" style="width: 62px; height: 62px; border-radius: 31px; background: #0B7A55; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 8px 20px rgba(11,122,85,0.35)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8V5A1.5 1.5 0 0 1 5 3.5h3 M16 3.5h3A1.5 1.5 0 0 1 20.5 5v3 M20.5 16v3a1.5 1.5 0 0 1-1.5 1.5h-3 M8 20.5H5A1.5 1.5 0 0 1 3.5 19v-3 M8 9h8 M8 12h8 M8 15h5"></path></svg></a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const line = '0.5px solid #E0E0E5';
+    const C = {
+      grocery: { color: '#1E7A35', tint: '#E5F5E8', d: 'M3 4h2.5l2 11h10l2-8H6.5 M9 19.5a1 1 0 1 0 0 .01 M17 19.5a1 1 0 1 0 0 .01' },
+      gas: { color: '#B04A08', tint: '#FDEEE3', d: 'M5 20.5V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15.5 M3.5 20.5h12 M5 10h9 M14 8.5h3l2 2V17a1.5 1.5 0 0 1-3 0v-3.5h-2' },
+      digital: { color: '#0A5BC4', tint: '#E6EFFC', d: 'M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4.5 4.5 0 0 1 0 9z' },
+      office: { color: '#0B6E77', tint: '#E2F3F4', d: 'M3.5 7.5h17v12h-17z M9 7.5V5h6v2.5 M3.5 12.5h17' },
+      dining: { color: '#B8185A', tint: '#FBE7EF', d: 'M7 2.5v19 M4.5 2.5v5a2.5 2.5 0 0 0 5 0v-5 M17 21.5v-19c-2.5 1-3.5 3.5-3.5 7v4H17' },
+      transport: { color: '#5A3CC2', tint: '#EEEAFB', d: 'M4 16.5V12l2-5.5h12l2 5.5v4.5z M4 12h16 M7 16.5v2 M17 16.5v2 M7.5 14h.01 M16.5 14h.01' }
+    };
+    const row = (store, meta, amount, hst, cat, last) => Object.assign({ store, meta, amount, hst, line: last ? '0' : line, mono: store.split(/[\s-]+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() }, C[cat]);
+    return {
+      sep: [
+        row('FreshCo', 'Sep 24 · Visa •• 4821', '$86.42', '$2.10', 'grocery'),
+        row('Petro-Canada', 'Sep 22 · Mastercard •• 1190', '$64.10', '$7.37', 'gas'),
+        row('Adobe', 'Sep 20 · Monthly plan', '$29.37', '$3.38', 'digital'),
+        row('Staples', 'Sep 18 · Visa •• 4821', '$47.45', '$5.46', 'office'),
+        row('Tim Hortons', 'Sep 17 · Debit', '$14.63', '$1.68', 'dining', true)
+      ],
+      aug: [
+        row('Costco', 'Aug 30 · Mastercard •• 1190', '$212.80', '$9.14', 'grocery'),
+        row('Uber', 'Aug 28 · Apple Pay', '$23.15', '$2.66', 'transport', true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Launch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#0B7A55}a:hover{color:#08603F}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0B7A55; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #FFFFFF; -webkit-font-smoothing: antialiased">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 0 24px 34px; box-sizing: border-box">
+<div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px">
+<span style="width: 108px; height: 108px; border-radius: 26px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 36px rgba(0,0,0,0.18)"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0B7A55" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z M9 7.5h6 M9 11h6 M9 14.5h3.5"></path></svg></span>
+<span style="font-size: 34px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.4px">Receipt TaX</span>
+<span style="font-size: 17px; color: rgba(255,255,255,0.85)">Every receipt, captured and sorted.</span></div>
+<div style="width: 100%; display: flex; flex-direction: column; gap: 6px">
+<a href="Onboarding.dc.html" style="height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; text-decoration: none; background: #FFFFFF; color: #0B7A55">Get Started</a>
+<a href="Login.dc.html" style="height: 44px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #FFFFFF; text-decoration: none">I already have an account</a></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

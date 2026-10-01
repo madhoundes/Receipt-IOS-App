@@ -1,0 +1,392 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "CameraPermission.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B1 Camera Access",
+      "w": 390,
+      "x": 1560,
+      "y": 1244
+    },
+    "Categories.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "E3 Manage Categories",
+      "w": 390,
+      "x": 2500,
+      "y": 5192
+    },
+    "CategoriesTab.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "E1 Categories",
+      "w": 390,
+      "x": 1560,
+      "y": 5192
+    },
+    "CategoryDetail.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "E2 Category Detail",
+      "w": 390,
+      "x": 2030,
+      "y": 5192
+    },
+    "CategoryPicker.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B6 Category Picker",
+      "w": 390,
+      "x": 3910,
+      "y": 1244
+    },
+    "EditCategory.dc.html": {
+      "h": 1500,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "E4 Edit Category",
+      "w": 390,
+      "x": 2970,
+      "y": 5192
+    },
+    "EditProfile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "F2 Edit Profile",
+      "w": 390,
+      "x": 2030,
+      "y": 7092
+    },
+    "EmptyReceipts.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C2 Receipts Empty",
+      "w": 390,
+      "x": 2030,
+      "y": 2488
+    },
+    "Export.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "D4 Export for Accountant",
+      "w": 390,
+      "x": 2970,
+      "y": 3732
+    },
+    "History.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C1 Receipts History",
+      "w": 390,
+      "x": 1560,
+      "y": 2488
+    },
+    "Home.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "D1 Home",
+      "w": 390,
+      "x": 1560,
+      "y": 3732
+    },
+    "Insights.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "D2 Insights",
+      "w": 390,
+      "x": 2030,
+      "y": 3732
+    },
+    "Launch.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "A1 Launch",
+      "w": 390,
+      "x": 1560,
+      "y": 0
+    },
+    "Login.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "A5 Log In",
+      "w": 390,
+      "x": 3440,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 2240,
+      "title": "Design System",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "ManualEntry.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B7 Manual Entry",
+      "w": 390,
+      "x": 4380,
+      "y": 1244
+    },
+    "MotionSteady.dc.html": {
+      "h": 2440,
+      "title": "Motion · Steady (No Morph)",
+      "w": 1440,
+      "x": -1560,
+      "y": 0
+    },
+    "Onboarding.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "A2 Welcome · 1 of 5",
+      "w": 390,
+      "x": 2030,
+      "y": 0
+    },
+    "OriginalPhoto.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C6 Original Photo",
+      "w": 390,
+      "x": 3910,
+      "y": 2488
+    },
+    "Reading.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B3 Reading Receipt",
+      "w": 390,
+      "x": 2500,
+      "y": 1244
+    },
+    "ReceiptDetail.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C4 Receipt · Digital Copy",
+      "w": 390,
+      "x": 2970,
+      "y": 2488
+    },
+    "ReceiptOriginal.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C5 Receipt · Original",
+      "w": 390,
+      "x": 3440,
+      "y": 2488
+    },
+    "Reminders.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C7 Return Reminders",
+      "w": 390,
+      "x": 4380,
+      "y": 2488
+    },
+    "Reports.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "D3 HST Summary",
+      "w": 390,
+      "x": 2500,
+      "y": 3732
+    },
+    "Review.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B4 Review Details",
+      "w": 390,
+      "x": 2970,
+      "y": 1244
+    },
+    "ReviewTax.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B5 Review · Tax Check",
+      "w": 390,
+      "x": 3440,
+      "y": 1244
+    },
+    "Saved.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B8 Receipt Saved",
+      "w": 390,
+      "x": 4850,
+      "y": 1244
+    },
+    "Scan.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "B2 Scan",
+      "w": 390,
+      "x": 2030,
+      "y": 1244
+    },
+    "SearchResults.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "C3 Search Results",
+      "w": 390,
+      "x": 2500,
+      "y": 2488
+    },
+    "Settings.dc.html": {
+      "h": 1560,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "F1 Profile & Settings",
+      "w": 390,
+      "x": 1560,
+      "y": 7092
+    },
+    "SignUp.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "A4 Sign Up",
+      "w": 390,
+      "x": 2970,
+      "y": 0
+    },
+    "Walkthrough.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 48,
+      "title": "A3 Walkthrough · 3 of 5",
+      "w": 390,
+      "x": 2500,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-30T19:37:51Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "rowA": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "A · Onboarding & Account",
+      "w": 240,
+      "x": 1560,
+      "y": -280
+    },
+    "rowB": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "B · Capture: Scan → Read → Review → Save",
+      "w": 240,
+      "x": 1560,
+      "y": 964
+    },
+    "rowC": {
+      "kind": "title1",
+      "maxW": 3210,
+      "text": "C · Receipts",
+      "w": 240,
+      "x": 1560,
+      "y": 2208
+    },
+    "rowD": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "D · Home, Insights & HST",
+      "w": 240,
+      "x": 1560,
+      "y": 3452
+    },
+    "rowE": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "E · Categories",
+      "w": 240,
+      "x": 1560,
+      "y": 4912
+    },
+    "rowF": {
+      "kind": "title1",
+      "maxW": 860,
+      "text": "F · Profile",
+      "w": 240,
+      "x": 1560,
+      "y": 6812
+    },
+    "title": {
+      "kind": "title1",
+      "maxW": 5000,
+      "text": "Receipt TaX · iOS Native",
+      "w": 240,
+      "x": 0,
+      "y": -640
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "MotionSteady.dc.html",
+    "Launch.dc.html",
+    "Onboarding.dc.html",
+    "Walkthrough.dc.html",
+    "SignUp.dc.html",
+    "Login.dc.html",
+    "CameraPermission.dc.html",
+    "Scan.dc.html",
+    "Reading.dc.html",
+    "Review.dc.html",
+    "ReviewTax.dc.html",
+    "CategoryPicker.dc.html",
+    "ManualEntry.dc.html",
+    "Saved.dc.html",
+    "History.dc.html",
+    "EmptyReceipts.dc.html",
+    "SearchResults.dc.html",
+    "ReceiptDetail.dc.html",
+    "ReceiptOriginal.dc.html",
+    "OriginalPhoto.dc.html",
+    "Reminders.dc.html",
+    "Home.dc.html",
+    "Insights.dc.html",
+    "Reports.dc.html",
+    "Export.dc.html",
+    "CategoriesTab.dc.html",
+    "CategoryDetail.dc.html",
+    "Categories.dc.html",
+    "EditCategory.dc.html",
+    "Settings.dc.html",
+    "EditProfile.dc.html"
+  ],
+  "pages": [],
+  "title": "Receipt TaX iOS"
+}

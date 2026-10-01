@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Receipt TaX Design System</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#0B7A55}a:hover{color:#08603F}
+</style>
+</helmet>
+<div style="width: 1440px; height: 2240px; box-sizing: border-box; padding: 72px; background: #F2F2F7; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #111113; display: flex; flex-direction: column; gap: 40px; -webkit-font-smoothing: antialiased">
+
+<header style="display: flex; align-items: center; gap: 28px">
+<div style="width: 104px; height: 104px; border-radius: 24px; background: #0B7A55; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(11,122,85,0.25)">
+<svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z M9 7.5h6 M9 11h6 M9 14.5h3.5"></path></svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1">
+<h1 style="margin: 0; font-size: 56px; line-height: 60px; font-weight: 700; letter-spacing: -0.8px">Receipt TaX</h1>
+<p style="margin: 0; font-size: 20px; line-height: 26px; color: #6C6C70">iOS Design System v1.0 · SwiftUI · Apple Human Interface Guidelines</p>
+</div>
+<div style="display: flex; gap: 10px">
+<span style="padding: 10px 16px; border-radius: 20px; background: #FFFFFF; font-size: 15px; font-weight: 600">SF Pro Display</span>
+<span style="padding: 10px 16px; border-radius: 20px; background: #FFFFFF; font-size: 15px; font-weight: 600">SF Symbols 7</span>
+<span style="padding: 10px 16px; border-radius: 20px; background: #E4F3EC; color: #0B7A55; font-size: 15px; font-weight: 600">iOS 26 · Liquid Glass</span>
+</div>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+
+<section style="background: #FFFFFF; border-radius: 24px; padding: 36px; display: flex; flex-direction: column; gap: 26px">
+<div>
+<h2 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Color</h2>
+<p style="margin: 6px 0 0; font-size: 15px; color: #6C6C70">Each swatch shows Light (left) and Dark (right). Names map to the Xcode asset catalog.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h3 style="margin: 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">BRAND</h3>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{brand}}" as="c" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="width: 60px; height: 60px; border-radius: 14px; overflow: hidden; display: flex; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0">
+<div style="flex-grow: 1; background: {{c.light}}"></div>
+<div style="flex-grow: 1; background: {{c.dark}}"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 16px; font-weight: 600">{{c.name}}</span>
+<span style="font-size: 13px; color: #0B7A55; font-family: 'SF Mono', ui-monospace, Menlo, monospace">.{{c.token}}</span>
+<span style="font-size: 12px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">{{c.light}} / {{c.dark}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h3 style="margin: 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">SYSTEM NEUTRALS</h3>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{neutrals}}" as="c" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="width: 60px; height: 60px; border-radius: 14px; overflow: hidden; display: flex; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0">
+<div style="flex-grow: 1; background: {{c.light}}"></div>
+<div style="flex-grow: 1; background: {{c.dark}}"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 16px; font-weight: 600">{{c.name}}</span>
+<span style="font-size: 13px; color: #0B7A55; font-family: 'SF Mono', ui-monospace, Menlo, monospace">.{{c.token}}</span>
+<span style="font-size: 12px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">{{c.light}} / {{c.dark}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h3 style="margin: 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">EXPENSE CATEGORIES (tint fill + accessible foreground)</h3>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{cats}}" as="c" hint-placeholder-count="7">
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 14px; background: #F7F7FA">
+<div style="width: 40px; height: 40px; border-radius: 11px; background: {{c.tint}}; color: {{c.color}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{c.d}}"></path></svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
+<span style="font-size: 15px; font-weight: 600">{{c.name}}</span>
+<span style="font-size: 12px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">{{c.sf}}</span>
+</div>
+<span style="font-size: 12px; color: {{c.color}}; font-family: 'SF Mono', ui-monospace, Menlo, monospace">{{c.color}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border-radius: 24px; padding: 36px; display: flex; flex-direction: column; gap: 22px">
+<h2 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Typography</h2><div>
+
+<p style="margin: 6px 0 0; font-size: 15px; color: #6C6C70">SF Pro Display on the iOS Dynamic Type scale (Large size, pt). Always use .font(.textStyle) so text scales with accessibility settings.</p>
+</div>
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{types}}" as="t" hint-placeholder-count="11">
+<div style="display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid #EFEFF3">
+<span style="width: 118px; flex-shrink: 0; font-size: 13px; color: #6C6C70">{{t.name}}</span>
+<span style="flex-grow: 1; font-size: {{t.size}}px; line-height: {{t.lh}}px; font-weight: {{t.w}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.sample}}</span>
+<span style="flex-shrink: 0; font-size: 12px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">{{t.spec}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="background: #F7F7FA; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: #6C6C70">AMOUNT DISPLAY</span>
+<span style="font-size: 44px; line-height: 50px; font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums">$1,284.50</span>
+<span style="font-size: 12px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">44 Bold · .monospacedDigit()</span>
+</div>
+<div style="background: #FFFDF7; border: 1px solid #E9E4D6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 6px; color: #23211C">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: #6C6C70; font-family: 'SF Pro Display', -apple-system, system-ui, sans-serif">RECEIPT PAPER TEXT</span>
+<span style="font-family: 'SF Mono', ui-monospace, Menlo, monospace; font-size: 14px; line-height: 20px; white-space: pre">HST 13%          $10.21
+TOTAL            $88.73</span>
+<span style="font-size: 12px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">SF Mono 14 · receipt surface only</span>
+</div>
+</div>
+</section>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px">
+<section style="background: #FFFFFF; border-radius: 24px; padding: 36px; display: flex; flex-direction: column; gap: 22px">
+<h2 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Spacing &amp; Radius</h2>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{spaces}}" as="s" hint-placeholder-count="8">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="width: 70px; font-size: 13px; color: #6C6C70; font-family: 'SF Mono', ui-monospace, Menlo, monospace">{{s.name}}</span>
+<div style="height: 14px; width: {{s.v}}px; background: #0B7A55; border-radius: 3px"></div>
+<span style="font-size: 13px; font-weight: 600">{{s.v}} pt</span>
+</div>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="width: 52px; height: 52px; background: #E4F3EC; border: 1.5px solid #0B7A55; border-radius: 8px"></div><span style="font-size: 12px; color: #6C6C70">8 Chip</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="width: 52px; height: 52px; background: #E4F3EC; border: 1.5px solid #0B7A55; border-radius: 12px"></div><span style="font-size: 12px; color: #6C6C70">12 Field</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="width: 52px; height: 52px; background: #E4F3EC; border: 1.5px solid #0B7A55; border-radius: 16px"></div><span style="font-size: 12px; color: #6C6C70">16 Card</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="width: 52px; height: 52px; background: #E4F3EC; border: 1.5px solid #0B7A55; border-radius: 22px"></div><span style="font-size: 12px; color: #6C6C70">22 Sheet</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="width: 52px; height: 52px; background: #E4F3EC; border: 1.5px solid #0B7A55; border-radius: 26px"></div><span style="font-size: 12px; color: #6C6C70">Capsule</span></div>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: #6C6C70">Screen margins 16 pt (20 pt on Pro Max). Minimum tap target 44 × 44 pt. Use .continuous corner style everywhere.</p>
+</section>
+
+<section style="grid-column: span 2; background: #FFFFFF; border-radius: 24px; padding: 36px; display: flex; flex-direction: column; gap: 22px">
+<div>
+<h2 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Iconography · SF Symbols</h2>
+<p style="margin: 6px 0 0; font-size: 15px; color: #6C6C70">Use Image(systemName:) in the app. Drawings below are placeholders for the canvas; the symbol name under each is what ships. Weight: Medium, scale: Medium.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{icons}}" as="i" hint-placeholder-count="18">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 6px; border-radius: 14px; background: #F7F7FA">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#111113" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{i.d}}"></path></svg>
+<span style="font-size: 11px; color: #3A3A3C; font-family: 'SF Mono', ui-monospace, Menlo, monospace; text-align: center">{{i.n}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+
+<section style="background: #FFFFFF; border-radius: 24px; padding: 36px; display: flex; flex-direction: column; gap: 26px">
+<h2 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Components</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h3 style="margin: 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">BUTTONS</h3>
+<button type="button" style="height: 50px; border: 0; border-radius: 25px; background: #0B7A55; color: #FFFFFF; font: 600 17px 'SF Pro Display', -apple-system, system-ui, sans-serif">Save Receipt</button>
+<button type="button" style="height: 50px; border: 0; border-radius: 25px; background: #E4F3EC; color: #0B7A55; font: 600 17px 'SF Pro Display', -apple-system, system-ui, sans-serif">Export for Accountant</button>
+<button type="button" style="height: 44px; border: 0; background: transparent; color: #0B7A55; font: 400 17px 'SF Pro Display', -apple-system, system-ui, sans-serif">View Original Photo</button>
+<button type="button" style="height: 50px; border: 0; border-radius: 25px; background: #FDE7E9; color: #D70015; font: 600 17px 'SF Pro Display', -apple-system, system-ui, sans-serif">Delete Receipt</button>
+<h3 style="margin: 10px 0 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">SEGMENTED · TOGGLE</h3>
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="flex-grow: 1; height: 32px; border-radius: 9px; background: rgba(118,118,128,0.12); padding: 2px; box-sizing: border-box; display: flex">
+<span style="flex: 1; border-radius: 7px; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">Month</span>
+<span style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 13px">Quarter</span>
+<span style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 13px">Year</span>
+</div>
+<div style="width: 51px; height: 31px; border-radius: 16px; background: #0B7A55; position: relative; flex-shrink: 0"><div style="position: absolute; right: 2px; top: 2px; width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.15)"></div></div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h3 style="margin: 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">SEARCH · CHIPS</h3>
+<div style="height: 36px; border-radius: 10px; background: rgba(118,118,128,0.12); display: flex; align-items: center; gap: 6px; padding: 0 8px; color: #6C6C70">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 1 0 0-13z M15.3 15.3 20.5 20.5"></path></svg>
+<span style="font-size: 17px">Search stores, items, amounts</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="height: 32px; padding: 0 14px; border-radius: 16px; background: #111113; color: #FFFFFF; display: inline-flex; align-items: center; font-size: 15px; font-weight: 600">All</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #E5F5E8; color: #1E7A35; display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2.5l2 11h10l2-8H6.5 M9 19.5a1 1 0 1 0 0 .01 M17 19.5a1 1 0 1 0 0 .01"></path></svg>Grocery</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #FDEEE3; color: #B04A08; display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20.5V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15.5 M3.5 20.5h12 M5 10h9 M14 8.5h3l2 2V17a1.5 1.5 0 0 1-3 0v-3.5h-2"></path></svg>Gas</span>
+<span style="height: 32px; padding: 0 12px; border-radius: 16px; background: #E6EFFC; color: #0A5BC4; display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4.5 4.5 0 0 1 0 9z"></path></svg>Digital</span>
+</div>
+<h3 style="margin: 10px 0 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">RECEIPT ROW (inset grouped)</h3>
+<div style="background: #F2F2F7; border-radius: 18px; padding: 12px">
+<div style="background: #FFFFFF; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px">
+<div style="width: 42px; height: 42px; border-radius: 11px; background: #E5F5E8; color: #1E7A35; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2.5l2 11h10l2-8H6.5 M9 19.5a1 1 0 1 0 0 .01 M17 19.5a1 1 0 1 0 0 .01"></path></svg></div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 17px; font-weight: 600">FreshCo</span>
+<span style="font-size: 15px; color: #6C6C70">Sep 24 · Visa •• 4821</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+<span style="font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums">$86.42</span>
+<span style="font-size: 13px; font-weight: 600; color: #B35C00; font-variant-numeric: tabular-nums">HST $2.10</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h3 style="margin: 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">HST SUMMARY CARD</h3>
+<div style="background: #0B7A55; border-radius: 22px; padding: 20px; color: #FFFFFF; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 600; letter-spacing: 0.4px; opacity: 0.85">HST PAID · SEPTEMBER</span>
+<span style="font-size: 40px; line-height: 46px; font-weight: 700; font-variant-numeric: tabular-nums">$184.37</span>
+<span style="font-size: 15px; opacity: 0.9">on $1,418.24 spent · 23 receipts</span>
+</div>
+<h3 style="margin: 10px 0 0; font-size: 13px; letter-spacing: 0.6px; font-weight: 600; color: #6C6C70">TAB BAR · LIQUID GLASS</h3>
+<div style="background: #E3E3E8; border-radius: 22px; padding: 16px; display: flex; gap: 10px; align-items: center">
+<div style="flex-grow: 1; height: 62px; border-radius: 31px; background: rgba(255,255,255,0.8); border: 0.5px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.10); display: flex; align-items: center; padding: 4px; box-sizing: border-box">
+<span style="flex: 1; height: 54px; border-radius: 27px; background: rgba(11,122,85,0.12); color: #0B7A55; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7V20a.5.5 0 0 1-.5.5h-5v-6H9v6H4a.5.5 0 0 1-.5-.5z"></path></svg><span style="font-size: 10px; font-weight: 600">Home</span></span>
+<span style="flex: 1; color: #111113; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z M9 7.5h6 M9 11h6 M9 14.5h3.5"></path></svg><span style="font-size: 10px; font-weight: 500">Receipts</span></span>
+<span style="flex: 1; color: #111113; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5 5 19 M7 4.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z M17 14.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z"></path></svg><span style="font-size: 10px; font-weight: 500">HST</span></span>
+</div>
+<span style="width: 62px; height: 62px; border-radius: 31px; background: #0B7A55; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 8px 20px rgba(11,122,85,0.35)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8V5A1.5 1.5 0 0 1 5 3.5h3 M16 3.5h3A1.5 1.5 0 0 1 20.5 5v3 M20.5 16v3a1.5 1.5 0 0 1-1.5 1.5h-3 M8 20.5H5A1.5 1.5 0 0 1 3.5 19v-3 M8 9h8 M8 12h8 M8 15h5"></path></svg></span>
+</div>
+</div>
+
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      brand: [
+        { name: 'Primary', token: 'brandPrimary', light: '#0B7A55', dark: '#34C98E' },
+        { name: 'Primary Tint', token: 'brandTint', light: '#E4F3EC', dark: '#0F2E22' },
+        { name: 'HST Accent', token: 'hstAccent', light: '#B35C00', dark: '#FFB057' },
+        { name: 'HST Tint', token: 'hstTint', light: '#FFF1DE', dark: '#3A2710' },
+        { name: 'Receipt Paper', token: 'paper', light: '#FFFDF7', dark: '#1F1E1A' },
+        { name: 'Receipt Ink', token: 'paperInk', light: '#23211C', dark: '#ECE8DC' }
+      ],
+      neutrals: [
+        { name: 'Background', token: 'systemGroupedBackground', light: '#F2F2F7', dark: '#000000' },
+        { name: 'Surface', token: 'secondarySystemGroupedBg', light: '#FFFFFF', dark: '#1C1C1E' },
+        { name: 'Label', token: 'label', light: '#111113', dark: '#FFFFFF' },
+        { name: 'Secondary Label', token: 'secondaryLabel', light: '#6C6C70', dark: '#AEAEB2' },
+        { name: 'Separator', token: 'separator', light: '#E0E0E5', dark: '#38383A' },
+        { name: 'Destructive', token: 'systemRed', light: '#D70015', dark: '#FF6961' }
+      ],
+      cats: [
+        { name: 'Grocery', sf: 'cart', color: '#1E7A35', tint: '#E5F5E8', d: 'M3 4h2.5l2 11h10l2-8H6.5 M9 19.5a1 1 0 1 0 0 .01 M17 19.5a1 1 0 1 0 0 .01' },
+        { name: 'Gas', sf: 'fuelpump', color: '#B04A08', tint: '#FDEEE3', d: 'M5 20.5V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15.5 M3.5 20.5h12 M5 10h9 M14 8.5h3l2 2V17a1.5 1.5 0 0 1-3 0v-3.5h-2' },
+        { name: 'Digital Services', sf: 'icloud', color: '#0A5BC4', tint: '#E6EFFC', d: 'M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4.5 4.5 0 0 1 0 9z' },
+        { name: 'Dining', sf: 'fork.knife', color: '#B8185A', tint: '#FBE7EF', d: 'M7 2.5v19 M4.5 2.5v5a2.5 2.5 0 0 0 5 0v-5 M17 21.5v-19c-2.5 1-3.5 3.5-3.5 7v4H17' },
+        { name: 'Transport', sf: 'car', color: '#5A3CC2', tint: '#EEEAFB', d: 'M4 16.5V12l2-5.5h12l2 5.5v4.5z M4 12h16 M7 16.5v2 M17 16.5v2 M7.5 14h.01 M16.5 14h.01' },
+        { name: 'Office', sf: 'briefcase', color: '#0B6E77', tint: '#E2F3F4', d: 'M3.5 7.5h17v12h-17z M9 7.5V5h6v2.5 M3.5 12.5h17' },
+        { name: 'Other', sf: 'tag', color: '#555559', tint: '#EFEFF1', d: 'M3.5 12.5v-8a1 1 0 0 1 1-1h8L21 12l-8.5 8.5z M8 8h.01' }
+      ],
+      types: [
+        { name: 'Large Title', size: 34, lh: 41, w: 700, spec: '34/41 Bold', sample: 'Receipts' },
+        { name: 'Title 1', size: 28, lh: 34, w: 700, spec: '28/34 Bold', sample: 'Tax Year 2026' },
+        { name: 'Title 2', size: 22, lh: 28, w: 700, spec: '22/28 Bold', sample: 'September' },
+        { name: 'Title 3', size: 20, lh: 25, w: 600, spec: '20/25 Semibold', sample: 'HST Summary' },
+        { name: 'Headline', size: 17, lh: 22, w: 600, spec: '17/22 Semibold', sample: 'FreshCo Grocery' },
+        { name: 'Body', size: 17, lh: 22, w: 400, spec: '17/22 Regular', sample: 'Scan a receipt to get started.' },
+        { name: 'Callout', size: 16, lh: 21, w: 400, spec: '16/21 Regular', sample: 'Return by Oct 24' },
+        { name: 'Subheadline', size: 15, lh: 20, w: 400, spec: '15/20 Regular', sample: 'Sep 24 · Visa •• 4821' },
+        { name: 'Footnote', size: 13, lh: 18, w: 400, spec: '13/18 Regular', sample: 'Extracted automatically' },
+        { name: 'Caption 1', size: 12, lh: 16, w: 500, spec: '12/16 Medium', sample: 'GROCERY' },
+        { name: 'Caption 2', size: 11, lh: 13, w: 500, spec: '11/13 Medium', sample: 'Synced to iCloud' }
+      ],
+      spaces: [
+        { name: 'xxs', v: 4 }, { name: 'xs', v: 8 }, { name: 'sm', v: 12 }, { name: 'md', v: 16 },
+        { name: 'lg', v: 20 }, { name: 'xl', v: 24 }, { name: 'xxl', v: 32 }, { name: 'tap', v: 44 }
+      ],
+      icons: [
+        { n: 'house', d: 'M3.5 10.5 12 3.5l8.5 7V20a.5.5 0 0 1-.5.5h-5v-6H9v6H4a.5.5 0 0 1-.5-.5z' },
+        { n: 'receipt', d: 'M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z M9 7.5h6 M9 11h6 M9 14.5h3.5' },
+        { n: 'doc.viewfinder', d: 'M3.5 8V5A1.5 1.5 0 0 1 5 3.5h3 M16 3.5h3A1.5 1.5 0 0 1 20.5 5v3 M20.5 16v3a1.5 1.5 0 0 1-1.5 1.5h-3 M8 20.5H5A1.5 1.5 0 0 1 3.5 19v-3 M8 9h8 M8 12h8 M8 15h5' },
+        { n: 'chart.pie', d: 'M11 3.5a8.5 8.5 0 1 0 8.5 8.5H11z M14 2.8a7.5 7.5 0 0 1 6.2 6.2H14z' },
+        { n: 'gearshape', d: 'M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z M12 2.5v3 M12 18.5v3 M2.5 12h3 M18.5 12h3 M5.3 5.3l2.1 2.1 M16.6 16.6l2.1 2.1 M5.3 18.7l2.1-2.1 M16.6 7.4l2.1-2.1' },
+        { n: 'magnifyingglass', d: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 1 0 0-13z M15.3 15.3 20.5 20.5' },
+        { n: 'sparkles', d: 'M11 3l1.8 5.2L18 10l-5.2 1.8L11 17l-1.8-5.2L4 10l5.2-1.8z M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z' },
+        { n: 'bolt', d: 'M13 2.5 5 13.5h6l-1 8 8-11h-6z' },
+        { n: 'photo.on.rectangle', d: 'M4 5h16v14H4z M4 16l5-5 4 4 3-3 4 4 M15.5 8.5h.01' },
+        { n: 'checkmark.circle', d: 'M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z M8 12.3l2.7 2.7L16 9.7' },
+        { n: 'square.and.arrow.up', d: 'M12 3v12 M8 7l4-4 4 4 M7 11H5v10h14V11h-2' },
+        { n: 'arrow.down.doc', d: 'M6 2.5h8l4.5 4.5v14.5H6z M14 2.5V7h4.5 M12 10.5v7 M9 14.5l3 3 3-3' },
+        { n: 'calendar', d: 'M4 5.5h16v15H4z M4 10h16 M8 3v4 M16 3v4' },
+        { n: 'creditcard', d: 'M3 6h18v12H3z M3 10h18 M6.5 15h4' },
+        { n: 'arrow.uturn.backward', d: 'M9 5 4.5 9.5 9 14 M4.5 9.5H15a5 5 0 0 1 0 10h-4' },
+        { n: 'bell', d: 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z M10 20.5a2 2 0 0 0 4 0' },
+        { n: 'faceid', d: 'M3.5 8V5A1.5 1.5 0 0 1 5 3.5h3 M16 3.5h3A1.5 1.5 0 0 1 20.5 5v3 M20.5 16v3a1.5 1.5 0 0 1-1.5 1.5h-3 M8 20.5H5A1.5 1.5 0 0 1 3.5 19v-3 M9 9v1.5 M15 9v1.5 M12 9v4h-1 M9 16c1.8 1.3 4.2 1.3 6 0' },
+        { n: 'line.3.horizontal.decrease', d: 'M4 7h16 M7 12h10 M10 17h4' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
