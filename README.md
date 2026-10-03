@@ -2,7 +2,7 @@
 
 Snap a receipt, read the total and HST with OCR, keep the original photo, and see HST totals by week, month, quarter or year for tax time.
 
-> **V2 in progress.** This branch rebuilds the app on the new design in `design/` (green brand, system font, Iconsax icons, steady Lottie illustrations). Done so far: design foundation (`src/theme.ts`, `src/components/icons.tsx`, `src/components/ui.tsx`, `src/components/Illustration.tsx`) and flow A (Launch, Walkthrough, Sign Up, Log In). Flows B to F still use the V1 layouts with the new theme and icons.
+> **V2 in progress.** This branch rebuilds the app on the new design in `design/` (green brand, system font, Iconsax icons, steady Lottie illustrations). Done so far: design foundation (`src/theme.ts`, `src/components/icons.tsx`, `src/components/ui.tsx`, `src/components/Illustration.tsx`) and flow A (Launch, Walkthrough, Sign Up, Log In) and flow B (Camera Access, Scan, Reading, Review with tax check, Category Picker, Manual Entry, Saved). Flows C to F still use the V1 layouts with the new theme and icons.
 
 This is an **Expo (SDK 51) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
 
@@ -24,7 +24,7 @@ npx tsc --noEmit        # type-check
 | Launch → 5-slide walkthrough → Sign Up / Log In | Built, validated forms, mock auth |
 | Returning users | Skip the walkthrough and land on Log In |
 | History | Grouped by Today / This week / month, search, CSV export, "HST this month" card, empty state |
-| Scan flow | Camera (tips, flash, import, manual entry, permission screen) → Analyzing → Scan Result with **Original** / **Digital copy** tabs → Saved. Original photo is copied into app storage. Totals check with one-tap fixes for missing or mismatched HST |
+| Scan flow | Camera Access → Scan (flash, import, manual entry) → Reading (progress, failure state) → Review with **Original** / **Digital copy** tabs, tax check and category sheet → Saved (also New Receipt for manual entry). Original photo is copied into app storage. Totals check with one-tap fixes for missing or mismatched HST |
 | HST Summary | Week / month / quarter / year totals, chart, by-category, fix receipts whose tax wasn't read, CSV export |
 | Receipt Detail | Items, subtotal / HST / total, tax review banner, notes, share, CSV, delete |
 | Categories | Spend per category (This Month / 30 Days / YTD / All Time), search, detail with subcategory filter, Manage (pinned / all / hidden), create & edit (name, color, icon, subcategories, tax rule, keywords, priority, visibility, pin), merge, delete. Renaming or deleting moves the receipts |

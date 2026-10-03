@@ -8,7 +8,7 @@ import { colors, font, radius } from '../theme';
 type ButtonVariant = 'primary' | 'secondary' | 'tinted' | 'dark' | 'ghost' | 'destructive' | 'onAccent' | 'ghostOnAccent';
 
 export function Button({
-  title, onPress, variant = 'primary', loading = false, disabled = false, icon, style,
+  title, onPress, variant = 'primary', loading = false, disabled = false, icon, style, compact = false,
 }: {
   title: string;
   onPress: () => void;
@@ -17,6 +17,8 @@ export function Button({
   disabled?: boolean;
   icon?: React.ReactNode;
   style?: ViewStyle;
+  /** Smaller button for side-by-side pairs. */
+  compact?: boolean;
 }) {
   const v = VARIANTS[variant];
   return (
@@ -28,6 +30,7 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         { backgroundColor: v.bg, borderColor: v.border ?? v.bg },
+        compact && { height: 46, borderRadius: 23, paddingHorizontal: 8, gap: 6 },
         (disabled || loading) && { opacity: 0.6 },
         pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 },
         style,
@@ -38,7 +41,7 @@ export function Button({
       ) : (
         <>
           {icon}
-          <Text style={[styles.buttonText, { color: v.fg }]}>{title}</Text>
+          <Text style={[styles.buttonText, compact && { fontSize: 14 }, { color: v.fg }]} numberOfLines={1}>{title}</Text>
         </>
       )}
     </Pressable>

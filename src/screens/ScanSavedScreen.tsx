@@ -1,89 +1,87 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { ZoomIn, FadeInDown } from 'react-native-reanimated';
-import { Check, Image as ImageIcon, ReceiptText, ImageOff } from '../components/icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { FileText, Image as ImageIcon, Scan } from '../components/icons';
+import { Illustration } from '../components/Illustration';
+import { MerchantAvatar } from '../components/MerchantAvatar';
 import { useReceipts } from '../context/ReceiptContext';
 import { Button } from '../components/ui';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
 import { colors, font, radius } from '../theme';
 
+/** B8 · Receipt saved. */
 export default function ScanSavedScreen({ route, navigation }: any) {
   const { receipts, categories, userProfile } = useReceipts();
   const receipt = receipts.find(r => r.id === route.params?.receiptId);
   if (!receipt) return null;
   const tax = resolveReceiptTax(receipt, categories, userProfile.hstDefaultPercent);
+  const date = new Date(receipt.purchaseDate).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.body}>
-        <Animated.View entering={ZoomIn.springify().damping(11)} style={styles.badgeOuter}>
-          <View style={styles.badge}><Check size={32} color="#FFFFFF" strokeWidth={3} /></View>
-        </Animated.View>
-        <Animated.Text entering={FadeInDown.delay(100)} style={styles.title} accessibilityRole="header">Receipt saved</Animated.Text>
-        <Animated.Text entering={FadeInDown.delay(160)} style={styles.sub}>
-          {receipt.imageName ? 'Both versions are stored together in your History.' : 'Your receipt is in your History.'}
+        <Illustration name="allCaughtUp" size={200} label="Receipt saved" />
+        <Animated.Text entering={FadeInDown.delay(80)} style={styles.title} accessibilityRole="header">Receipt saved</Animated.Text>
+        <Animated.Text entering={FadeInDown.delay(140)} style={styles.sub}>
+          {receipt.imageName
+            ? 'Searchable and exportable, with the original photo kept.'
+            : 'Searchable and exportable.'}
         </Animated.Text>
 
-        <Animated.View entering={FadeInDown.delay(240)} style={styles.cards}>
-          <View style={styles.card}>
-            <View style={styles.thumbDark}>
-              {receipt.imageName
-                ? <Image source={{ uri: receipt.imageName }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                : <ImageOff size={26} color="#8A8A90" />}
+        <Animated.View entering={FadeInDown.delay(220)} style={styles.card}>
+          <View style={styles.top}>
+            <MerchantAvatar name={receipt.storeName} category={receipt.category} size={44} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.store} numberOfLines={1}>{receipt.storeName}</Text>
+              <Text style={styles.meta}>{date} · {receipt.category}</Text>
             </View>
-            <View style={styles.label}><ImageIcon size={15} color={colors.text} /><Text style={styles.labelText}>Original</Text></View>
-            <Text style={styles.caption}>{receipt.imageName ? 'Photo kept as captured' : 'No photo'}</Text>
           </View>
-          <View style={styles.card}>
-            <View style={styles.mini}>
-              <Text style={styles.miniStore} numberOfLines={1}>{receipt.storeName}</Text>
-              <View style={styles.dash} />
-              <Row label="HST" value={formatCents(tax.hstCents)} />
-              <View style={{ flex: 1 }} />
-              <Row label="Total" value={formatCents(toCents(receipt.totalAmount))} strong />
-            </View>
-            <View style={styles.label}><ReceiptText size={15} color={colors.text} /><Text style={styles.labelText}>Digital copy</Text></View>
-            <Text style={styles.caption}>Searchable and exportable</Text>
+          <View style={styles.sep} />
+          <Row label="HST" value={formatCents(tax.hstCents)} tax />
+          <Row label="Total" value={formatCents(toCents(receipt.totalAmount))} strong />
+          <View style={styles.chips}>
+            {!!receipt.imageName && <Chip icon={<ImageIcon size={14} color={colors.text} />} label="Original" />}
+            <Chip icon={<FileText size={14} color={colors.text} />} label="Digital copy" />
           </View>
         </Animated.View>
       </View>
 
       <View style={styles.actions}>
         <Button title="View Receipt" onPress={() => navigation.replace('ReceiptDetail', { receiptId: receipt.id })} />
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Button title="Scan another" variant="secondary" style={{ flex: 1 }} onPress={() => navigation.replace('CameraModal')} />
-          <Button title="Done" variant="secondary" style={{ flex: 1 }} onPress={() => navigation.goBack()} />
-        </View>
+        <Button title="Scan Another" variant="tinted" icon={<Scan size={20} color={colors.accent} />} onPress={() => navigation.replace('CameraModal')} />
+        <Button title="Done" variant="ghost" onPress={() => navigation.goBack()} />
       </View>
     </SafeAreaView>
   );
 }
 
-const Row = ({ label, value, strong }: { label: string; value: string; strong?: boolean }) => (
-  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-    <Text style={[styles.miniLabel, strong && { ...font.extrabold, color: colors.text, fontSize: 13 }]}>{label}</Text>
-    <Text style={[styles.miniValue, strong && { ...font.monoBold, fontSize: 13 }]}>{value}</Text>
+const Row = ({ label, value, strong, tax }: { label: string; value: string; strong?: boolean; tax?: boolean }) => (
+  <View style={styles.row}>
+    <Text style={[styles.rowLabel, strong && { color: colors.text }]}>{label}</Text>
+    <Text style={[styles.rowValue, tax && { color: colors.tax, ...font.bold }, strong && font.bold]}>{value}</Text>
   </View>
+);
+
+const Chip = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+  <View style={styles.chip}>{icon}<Text style={styles.chipText}>{label}</Text></View>
 );
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  body: { flex: 1, alignItems: 'center', paddingTop: 60, paddingHorizontal: 20, gap: 8 },
-  badgeOuter: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.successSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  badge: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.success, alignItems: 'center', justifyContent: 'center' },
-  title: { ...font.extrabold, fontSize: 28, letterSpacing: -0.8, color: colors.text },
-  sub: { ...font.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center', maxWidth: 290 },
-  cards: { flexDirection: 'row', gap: 12, marginTop: 26, alignSelf: 'stretch' },
-  card: { flex: 1, backgroundColor: colors.card, borderRadius: 18, padding: 14, gap: 8 },
-  thumbDark: { height: 150, borderRadius: 10, backgroundColor: '#26262B', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  mini: { height: 150, borderRadius: 10, backgroundColor: '#F5F5F8', padding: 12, gap: 6 },
-  miniStore: { ...font.extrabold, fontSize: 13, color: colors.text },
-  dash: { height: 1, backgroundColor: colors.border, marginVertical: 4 },
-  miniLabel: { ...font.regular, fontSize: 11, color: colors.textSecondary },
-  miniValue: { ...font.mono, fontSize: 11, color: colors.text },
-  label: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  labelText: { ...font.bold, fontSize: 15, color: colors.text },
-  caption: { ...font.regular, fontSize: 13, color: colors.textSecondary },
+  body: { flex: 1, alignItems: 'center', paddingTop: 40, paddingHorizontal: 16, gap: 8 },
+  title: { ...font.bold, fontSize: 28, lineHeight: 34, color: colors.text },
+  sub: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center', maxWidth: 300 },
+  card: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: radius.xl, padding: 16, gap: 10, marginTop: 22 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  store: { ...font.semibold, fontSize: 17, color: colors.text },
+  meta: { ...font.regular, fontSize: 15, color: colors.textSecondary },
+  sep: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  rowLabel: { ...font.regular, fontSize: 17, color: colors.textSecondary },
+  rowValue: { ...font.regular, fontSize: 17, color: colors.text, fontVariant: ['tabular-nums'] },
+  chips: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: colors.fill },
+  chipText: { ...font.semibold, fontSize: 13, color: colors.text },
   actions: { padding: 16, gap: 10 },
 });
