@@ -3,10 +3,10 @@ import { View, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { Clock, LayoutGrid, BarChart3, User } from 'lucide-react-native';
+import { Clock, LayoutGrid, BarChart3, User } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
-import { colors, fonts } from '../theme';
+import { colors, font } from '../theme';
 
 import LaunchScreen from '../screens/auth/LaunchScreen';
 import OnboardingScreen from '../screens/auth/OnboardingScreen';
@@ -38,7 +38,7 @@ function MainTabs() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
+        tabBarLabelStyle: { ...font.semibold, fontSize: 11 },
         tabBarStyle: { borderTopColor: '#D8D8DE' },
       }}
     >

@@ -1,6 +1,8 @@
-# Receiptfy
+# Receipt TaX (V2)
 
 Snap a receipt, read the total and HST with OCR, keep the original photo, and see HST totals by week, month, quarter or year for tax time.
+
+> **V2 in progress.** This branch rebuilds the app on the new design in `design/` (green brand, system font, Iconsax icons, steady Lottie illustrations). Done so far: design foundation (`src/theme.ts`, `src/components/icons.tsx`, `src/components/ui.tsx`, `src/components/Illustration.tsx`) and flow A (Launch, Walkthrough, Sign Up, Log In). Flows B to F still use the V1 layouts with the new theme and icons.
 
 This is an **Expo (SDK 51) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
 

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Search, ChevronRight } from 'lucide-react-native';
+import { Plus, Search, ChevronRight } from '../../components/icons';
 import { useReceipts } from '../../context/ReceiptContext';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { NavBar } from '../../components/ui';
-import { colors, fonts, radius, type } from '../../theme';
+import { colors, font, radius, type } from '../../theme';
 import type { CategoryDefinition } from '../../types';
 
 const TAX_LABEL = { none: 'No tax', add: 'Tax added', included: 'Tax included' } as const;
@@ -68,11 +68,11 @@ const styles = StyleSheet.create({
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, gap: 16, paddingBottom: 40 },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
-  searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  none: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center' },
+  searchInput: { flex: 1, ...font.regular, fontSize: 16, color: colors.text },
+  none: { ...font.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center' },
   group: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10 },
   rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  name: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  meta: { fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  name: { ...font.bold, fontSize: 16, color: colors.text },
+  meta: { ...font.regular, fontSize: 12, color: colors.textMuted, marginTop: 1 },
 });

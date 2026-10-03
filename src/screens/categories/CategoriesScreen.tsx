@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal } from 'lucide-react-native';
+import { Search, SlidersHorizontal } from '../../components/icons';
 import { useReceipts } from '../../context/ReceiptContext';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { Segmented } from '../../components/ui';
 import { inSpendRange, spendByCategory, spendRange, SpendRange } from '../../utils/spend';
 import { formatCents } from '../../utils/tax';
-import { colors, fonts, radius, type } from '../../theme';
+import { colors, font, radius, type } from '../../theme';
 
 const RANGES: SpendRange[] = ['month', 'last30', 'ytd', 'all'];
 const LABEL: Record<string, string> = { month: 'This Month', last30: '30 Days', ytd: 'YTD', all: 'All Time' };
@@ -71,12 +71,12 @@ const styles = StyleSheet.create({
   headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, gap: 14, paddingBottom: 40 },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
-  searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  none: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
+  searchInput: { flex: 1, ...font.regular, fontSize: 16, color: colors.text },
+  none: { ...font.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: { width: '48%', flexGrow: 1, height: 112, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, justifyContent: 'space-between' },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  count: { fontFamily: fonts.semibold, fontSize: 12, color: colors.textMuted },
-  name: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  total: { fontFamily: fonts.mono, fontSize: 15, color: colors.text, marginTop: 1 },
+  count: { ...font.semibold, fontSize: 12, color: colors.textMuted },
+  name: { ...font.bold, fontSize: 15, color: colors.text },
+  total: { ...font.mono, fontSize: 15, color: colors.text, marginTop: 1 },
 });

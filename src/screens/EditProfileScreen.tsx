@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Image as ImageIcon } from 'lucide-react-native';
+import { Camera, Image as ImageIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { Field, FieldGroup, Section, SettingRow } from '../components/ui';
@@ -10,7 +10,7 @@ import { AuthError, isValidEmail } from '../services/auth';
 import { persistReceiptPhoto } from '../utils/photos';
 import { triggerHaptic } from '../utils/nativeUtils';
 import { initials } from './ProfileScreen';
-import { colors, fonts, type } from '../theme';
+import { colors, font, type } from '../theme';
 
 export default function EditProfileScreen({ navigation }: any) {
   const { user, updateProfile: updateAccount } = useAuth();
@@ -53,7 +53,7 @@ export default function EditProfileScreen({ navigation }: any) {
         <Pressable onPress={() => navigation.goBack()} style={styles.navBtn} accessibilityRole="button"><Text style={styles.navText}>Cancel</Text></Pressable>
         <Text style={type.headline}>Edit Profile</Text>
         <Pressable onPress={save} disabled={saving} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button">
-          <Text style={[styles.navText, { fontFamily: fonts.bold }, saving && { opacity: 0.5 }]}>{saving ? 'Saving…' : 'Save'}</Text>
+          <Text style={[styles.navText, { ...font.bold }, saving && { opacity: 0.5 }]}>{saving ? 'Saving…' : 'Save'}</Text>
         </Pressable>
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -85,10 +85,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
+  navText: { ...font.medium, fontSize: 17, color: colors.accent },
   content: { padding: 16, gap: 24, paddingTop: 20 },
   avatar: { width: 104, height: 104, borderRadius: 52, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: fonts.extrabold, fontSize: 38, color: '#FFFFFF' },
-  link: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent, padding: 6 },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
+  avatarText: { ...font.extrabold, fontSize: 38, color: '#FFFFFF' },
+  link: { ...font.semibold, fontSize: 16, color: colors.accent, padding: 6 },
+  error: { ...font.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
 });

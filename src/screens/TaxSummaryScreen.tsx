@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ChevronRight, Share, AlertTriangle } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Share, AlertTriangle } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { THEME } from '../constants';
 import { shareCSV, triggerHaptic } from '../utils/nativeUtils';

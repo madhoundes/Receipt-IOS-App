@@ -3,15 +3,15 @@ import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, FlatLi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ShoppingBasket, Utensils, Fuel, Pill, Home, MonitorSmartphone, Shirt, Zap, Car, Clapperboard, Wrench, Box, Plus, X, LucideIcon,
-} from 'lucide-react-native';
+} from '../../components/icons';
 import { useReceipts } from '../../context/ReceiptContext';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { Section, Segmented, SettingRow } from '../../components/ui';
 import { confirmAction, triggerHaptic } from '../../utils/nativeUtils';
-import { colors, fonts, radius, type } from '../../theme';
+import { colors, font, radius, type } from '../../theme';
 import type { CategoryDefinition, ClassifierBoost, TaxRule, Visibility } from '../../types';
 
-const COLORS = ['#12805C', '#B4480A', '#B42318', '#0E7C8C', '#0062CC', '#4A34B8', '#B0266E', '#8A6100', '#475467'];
+const COLORS = ['#12805C', '#B4480A', '#B42318', '#0E7C8C', '#0B7A55', '#4A34B8', '#B0266E', '#8A6100', '#475467'];
 const ICONS: [string, LucideIcon][] = [
   ['ShoppingBasket', ShoppingBasket], ['Utensils', Utensils], ['Fuel', Fuel], ['Pill', Pill], ['Home', Home], ['MonitorSmartphone', MonitorSmartphone],
   ['Shirt', Shirt], ['Zap', Zap], ['Car', Car], ['Clapperboard', Clapperboard], ['Wrench', Wrench], ['Box', Box],
@@ -79,7 +79,7 @@ export default function EditCategoryScreen({ route, navigation }: any) {
       <View style={styles.nav}>
         <Pressable onPress={() => navigation.goBack()} style={styles.navBtn} accessibilityRole="button"><Text style={styles.navText}>Cancel</Text></Pressable>
         <Text style={type.headline}>{existing ? 'Edit Category' : 'New Category'}</Text>
-        <Pressable onPress={save} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button"><Text style={[styles.navText, { fontFamily: fonts.bold }]}>Save</Text></Pressable>
+        <Pressable onPress={save} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button"><Text style={[styles.navText, { ...font.bold }]}>Save</Text></Pressable>
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -144,7 +144,7 @@ export default function EditCategoryScreen({ route, navigation }: any) {
             </View>
           </Section>
 
-          <Section title="Smart Classification" footer="Receiptfy uses these keywords to auto-detect this category.">
+          <Section title="Smart Classification" footer="Receipt TaX uses these keywords to auto-detect this category.">
             <View style={styles.chips}>
               {form.aliases.map(a => <Chip key={`a${a}`} label={a} tone="alias" onRemove={() => set({ aliases: form.aliases.filter(x => x !== a) })} />)}
               {form.keywords.map(k => <Chip key={`k${k}`} label={k} onRemove={() => set({ keywords: form.keywords.filter(x => x !== k) })} />)}
@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
+  navText: { ...font.medium, fontSize: 17, color: colors.accent },
   content: { padding: 16, gap: 22, paddingBottom: 48 },
   preview: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   nameBox: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 10 },
-  label: { fontFamily: fonts.semibold, fontSize: 12, color: colors.textSecondary },
-  nameInput: { fontFamily: fonts.semibold, fontSize: 17, color: colors.text, paddingVertical: 4 },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.danger },
+  label: { ...font.semibold, fontSize: 12, color: colors.textSecondary },
+  nameInput: { ...font.semibold, fontSize: 17, color: colors.text, paddingVertical: 4 },
+  error: { ...font.medium, fontSize: 14, color: colors.danger },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 14, gap: 8 },
   swatch: { width: 32, height: 32, borderRadius: 16 },
   icons: { flexDirection: 'row', flexWrap: 'wrap', padding: 10, gap: 8 },
@@ -230,15 +230,15 @@ const styles = StyleSheet.create({
   subRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 50 },
   rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#C7C7CC' },
-  subName: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  defaultTag: { fontFamily: fonts.bold, fontSize: 12, color: colors.textSecondary },
-  subInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text, paddingVertical: 12 },
+  subName: { flex: 1, ...font.regular, fontSize: 16, color: colors.text },
+  defaultTag: { ...font.bold, fontSize: 12, color: colors.textSecondary },
+  subInput: { flex: 1, ...font.regular, fontSize: 16, color: colors.text, paddingVertical: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14, paddingBottom: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.bg, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
-  chipText: { fontFamily: fonts.semibold, fontSize: 13, color: '#3A3A40' },
-  keywordInput: { marginHorizontal: 14, marginBottom: 14, height: 40, borderRadius: 10, backgroundColor: colors.bg, paddingHorizontal: 12, fontFamily: fonts.regular, fontSize: 15, color: colors.text },
+  chipText: { ...font.semibold, fontSize: 13, color: '#3A3A40' },
+  keywordInput: { marginHorizontal: 14, marginBottom: 14, height: 40, borderRadius: 10, backgroundColor: colors.bg, paddingHorizontal: 12, ...font.regular, fontSize: 15, color: colors.text },
   delete: { height: 52, borderRadius: radius.lg, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  deleteText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.danger },
+  deleteText: { ...font.semibold, fontSize: 17, color: colors.danger },
   pickRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, minHeight: 52, backgroundColor: colors.card },
   pickFirst: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
 });

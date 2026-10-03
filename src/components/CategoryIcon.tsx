@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import {
   ShoppingBasket, Utensils, Fuel, Pill, Home, MonitorSmartphone, Shirt, Zap, Car, Clapperboard, Wrench, Box, LucideIcon,
-} from 'lucide-react-native';
+} from './icons';
 import { useReceipts } from '../context/ReceiptContext';
 
 const ICONS: Record<string, LucideIcon> = {

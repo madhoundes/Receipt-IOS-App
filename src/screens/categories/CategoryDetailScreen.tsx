@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '../../components/icons';
 import { useReceipts } from '../../context/ReceiptContext';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { NavBar } from '../../components/ui';
 import { inSpendRange, spendRange, SpendRange, SPEND_RANGE_LABEL } from '../../utils/spend';
 import { formatCents, toCents } from '../../utils/tax';
-import { colors, fonts, radius, type } from '../../theme';
+import { colors, font, radius, type } from '../../theme';
 
 const relDate = (iso: string) => {
   const d = new Date(iso), now = new Date();
@@ -92,23 +92,23 @@ export default function CategoryDetailScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   edit: { height: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  editText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.accent },
+  editText: { ...font.semibold, fontSize: 17, color: colors.accent },
   content: { padding: 16, gap: 16, paddingBottom: 40 },
   card: { backgroundColor: colors.card, borderRadius: radius.xl, padding: 18, gap: 16 },
-  title: { fontFamily: fonts.extrabold, fontSize: 24, letterSpacing: -0.5, color: colors.text },
-  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  title: { ...font.extrabold, fontSize: 24, letterSpacing: -0.5, color: colors.text },
+  meta: { ...font.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
   stats: { flexDirection: 'row', gap: 12 },
   stat: { flex: 1, backgroundColor: '#F5F5F8', borderRadius: 14, padding: 12, gap: 2 },
-  statLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textSecondary },
-  statValue: { fontFamily: fonts.mono, fontSize: 22, color: colors.text },
+  statLabel: { ...font.semibold, fontSize: 13, color: colors.textSecondary },
+  statValue: { ...font.mono, fontSize: 22, color: colors.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.card, justifyContent: 'center' },
   chipOn: { backgroundColor: colors.text },
-  chipText: { fontFamily: fonts.semibold, fontSize: 14, color: '#3A3A40' },
-  chipTextOn: { fontFamily: fonts.bold, color: '#FFFFFF' },
-  empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
+  chipText: { ...font.semibold, fontSize: 14, color: '#3A3A40' },
+  chipTextOn: { ...font.bold, color: '#FFFFFF' },
+  empty: { ...font.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
   list: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  store: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
+  store: { ...font.bold, fontSize: 16, color: colors.text },
 });

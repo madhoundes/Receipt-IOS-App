@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Share, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ChevronRight, Share2, FileText, Copy, ImageOff, AlertTriangle, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Share2, FileText, Copy, ImageOff, AlertTriangle, X } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
 import { resolveReceiptTax, formatCents, toCents } from '../utils/tax';
 import { confirmAction, shareCSV, triggerHaptic } from '../utils/nativeUtils';
 import { deleteReceiptPhoto } from '../utils/photos';
-import { colors, fonts, radius, type } from '../theme';
+import { colors, font, radius, type } from '../theme';
 import type { Receipt } from '../types';
 
 const formatDate = (iso: string) => {
@@ -190,7 +190,7 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
 const TotalRow = ({ label, value, strong }: { label: string; value: string; strong?: boolean }) => (
   <View style={styles.totalRow}>
     <Text style={strong ? styles.totalStrong : styles.totalLabel}>{label}</Text>
-    <Text style={[type.money, strong && { fontFamily: fonts.monoBold, fontSize: 17 }]}>{value}</Text>
+    <Text style={[type.money, strong && { ...font.monoBold, fontSize: 17 }]}>{value}</Text>
   </View>
 );
 
@@ -198,45 +198,45 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBack: { flexDirection: 'row', alignItems: 'center', height: 44, paddingRight: 8 },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
+  navText: { ...font.medium, fontSize: 17, color: colors.accent },
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, paddingBottom: 48 },
   card: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   hero: { alignItems: 'center', padding: 20, gap: 4, borderRadius: radius.xl },
-  store: { fontFamily: fonts.extrabold, fontSize: 22, color: colors.text, marginTop: 10 },
-  date: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted },
-  total: { fontFamily: fonts.mono, fontSize: 40, letterSpacing: -1, color: colors.text, marginVertical: 6 },
+  store: { ...font.extrabold, fontSize: 22, color: colors.text, marginTop: 10 },
+  date: { ...font.regular, fontSize: 14, color: colors.textMuted },
+  total: { ...font.mono, fontSize: 40, letterSpacing: -1, color: colors.text, marginVertical: 6 },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { fontFamily: fonts.bold, fontSize: 13, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, overflow: 'hidden' },
-  chipNeutral: { color: '#3A3A40', backgroundColor: colors.bg, fontFamily: fonts.semibold },
+  chip: { ...font.bold, fontSize: 13, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, overflow: 'hidden' },
+  chipNeutral: { color: '#3A3A40', backgroundColor: colors.bg, ...font.semibold },
   warn: {
     flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, padding: 14, borderRadius: radius.lg,
     backgroundColor: colors.warnBg, borderWidth: 1, borderColor: colors.warnBorder,
   },
-  warnTitle: { fontFamily: fonts.bold, fontSize: 15, color: colors.warnText },
-  warnText: { fontFamily: fonts.regular, fontSize: 13, color: colors.warnText, marginTop: 2 },
+  warnTitle: { ...font.bold, fontSize: 15, color: colors.warnText },
+  warnText: { ...font.regular, fontSize: 13, color: colors.warnText, marginTop: 2 },
   applyBtn: { backgroundColor: colors.accent, borderRadius: 18, paddingHorizontal: 16, height: 36, justifyContent: 'center' },
-  applyText: { fontFamily: fonts.bold, fontSize: 14, color: '#FFFFFF' },
+  applyText: { ...font.bold, fontSize: 14, color: '#FFFFFF' },
   photoRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, marginTop: 14 },
   thumb: { width: 52, height: 68, borderRadius: 8, backgroundColor: '#F4F3EF' },
   thumbEmpty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.separator },
-  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
+  meta: { ...font.regular, fontSize: 13, color: colors.textMuted },
   section: { marginTop: 22, marginBottom: 8, paddingHorizontal: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, minHeight: 52 },
   rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  qty: { fontFamily: fonts.bold, fontSize: 13, color: colors.textMuted, width: 24 },
-  itemName: { fontFamily: fonts.regular, fontSize: 15, color: colors.text },
+  qty: { ...font.bold, fontSize: 13, color: colors.textMuted, width: 24 },
+  itemName: { ...font.regular, fontSize: 15, color: colors.text },
   totals: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, padding: 16, gap: 8 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  totalLabel: { fontFamily: fonts.regular, fontSize: 15, color: colors.textSecondary },
-  totalStrong: { fontFamily: fonts.extrabold, fontSize: 17, color: colors.text },
-  notes: { fontFamily: fonts.regular, fontSize: 16, color: colors.text, minHeight: 44, padding: 0 },
+  totalLabel: { ...font.regular, fontSize: 15, color: colors.textSecondary },
+  totalStrong: { ...font.extrabold, fontSize: 17, color: colors.text },
+  notes: { ...font.regular, fontSize: 16, color: colors.text, minHeight: 44, padding: 0 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 18 },
   action: { flex: 1, height: 76, borderRadius: radius.lg, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  actionText: { fontFamily: fonts.bold, fontSize: 14, color: colors.text },
+  actionText: { ...font.bold, fontSize: 14, color: colors.text },
   delete: { marginTop: 18, height: 52, alignItems: 'center', justifyContent: 'center' },
-  deleteText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.danger },
-  link: { fontFamily: fonts.bold, fontSize: 16, color: colors.accent },
+  deleteText: { ...font.semibold, fontSize: 17, color: colors.danger },
+  link: { ...font.bold, fontSize: 16, color: colors.accent },
   viewer: { flex: 1, backgroundColor: '#000' },
   viewerClose: { position: 'absolute', top: 60, left: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
 });

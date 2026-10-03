@@ -3,14 +3,14 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, TextInput, Image, Modal, KeyboardAvoidingView, Platform, FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image as ImageIcon, ReceiptText, Check, AlertTriangle, ScanLine, ChevronDown, X, Maximize2 } from 'lucide-react-native';
+import { Image as ImageIcon, ReceiptText, Check, AlertTriangle, ScanLine, ChevronDown, X, Maximize2 } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
 import { Button } from '../components/ui';
 import { checkTotals, formatCents, resolveReceiptTax, toCents } from '../utils/tax';
 import { persistReceiptPhoto } from '../utils/photos';
 import { triggerHaptic } from '../utils/nativeUtils';
-import { colors, fonts, radius, type } from '../theme';
+import { colors, font, radius, type } from '../theme';
 import type { OcrResult } from '../services/ocr';
 import type { Receipt } from '../types';
 
@@ -133,7 +133,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
 
               <View style={styles.card}>
                 <View style={styles.keyRow}>
-                  <KeyValue label="Subtotal" swatch="#0062CC" value={draft.subtotal} />
+                  <KeyValue label="Subtotal" swatch="#0B7A55" value={draft.subtotal} />
                   <KeyValue label={`HST ${draft.hstPercent ?? ''}${draft.hstPercent != null ? '%' : ''}`} swatch={colors.tax} value={draft.hstAmount} />
                   <KeyValue label="Total" swatch={colors.success} value={parseMoney(total)} bold />
                 </View>
@@ -219,7 +219,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
                 accessibilityRole="button"
               >
                 <CategoryIcon category={item.name} size={32} />
-                <Text style={[styles.itemName, { flex: 1 }, item.name === category && { fontFamily: fonts.bold }]}>{item.name}</Text>
+                <Text style={[styles.itemName, { flex: 1 }, item.name === category && { ...font.bold }]}>{item.name}</Text>
                 {item.name === category && <Check size={20} color={colors.accent} strokeWidth={2.8} />}
               </Pressable>
             )}
@@ -243,7 +243,7 @@ const KeyValue = ({ label, swatch, value, bold }: { label: string; swatch: strin
       <View style={{ width: 10, height: 10, borderRadius: 2, borderWidth: 2, borderColor: swatch }} />
       <Text style={[styles.keyLabel, { color: swatch }]}>{label}</Text>
     </View>
-    <Text style={[styles.keyValue, bold && { fontFamily: fonts.monoBold }]}>{value == null ? '—' : formatCents(toCents(value))}</Text>
+    <Text style={[styles.keyValue, bold && { ...font.monoBold }]}>{value == null ? '—' : formatCents(toCents(value))}</Text>
   </View>
 );
 
@@ -263,11 +263,11 @@ const MoneyField = ({ label, value, onChange, border, strong, placeholder = '0.0
   keyboard?: 'decimal-pad' | 'numbers-and-punctuation';
 }) => (
   <View style={[styles.fieldRow, border && styles.rowBorder]}>
-    <Text style={[styles.fieldLabel, strong && { fontFamily: fonts.bold, color: colors.text }]}>{label}</Text>
+    <Text style={[styles.fieldLabel, strong && { ...font.bold, color: colors.text }]}>{label}</Text>
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       {!suffix && keyboard === 'decimal-pad' && <Text style={styles.fieldPrefix}>$</Text>}
       <TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={colors.placeholder}
-        keyboardType={keyboard} style={[styles.fieldInput, strong && { fontFamily: fonts.monoBold, fontSize: 18 }]} accessibilityLabel={label} />
+        keyboardType={keyboard} style={[styles.fieldInput, strong && { ...font.monoBold, fontSize: 18 }]} accessibilityLabel={label} />
       {!!suffix && <Text style={styles.fieldPrefix}>{suffix}</Text>}
     </View>
   </View>
@@ -298,50 +298,50 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 60, height: 44, justifyContent: 'center', paddingHorizontal: 8, alignItems: 'flex-start' },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
+  navText: { ...font.medium, fontSize: 17, color: colors.accent },
   segment: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, backgroundColor: colors.fill, borderRadius: 10, padding: 2 },
   segItem: { flex: 1, height: 34, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   segActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } },
-  segText: { fontFamily: fonts.semibold, fontSize: 14, color: '#3A3A40' },
-  segTextActive: { fontFamily: fonts.bold, color: colors.text },
+  segText: { ...font.semibold, fontSize: 14, color: '#3A3A40' },
+  segTextActive: { ...font.bold, color: colors.text },
   content: { padding: 16, gap: 14, paddingBottom: 24 },
   photoBox: { height: 420, borderRadius: radius.xl, backgroundColor: '#26262B', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   photo: { width: '100%', height: '100%' },
-  noPhoto: { fontFamily: fonts.medium, fontSize: 15, color: '#C7C7CC', textAlign: 'center', paddingHorizontal: 32 },
+  noPhoto: { ...font.medium, fontSize: 15, color: '#C7C7CC', textAlign: 'center', paddingHorizontal: 32 },
   ocrBadge: { position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
-  ocrText: { fontFamily: fonts.semibold, fontSize: 12, color: '#FFFFFF' },
+  ocrText: { ...font.semibold, fontSize: 12, color: '#FFFFFF' },
   expand: { position: 'absolute', top: 8, right: 8, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   card: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   keyRow: { flexDirection: 'row', padding: 16, gap: 8 },
-  keyLabel: { fontFamily: fonts.bold, fontSize: 12 },
-  keyValue: { fontFamily: fonts.mono, fontSize: 17, color: colors.text },
+  keyLabel: { ...font.bold, fontSize: 12 },
+  keyValue: { ...font.mono, fontSize: 17, color: colors.text },
   hr: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
   keyFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  checkText: { fontFamily: fonts.semibold, fontSize: 13 },
-  meta: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
+  checkText: { ...font.semibold, fontSize: 13 },
+  meta: { ...font.medium, fontSize: 12, color: colors.textMuted },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
-  storeInput: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.text, padding: 0 },
+  storeInput: { ...font.extrabold, fontSize: 20, color: colors.text, padding: 0 },
   catRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, alignSelf: 'flex-start' },
-  catChip: { fontFamily: fonts.bold, fontSize: 13, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, overflow: 'hidden' },
+  catChip: { ...font.bold, fontSize: 13, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, overflow: 'hidden' },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
   rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  qty: { fontFamily: fonts.bold, fontSize: 13, color: colors.textMuted, width: 24 },
-  itemName: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.text },
+  qty: { ...font.bold, fontSize: 13, color: colors.textMuted, width: 24 },
+  itemName: { flex: 1, ...font.regular, fontSize: 15, color: colors.text },
   fieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 52 },
-  fieldLabel: { fontFamily: fonts.regular, fontSize: 16, color: colors.textSecondary },
-  fieldPrefix: { fontFamily: fonts.mono, fontSize: 16, color: colors.textMuted },
-  fieldInput: { fontFamily: fonts.mono, fontSize: 16, color: colors.text, minWidth: 90, textAlign: 'right', paddingVertical: 12 },
+  fieldLabel: { ...font.regular, fontSize: 16, color: colors.textSecondary },
+  fieldPrefix: { ...font.mono, fontSize: 16, color: colors.textMuted },
+  fieldInput: { ...font.mono, fontSize: 16, color: colors.text, minWidth: 90, textAlign: 'right', paddingVertical: 12 },
   banner: { borderRadius: radius.lg, padding: 14, gap: 12, borderWidth: 1 },
   bannerOk: { backgroundColor: '#E6F6EF', borderColor: '#BFE6D3' },
   bannerWarn: { backgroundColor: colors.warnBg, borderColor: colors.warnBorder },
-  bannerTitle: { fontFamily: fonts.bold, fontSize: 15 },
-  bannerText: { fontFamily: fonts.regular, fontSize: 13, marginTop: 2 },
+  bannerTitle: { ...font.bold, fontSize: 15 },
+  bannerText: { ...font.regular, fontSize: 13, marginTop: 2 },
   bannerActions: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end' },
   fixBtn: { backgroundColor: colors.tax, borderRadius: 18, paddingHorizontal: 16, height: 36, justifyContent: 'center' },
-  fixText: { fontFamily: fonts.bold, fontSize: 14, color: '#FFFFFF' },
+  fixText: { ...font.bold, fontSize: 14, color: '#FFFFFF' },
   noTaxBtn: { backgroundColor: '#FFFFFF', borderRadius: 18, paddingHorizontal: 16, height: 36, justifyContent: 'center' },
-  noTaxText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
+  noTaxText: { ...font.semibold, fontSize: 14, color: colors.text },
+  error: { ...font.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
   footer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, backgroundColor: colors.bg },
   pickerWrap: { flex: 1, backgroundColor: colors.bg },
   pickerHead: { height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },

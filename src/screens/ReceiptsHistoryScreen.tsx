@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, SectionList, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Share, ChevronRight, Percent, Camera, X } from 'lucide-react-native';
+import { Search, Share, ChevronRight, Percent, Camera, X } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { CategoryIcon } from '../components/CategoryIcon';
 import { summarizeTax, formatCents, toCents } from '../utils/tax';
 import { shareCSV } from '../utils/nativeUtils';
-import { colors, fonts, radius, type } from '../theme';
+import { colors, font, radius, type } from '../theme';
 import type { Receipt } from '../types';
 
 const DAY = 86400000;
@@ -144,22 +144,22 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, height: 56 },
   headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, marginHorizontal: 16, marginTop: 8, marginBottom: 8, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
-  searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
+  searchInput: { flex: 1, ...font.regular, fontSize: 16, color: colors.text },
   list: { paddingHorizontal: 16, paddingBottom: 120 },
   taxCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, marginTop: 8 },
   taxIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.taxSoft, alignItems: 'center', justifyContent: 'center' },
-  taxLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textSecondary },
-  taxValue: { fontFamily: fonts.monoBold, fontSize: 20, color: colors.text },
-  pill: { fontFamily: fonts.bold, fontSize: 12, color: colors.warnText, backgroundColor: colors.warnBg, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, overflow: 'hidden' },
+  taxLabel: { ...font.semibold, fontSize: 13, color: colors.textSecondary },
+  taxValue: { ...font.monoBold, fontSize: 20, color: colors.text },
+  pill: { ...font.bold, fontSize: 12, color: colors.warnText, backgroundColor: colors.warnBg, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, overflow: 'hidden' },
   sectionTitle: { marginTop: 20, marginBottom: 8, paddingHorizontal: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, paddingHorizontal: 14, paddingVertical: 12 },
   rowFirst: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
   rowLast: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
   rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  store: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  amount: { fontFamily: fonts.mono, fontSize: 16, color: colors.text },
-  noResults: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+  store: { ...font.bold, fontSize: 16, color: colors.text },
+  meta: { ...font.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  amount: { ...font.mono, fontSize: 16, color: colors.text },
+  noResults: { ...font.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 40 },
   fab: {
     position: 'absolute', right: 20, bottom: 20, width: 60, height: 60, borderRadius: 30, backgroundColor: colors.accent,
     alignItems: 'center', justifyContent: 'center', shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 14, shadowOffset: { width: 0, height: 10 }, elevation: 6,
@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
   emptyArt: { width: 150, height: 150, borderRadius: 75, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   emptyPaper: { width: 64, height: 80, borderRadius: 10, backgroundColor: '#FFFFFF', padding: 12, gap: 6, transform: [{ rotate: '-6deg' }] },
   line: { height: 4, borderRadius: 2, backgroundColor: '#ECECF0' },
-  emptyTitle: { fontFamily: fonts.extrabold, fontSize: 22, color: colors.text },
-  emptyText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center' },
+  emptyTitle: { ...font.extrabold, fontSize: 22, color: colors.text },
+  emptyText: { ...font.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center' },
   emptyBtn: { marginTop: 14, height: 52, paddingHorizontal: 24, borderRadius: radius.lg, backgroundColor: colors.accent, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  emptyBtnText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
+  emptyBtnText: { ...font.bold, fontSize: 17, color: '#FFFFFF' },
 });

@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, PieChart, Utensils, Lightbulb, LucideIcon } from 'lucide-react-native';
+import { ChevronRight, PieChart, Utensils, Lightbulb, LucideIcon } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { inSpendRange, spendByCategory, spendRange, spendTips, spendTrend, SpendRange, SPEND_RANGE_LABEL } from '../utils/spend';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, fonts, radius, type } from '../theme';
+import { colors, font, radius, type } from '../theme';
 
 const RANGES: SpendRange[] = ['all', 'week', 'lastWeek', 'month', 'lastMonth'];
 const TIP_ICON: Record<string, [LucideIcon, string, string]> = {
@@ -53,7 +53,7 @@ export default function InsightsScreen({ navigation }: any) {
             <Stat label="Receipts" value={String(data.count)} />
             <Stat label="Avg. Receipt" value={formatCents(data.count ? Math.round(data.total / data.count) : 0)} />
             <Pressable style={styles.hstTile} onPress={() => navigation.navigate('TaxSummary')} accessibilityRole="button" accessibilityLabel={`Total HST ${formatCents(data.hst)}`}>
-              <Text style={[styles.statLabel, { color: colors.taxText, fontFamily: fonts.bold }]}>Total HST ›</Text>
+              <Text style={[styles.statLabel, { color: colors.taxText, ...font.bold }]}>Total HST ›</Text>
               <Text style={styles.statValue}>{formatCents(data.hst)}</Text>
             </Pressable>
           </View>
@@ -71,7 +71,7 @@ export default function InsightsScreen({ navigation }: any) {
               <View style={styles.chart}>
                 {data.trend.map((b, i) => (
                   <View key={i} style={styles.barCol}>
-                    <Text style={[styles.barVal, i === peak && { color: colors.text, fontFamily: fonts.monoBold }]} numberOfLines={1}>
+                    <Text style={[styles.barVal, i === peak && { color: colors.text, ...font.monoBold }]} numberOfLines={1}>
                       {b.totalCents ? `$${Math.round(b.totalCents / 100)}` : ''}
                     </Text>
                     <View style={[styles.bar, { height: Math.max(3, (b.totalCents / max) * CHART_H) }, i === peak && { backgroundColor: colors.accent }]} />
@@ -140,33 +140,33 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 16, paddingBottom: 40 },
   chip: { height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.card, justifyContent: 'center' },
   chipOn: { backgroundColor: colors.text },
-  chipText: { fontFamily: fonts.semibold, fontSize: 14, color: '#3A3A40' },
-  chipTextOn: { fontFamily: fonts.bold, color: '#FFFFFF' },
+  chipText: { ...font.semibold, fontSize: 14, color: '#3A3A40' },
+  chipTextOn: { ...font.bold, color: '#FFFFFF' },
   card: { backgroundColor: colors.card, borderRadius: radius.xl, padding: 18, gap: 14 },
-  label: { fontFamily: fonts.semibold, fontSize: 14, color: colors.textSecondary },
-  hero: { fontFamily: fonts.mono, fontSize: 40, letterSpacing: -1.2, color: colors.text, marginTop: -8 },
+  label: { ...font.semibold, fontSize: 14, color: colors.textSecondary },
+  hero: { ...font.mono, fontSize: 40, letterSpacing: -1.2, color: colors.text, marginTop: -8 },
   hr: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
   stats: { flexDirection: 'row', gap: 8 },
-  statLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textSecondary },
-  statValue: { fontFamily: fonts.mono, fontSize: 18, color: colors.text },
+  statLabel: { ...font.semibold, fontSize: 13, color: colors.textSecondary },
+  statValue: { ...font.mono, fontSize: 18, color: colors.text },
   hstTile: { flex: 1, gap: 2, backgroundColor: '#FFF4EB', borderRadius: 10, margin: -6, padding: 6 },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  meta: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textSecondary },
-  empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', paddingVertical: 30 },
+  meta: { ...font.semibold, fontSize: 13, color: colors.textSecondary },
+  empty: { ...font.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', paddingVertical: 30 },
   chart: { height: CHART_H + 24, flexDirection: 'row', alignItems: 'flex-end', gap: 8, borderBottomWidth: 1, borderBottomColor: '#C7C7CC' },
   barCol: { flex: 1, alignItems: 'center', gap: 4 },
-  barVal: { fontFamily: fonts.mono, fontSize: 10, color: colors.textSecondary },
+  barVal: { ...font.mono, fontSize: 10, color: colors.textSecondary },
   bar: { width: '100%', maxWidth: 44, borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: '#A9C8F2' },
   labels: { flexDirection: 'row', gap: 8, marginTop: -6 },
-  barLabel: { flex: 1, textAlign: 'center', fontFamily: fonts.semibold, fontSize: 11, color: colors.textSecondary },
-  link: { fontFamily: fonts.bold, fontSize: 14, color: colors.accent },
+  barLabel: { flex: 1, textAlign: 'center', ...font.semibold, fontSize: 11, color: colors.textSecondary },
+  link: { ...font.bold, fontSize: 14, color: colors.accent },
   catHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  catName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
-  catVal: { fontFamily: fonts.regular, fontSize: 15, color: colors.textSecondary },
-  mono: { fontFamily: fonts.mono, color: colors.text },
+  catName: { ...font.semibold, fontSize: 15, color: colors.text },
+  catVal: { ...font.regular, fontSize: 15, color: colors.textSecondary },
+  mono: { ...font.mono, color: colors.text },
   track: { height: 8, borderRadius: 4, backgroundColor: '#EFEFF3', overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4, backgroundColor: colors.accent },
   tip: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14 },
   tipIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  tipText: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.textSecondary, marginTop: 2 },
+  tipText: { ...font.regular, fontSize: 14, lineHeight: 20, color: colors.textSecondary, marginTop: 2 },
 });

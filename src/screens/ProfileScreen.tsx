@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Image, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, DollarSign, Percent, LayoutGrid, Check } from 'lucide-react-native';
+import { LogOut, DollarSign, Percent, LayoutGrid, Check } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { Section, SettingRow } from '../components/ui';
 import { confirmAction, shareCSV, shareJSON, triggerHaptic } from '../utils/nativeUtils';
 import { inSpendRange, spendRange } from '../utils/spend';
 import { config } from '../config';
-import { colors, fonts, radius, type } from '../theme';
+import { colors, font, radius, type } from '../theme';
 import appJson from '../../app.json';
 import type { UserProfile } from '../types';
 
@@ -50,7 +50,7 @@ export default function ProfileScreen({ navigation }: any) {
     triggerHaptic('success');
   });
 
-  const about = () => Alert.alert('Receiptfy', `Version ${appJson.expo.version}\nTotals come from the tax read on each receipt. Check with your accountant before filing.`);
+  const about = () => Alert.alert('Receipt TaX', `Version ${appJson.expo.version}\nTotals come from the tax read on each receipt. Check with your accountant before filing.`);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -108,7 +108,7 @@ export default function ProfileScreen({ navigation }: any) {
           <LogOut size={18} color={colors.danger} />
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
-        <Text style={styles.version}>Receiptfy · v{appJson.expo.version}</Text>
+        <Text style={styles.version}>Receipt TaX · v{appJson.expo.version}</Text>
       </ScrollView>
 
       <OptionSheet visible={sheet === 'currency'} title="Currency" options={CURRENCIES} value={p.currency}
@@ -174,24 +174,24 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 22, paddingBottom: 40 },
   card: { backgroundColor: colors.card, borderRadius: radius.xl, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: fonts.extrabold, fontSize: 24, color: '#FFFFFF' },
-  name: { fontFamily: fonts.extrabold, fontSize: 19, color: colors.text },
-  email: { fontFamily: fonts.regular, fontSize: 14, color: colors.textSecondary, marginTop: 2 },
+  avatarText: { ...font.extrabold, fontSize: 24, color: '#FFFFFF' },
+  name: { ...font.extrabold, fontSize: 19, color: colors.text },
+  email: { ...font.regular, fontSize: 14, color: colors.textSecondary, marginTop: 2 },
   edit: { height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.accentSoft, justifyContent: 'center' },
-  editText: { fontFamily: fonts.bold, fontSize: 14, color: '#0050A8' },
+  editText: { ...font.bold, fontSize: 14, color: '#0050A8' },
   signOut: { height: 52, borderRadius: radius.lg, backgroundColor: colors.card, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  signOutText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.danger },
-  version: { fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, textAlign: 'center' },
+  signOutText: { ...font.semibold, fontSize: 17, color: colors.danger },
+  version: { ...font.regular, fontSize: 12, color: colors.textMuted, textAlign: 'center' },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,10,14,0.45)' },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 40, gap: 16 },
   grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
   exportRow: { minHeight: 60, borderRadius: radius.lg, backgroundColor: colors.card, paddingHorizontal: 16, justifyContent: 'center' },
-  exportText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
+  exportText: { ...font.semibold, fontSize: 16, color: colors.text },
   cancel: { height: 52, borderRadius: radius.lg, backgroundColor: colors.fill, alignItems: 'center', justifyContent: 'center' },
-  cancelText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.text },
+  cancelText: { ...font.semibold, fontSize: 17, color: colors.text },
   optGroup: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   opt: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, minHeight: 56, paddingVertical: 8 },
   optBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  optLabel: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
-  optSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
+  optLabel: { ...font.semibold, fontSize: 16, color: colors.text },
+  optSub: { ...font.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
 });

@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { ZoomIn, FadeInDown } from 'react-native-reanimated';
-import { Check, Image as ImageIcon, ReceiptText, ImageOff } from 'lucide-react-native';
+import { Check, Image as ImageIcon, ReceiptText, ImageOff } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { Button } from '../components/ui';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, fonts, radius } from '../theme';
+import { colors, font, radius } from '../theme';
 
 export default function ScanSavedScreen({ route, navigation }: any) {
   const { receipts, categories, userProfile } = useReceipts();
@@ -62,8 +62,8 @@ export default function ScanSavedScreen({ route, navigation }: any) {
 
 const Row = ({ label, value, strong }: { label: string; value: string; strong?: boolean }) => (
   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-    <Text style={[styles.miniLabel, strong && { fontFamily: fonts.extrabold, color: colors.text, fontSize: 13 }]}>{label}</Text>
-    <Text style={[styles.miniValue, strong && { fontFamily: fonts.monoBold, fontSize: 13 }]}>{value}</Text>
+    <Text style={[styles.miniLabel, strong && { ...font.extrabold, color: colors.text, fontSize: 13 }]}>{label}</Text>
+    <Text style={[styles.miniValue, strong && { ...font.monoBold, fontSize: 13 }]}>{value}</Text>
   </View>
 );
 
@@ -72,18 +72,18 @@ const styles = StyleSheet.create({
   body: { flex: 1, alignItems: 'center', paddingTop: 60, paddingHorizontal: 20, gap: 8 },
   badgeOuter: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.successSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   badge: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.success, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: fonts.extrabold, fontSize: 28, letterSpacing: -0.8, color: colors.text },
-  sub: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center', maxWidth: 290 },
+  title: { ...font.extrabold, fontSize: 28, letterSpacing: -0.8, color: colors.text },
+  sub: { ...font.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center', maxWidth: 290 },
   cards: { flexDirection: 'row', gap: 12, marginTop: 26, alignSelf: 'stretch' },
   card: { flex: 1, backgroundColor: colors.card, borderRadius: 18, padding: 14, gap: 8 },
   thumbDark: { height: 150, borderRadius: 10, backgroundColor: '#26262B', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   mini: { height: 150, borderRadius: 10, backgroundColor: '#F5F5F8', padding: 12, gap: 6 },
-  miniStore: { fontFamily: fonts.extrabold, fontSize: 13, color: colors.text },
+  miniStore: { ...font.extrabold, fontSize: 13, color: colors.text },
   dash: { height: 1, backgroundColor: colors.border, marginVertical: 4 },
-  miniLabel: { fontFamily: fonts.regular, fontSize: 11, color: colors.textSecondary },
-  miniValue: { fontFamily: fonts.mono, fontSize: 11, color: colors.text },
+  miniLabel: { ...font.regular, fontSize: 11, color: colors.textSecondary },
+  miniValue: { ...font.mono, fontSize: 11, color: colors.text },
   label: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  labelText: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  caption: { fontFamily: fonts.regular, fontSize: 13, color: colors.textSecondary },
+  labelText: { ...font.bold, fontSize: 15, color: colors.text },
+  caption: { ...font.regular, fontSize: 13, color: colors.textSecondary },
   actions: { padding: 16, gap: 10 },
 });
