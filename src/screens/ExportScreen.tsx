@@ -8,7 +8,7 @@ import { Button, Segmented, SettingRow } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
 import { shareCSV, shareJSON } from '../utils/nativeUtils';
 import { formatCents, getPeriodRange, resolveReceiptTax } from '../utils/tax';
-import { colors, font, radius, type } from '../theme';
+import { colors, font, radius, type, themedStyles } from '../theme';
 
 type Preset = 'year' | 'lastYear' | 'quarter' | 'month' | 'custom';
 type Format = 'csv' | 'json';
@@ -83,7 +83,7 @@ export default function ExportScreen({ route, navigation }: any) {
             </View>
 
             <Text style={[kit.sectionLabel, styles.label]}>Period</Text>
-            <View style={{ marginHorizontal: -16 }}><Chips options={presets} value={preset} onChange={setPreset} tint={colors.accent} /></View>
+            <View style={{ marginHorizontal: -16 }}><Chips options={presets} value={preset} onChange={setPreset} tint={colors.accentFill} /></View>
             <View style={kit.card}>
               <SettingRow first label="From" value={shortDate(range.start.toISOString(), true)} />
               <SettingRow label="To" value={shortDate(last.toISOString(), true)} />
@@ -111,7 +111,7 @@ export default function ExportScreen({ route, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   head: { height: 56, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
   headBtn: { width: 76, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
@@ -124,4 +124,4 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
   done: { alignItems: 'center', gap: 6, paddingTop: 40, paddingHorizontal: 16 },
   doneTitle: { ...font.bold, fontSize: 28, color: colors.text },
-});
+}));

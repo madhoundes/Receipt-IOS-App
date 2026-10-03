@@ -8,7 +8,7 @@ import { NavBar, Segmented } from '../../components/ui';
 import { useReceipts } from '../../context/ReceiptContext';
 import { inSpendRange, spendRange, SpendRange } from '../../utils/spend';
 import { formatCents, resolveReceiptTax, toCents } from '../../utils/tax';
-import { colors, font, type } from '../../theme';
+import { colors, font, type, themedStyles } from '../../theme';
 import { CATEGORY_RANGES } from './CategoriesScreen';
 
 const TAX_LABEL = { none: 'No tax on this category', add: 'Tax added at checkout', included: 'Tax included in price' } as const;
@@ -80,10 +80,10 @@ export default function CategoryDetailScreen({ route, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, paddingTop: 8, paddingBottom: 48, gap: 12 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   title: { ...font.bold, fontSize: 28, lineHeight: 34, color: colors.text },
   empty: { alignItems: 'center', gap: 4, paddingTop: 12 },
-});
+}));

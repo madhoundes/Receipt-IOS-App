@@ -6,7 +6,7 @@ import { Button } from '../../components/ui';
 import { Illustration } from '../../components/Illustration';
 import { useAuth } from '../../context/AuthContext';
 import { triggerHaptic } from '../../utils/nativeUtils';
-import { colors, font } from '../../theme';
+import { colors, font, soft, themedStyles, tone } from '../../theme';
 
 type Slide = { key: string; title: string; subtitle: string; art: 'hero' | 'scan' | 'tax' | 'organize' | 'insights' };
 
@@ -19,10 +19,11 @@ const SLIDES: Slide[] = [
   { key: 'insights', art: 'insights', title: 'See where money goes', subtitle: 'Monthly totals and HST by category, ready whenever you need them.' },
 ];
 
-const FEATURES: { Icon: AppIcon; tint: string; color: string; title: string; text: string }[] = [
+// A function, so the colours follow the active scheme.
+const features = (): { Icon: AppIcon; tint: string; color: string; title: string; text: string }[] => [
   { Icon: Scan, tint: colors.accentSoft, color: colors.accent, title: 'Scan in seconds', text: 'Store, date, total and HST read for you' },
   { Icon: Undo, tint: colors.taxSoft, color: colors.tax, title: 'Never miss a return', text: 'The original image, always one tap away' },
-  { Icon: PieChart, tint: '#E6EFFC', color: '#0A5BC4', title: 'Tax-ready reports', text: 'HST by category, ready to export' },
+  { Icon: PieChart, tint: soft(tone('#0A5BC4')), color: tone('#0A5BC4'), title: 'Tax-ready reports', text: 'HST by category, ready to export' },
 ];
 
 function HeroArt() {
@@ -67,7 +68,7 @@ function Art({ kind }: { kind: Slide['art'] }) {
   if (kind === 'hero') return <HeroArt />;
   if (kind === 'tax') return <TaxArt />;
   if (kind === 'scan') return <IconArt Icon={Scan} tint={colors.accentSoft} color={colors.accent} />;
-  if (kind === 'organize') return <IconArt Icon={LayoutGrid} tint="#EEEAFB" color="#5A3CC2" />;
+  if (kind === 'organize') return <IconArt Icon={LayoutGrid} tint={soft(tone('#5A3CC2'))} color={tone('#5A3CC2')} />;
   return <IconArt Icon={BarChart3} tint={colors.taxSoft} color={colors.tax} />;
 }
 
@@ -123,7 +124,7 @@ export default function OnboardingScreen({ navigation }: any) {
             <Text style={styles.subtitle}>{item.subtitle}</Text>
             {item.art === 'hero' && (
               <View style={styles.features}>
-                {FEATURES.map(f => (
+                {features().map(f => (
                   <View key={f.title} style={styles.feature}>
                     <View style={[styles.featureIcon, { backgroundColor: f.tint }]}><f.Icon size={22} color={f.color} /></View>
                     <View style={{ flex: 1 }}>
@@ -150,7 +151,7 @@ export default function OnboardingScreen({ navigation }: any) {
 
 const shadow = { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 3 };
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   topBar: { height: 44, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16 },
   iconBtn: { width: 44, height: 44, justifyContent: 'center' },
@@ -165,8 +166,8 @@ const styles = StyleSheet.create({
   chip: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 6, ...shadow },
   chipHst: { right: 0, top: 34, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.taxSoft },
   chipHstText: { ...font.bold, fontSize: 13, color: colors.tax },
-  chipSaved: { left: 0, bottom: 30, paddingVertical: 8, paddingLeft: 8, paddingRight: 12, borderRadius: 18, backgroundColor: '#FFFFFF' },
-  chipTick: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  chipSaved: { left: 0, bottom: 30, paddingVertical: 8, paddingLeft: 8, paddingRight: 12, borderRadius: 18, backgroundColor: colors.elevated },
+  chipTick: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.accentFill, alignItems: 'center', justifyContent: 'center' },
   chipSavedText: { ...font.semibold, fontSize: 13, color: colors.text },
 
   features: { gap: 16, marginTop: 24, paddingHorizontal: 8 },
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
   featureTitle: { ...font.semibold, fontSize: 17, color: colors.text },
   featureText: { ...font.regular, fontSize: 15, color: colors.textSecondary, marginTop: 1 },
 
-  taxCard: { width: 250, backgroundColor: '#FFFFFF', borderRadius: 22, padding: 20, gap: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 36, shadowOffset: { width: 0, height: 18 }, elevation: 6 },
+  taxCard: { width: 250, backgroundColor: colors.card, borderRadius: 22, padding: 20, gap: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 36, shadowOffset: { width: 0, height: 18 }, elevation: 6 },
   taxLabel: { ...font.semibold, fontSize: 12, letterSpacing: 0.5, color: colors.textSecondary },
   taxRow: { flexDirection: 'row', justifyContent: 'space-between' },
   taxText: { ...font.regular, fontSize: 15, color: colors.text, fontVariant: ['tabular-nums'] },
@@ -187,10 +188,10 @@ const styles = StyleSheet.create({
   taxFootText: { ...font.semibold, fontSize: 13, color: colors.accent },
 
   iconCircle: { width: 250, height: 250, borderRadius: 125, alignItems: 'center', justifyContent: 'center' },
-  iconTile: { width: 140, height: 140, borderRadius: 36, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', ...shadow },
+  iconTile: { width: 140, height: 140, borderRadius: 36, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center', ...shadow },
 
   bottom: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 8, gap: 16 },
   dots: { flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#C7C7CC' },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.grabber },
   dotActive: { width: 18, backgroundColor: colors.accent },
-});
+}));

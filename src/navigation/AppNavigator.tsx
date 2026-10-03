@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, DefaultTheme, NavigationState } from '@react-navigation/native';
 import { TabBar } from '../components/TabBar';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
+import { useAppScheme } from '../context/useAppScheme';
 import { colors } from '../theme';
 
 import LaunchScreen from '../screens/auth/LaunchScreen';
@@ -33,7 +35,6 @@ import EditCategoryScreen from '../screens/categories/EditCategoryScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.bg, primary: colors.accent } };
 
 /** Tabs from the design: Home · Receipts · Categories · HST, plus the round Scan button in the bar. */
 function MainTabs() {
@@ -100,17 +101,25 @@ function AuthStack({ hasOnboarded }: { hasOnboarded: boolean }) {
 export default function AppNavigator() {
   const { loading, user, hasOnboarded } = useAuth();
   const { loading: dataLoading } = useReceipts();
+  // Sets the palette before any screen below renders.
+  const scheme = useAppScheme();
+  // Kept across the remount that a Light/Dark switch causes, so the user stays on the same screen.
+  const navState = useRef<NavigationState | undefined>(undefined);
 
   if (loading || dataLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: colors.accentFill, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
 
+  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const navTheme = { ...base, colors: { ...base.colors, background: colors.bg, card: colors.card, text: colors.text, border: colors.separator, primary: colors.accent } };
+
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer key={scheme} theme={navTheme} initialState={navState.current} onStateChange={s => { navState.current = s; }}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       {user ? <AppStack /> : <AuthStack hasOnboarded={hasOnboarded} />}
     </NavigationContainer>
   );

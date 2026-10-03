@@ -5,7 +5,7 @@ import { Check, Search, X } from './icons';
 import { MerchantAvatar } from './MerchantAvatar';
 import { useReceipts } from '../context/ReceiptContext';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, font, radius } from '../theme';
+import { colors, font, radius, themedStyles } from '../theme';
 import type { Receipt } from '../types';
 
 /** Space to leave at the bottom of a tab screen so content clears the floating tab bar. */
@@ -67,7 +67,7 @@ export function Chips<T extends string>({ options, value, onChange, tint }: {
         return (
           <Pressable key={o.value} onPress={() => onChange(o.value)} accessibilityRole="button" accessibilityState={{ selected: on }}
             style={[kit.chip, on && { backgroundColor: tint ?? colors.text }]}>
-            <Text style={[kit.chipText, on && { color: '#FFFFFF', ...font.semibold }]}>{o.label}</Text>
+            <Text style={[kit.chipText, on && { color: tint ? '#FFFFFF' : colors.bg, ...font.semibold }]}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -108,7 +108,7 @@ export function ReceiptRow({ receipt, onPress, meta, first, highlight }: {
   return (
     <Pressable onPress={onPress} accessibilityRole="button"
       accessibilityLabel={`${receipt.storeName}, ${formatCents(toCents(receipt.totalAmount))}, ${line}`}
-      style={({ pressed }) => [kit.row, !first && kit.rowBorder, pressed && { backgroundColor: '#F7F7FA' }]}>
+      style={({ pressed }) => [kit.row, !first && kit.rowBorder, pressed && { backgroundColor: colors.pressed }]}>
       <MerchantAvatar name={receipt.storeName} category={receipt.category} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={kit.rowTitle} numberOfLines={1}>{receipt.storeName}</Text>
@@ -169,19 +169,19 @@ export function OptionSheet<T extends string | number>({ visible, title, options
   );
 }
 
-export const kit = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
+export const kit = themedStyles(() => ({
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,
   },
-  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
+  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: colors.grabber },
   sheetTitle: { ...font.semibold, fontSize: 17, color: colors.text, textAlign: 'center' },
   opt: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, minHeight: 50, paddingVertical: 8, backgroundColor: colors.card },
   optText: { ...font.regular, fontSize: 17, color: colors.text },
   optSub: { ...font.regular, fontSize: 13, color: colors.textSecondary, marginTop: 1 },
   round: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 2,
   },
   roundDark: { backgroundColor: 'rgba(40,40,42,0.7)', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.15)' },
@@ -192,10 +192,10 @@ export const kit = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, paddingHorizontal: 10, height: 36, borderRadius: 10,
     backgroundColor: colors.fill,
   },
-  searchOutlined: { backgroundColor: '#FFFFFF', height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: colors.accent, marginHorizontal: 0, flex: 1 },
+  searchOutlined: { backgroundColor: colors.card, height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: colors.accent, marginHorizontal: 0, flex: 1 },
   searchInput: { flex: 1, ...font.regular, fontSize: 17, color: colors.text, padding: 0, minWidth: 0 },
   chips: { paddingHorizontal: 16, gap: 8, paddingVertical: 2 },
-  chip: { height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: '#FFFFFF', justifyContent: 'center' },
+  chip: { height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: colors.elevated, justifyContent: 'center' },
   chipText: { ...font.regular, fontSize: 15, color: colors.text },
   card: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   sectionLabel: { ...font.regular, fontSize: 13, color: colors.textSecondary, textTransform: 'uppercase', paddingHorizontal: 16 },
@@ -210,4 +210,4 @@ export const kit = StyleSheet.create({
   rowAmount: { ...font.semibold, fontSize: 17, color: colors.text, fontVariant: ['tabular-nums'] },
   rowHst: { ...font.bold, fontSize: 12, color: colors.tax, fontVariant: ['tabular-nums'] },
   link: { ...font.regular, fontSize: 17, color: colors.accent },
-});
+}));

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Home, LayoutGrid, Percent, ReceiptText, Scan } from './icons';
 import { triggerHaptic } from '../utils/nativeUtils';
-import { colors, font } from '../theme';
+import { colors, font, themedStyles } from '../theme';
 
 const ICONS: Record<string, typeof Home> = { Home, Receipts: ReceiptText, Categories: LayoutGrid, HST: Percent };
 
@@ -40,14 +40,14 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 
 const shadow = { shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8 };
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrap: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
   bar: {
-    flex: 1, height: 62, borderRadius: 31, backgroundColor: 'rgba(255,255,255,0.96)', flexDirection: 'row', alignItems: 'center',
+    flex: 1, height: 62, borderRadius: 31, backgroundColor: colors.tabBar, flexDirection: 'row', alignItems: 'center',
     padding: 4, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(0,0,0,0.06)', ...shadow,
   },
   item: { flex: 1, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', gap: 2 },
   itemOn: { backgroundColor: colors.accentSoft },
   label: { ...font.medium, fontSize: 10, color: colors.text },
-  scan: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', ...shadow },
-});
+  scan: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.accentFill, alignItems: 'center', justifyContent: 'center', ...shadow },
+}));

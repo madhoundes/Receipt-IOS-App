@@ -11,7 +11,7 @@ import { triggerHaptic } from '../utils/nativeUtils';
 import {
   ReceiptTax, TaxPeriod, formatCents, formatPeriodLabel, getPeriodRange, shiftPeriod, summarizeTax, toCents,
 } from '../utils/tax';
-import { colors, font, radius, type } from '../theme';
+import { colors, font, radius, type, themedStyles } from '../theme';
 
 const PERIODS: { value: TaxPeriod; label: string }[] = [
   { value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter' }, { value: 'year', label: 'Year' },
@@ -95,7 +95,7 @@ export default function TaxSummaryScreen({ navigation }: any) {
                 <Pressable style={styles.applyBtn} onPress={() => applySuggestion(t)} accessibilityRole="button">
                   <Text style={styles.applyText}>Add {formatCents(t.suggestedHstCents ?? 0)}</Text>
                 </Pressable>
-                <Pressable style={[styles.applyBtn, { backgroundColor: '#FFFFFF' }]} onPress={() => markNoTax(t)} accessibilityRole="button">
+                <Pressable style={[styles.applyBtn, { backgroundColor: colors.elevated }]} onPress={() => markNoTax(t)} accessibilityRole="button">
                   <Text style={[styles.applyText, { color: colors.text }]}>No tax</Text>
                 </Pressable>
               </View>
@@ -150,7 +150,7 @@ export default function TaxSummaryScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { paddingBottom: TAB_BAR_SPACE, gap: 12 },
   pad: { paddingHorizontal: 16 },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   heroValue: { ...font.bold, fontSize: 40, lineHeight: 48, color: colors.tax, fontVariant: ['tabular-nums'] },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: CHART_H + 20, marginTop: 14 },
   barCol: { flex: 1, justifyContent: 'flex-end', gap: 5 },
-  bar: { borderRadius: 4, backgroundColor: '#F1CFA3' },
+  bar: { borderRadius: 4, backgroundColor: colors.taxBar },
   barLabel: { ...font.regular, fontSize: 10, color: colors.textSecondary, textAlign: 'center' },
   warn: { marginHorizontal: 16, backgroundColor: colors.warnBg, borderColor: colors.warnBorder, borderWidth: 1, borderRadius: radius.lg, padding: 14, gap: 12 },
   warnTitle: { ...font.semibold, fontSize: 17, color: colors.warnText },
@@ -169,14 +169,14 @@ const styles = StyleSheet.create({
   reviewRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.warnBorder, paddingTop: 10 },
   reviewStore: { ...font.semibold, fontSize: 15, color: colors.text },
   reviewMeta: { ...font.regular, fontSize: 13, color: colors.warnText },
-  applyBtn: { height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: colors.tax, alignItems: 'center', justifyContent: 'center' },
+  applyBtn: { height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: colors.taxFill, alignItems: 'center', justifyContent: 'center' },
   applyText: { ...font.semibold, fontSize: 14, color: '#FFFFFF' },
   catRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.card },
   catVal: { ...font.semibold, fontSize: 17, color: colors.text, fontVariant: ['tabular-nums'] },
   send: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
   sendIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  exportBtn: { height: 36, paddingHorizontal: 16, borderRadius: 18, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  exportBtn: { height: 36, paddingHorizontal: 16, borderRadius: 18, backgroundColor: colors.accentFill, alignItems: 'center', justifyContent: 'center' },
   exportText: { ...font.semibold, fontSize: 15, color: '#FFFFFF' },
   empty: { alignItems: 'center', gap: 4, padding: 20 },
   footnote: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 32 },
-});
+}));

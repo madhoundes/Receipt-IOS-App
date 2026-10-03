@@ -5,7 +5,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { ReceiptText } from '../../components/icons';
 import { Button } from '../../components/ui';
-import { colors, font } from '../../theme';
+import { colors, font, themedStyles } from '../../theme';
 
 // A1 Launch
 export default function LaunchScreen({ navigation }: any) {
@@ -29,8 +29,8 @@ export default function LaunchScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.accent, paddingHorizontal: 24 },
+const styles = themedStyles(() => ({
+  container: { flex: 1, backgroundColor: colors.accentFill, paddingHorizontal: 24 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 18 },
   logo: {
     width: 108, height: 108, borderRadius: 26, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
@@ -39,4 +39,4 @@ const styles = StyleSheet.create({
   title: { ...font.bold, fontSize: 34, letterSpacing: -0.4, color: '#FFFFFF' },
   tagline: { ...font.regular, fontSize: 17, color: 'rgba(255,255,255,0.85)', textAlign: 'center' },
   actions: { gap: 6, paddingBottom: 12 },
-});
+}));

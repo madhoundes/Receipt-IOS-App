@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'r
 import { Check, Search, Settings } from './icons';
 import { CategoryIcon } from './CategoryIcon';
 import { useReceipts } from '../context/ReceiptContext';
-import { colors, font, radius, type } from '../theme';
+import { colors, font, radius, type, themedStyles } from '../theme';
 
 /**
  * Category sheet (design B6). Tap a category to pick it; the chosen one expands to show its
@@ -103,7 +103,7 @@ export function CategoryPickerSheet({ visible, category, subcategory, onClose, o
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrap: { flex: 1, backgroundColor: colors.bg },
   head: { height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   headBtn: { minWidth: 72, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
@@ -120,9 +120,9 @@ const styles = StyleSheet.create({
   name: { ...font.semibold, fontSize: 17, color: colors.text },
   subs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingLeft: 60, paddingRight: 16, paddingBottom: 12 },
   chip: { height: 32, paddingHorizontal: 14, borderRadius: 16, backgroundColor: colors.accentSoft, justifyContent: 'center' },
-  chipOn: { backgroundColor: colors.accent },
+  chipOn: { backgroundColor: colors.accentFill },
   chipText: { ...font.semibold, fontSize: 15, color: colors.accent },
   sep: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginLeft: 60 },
   manage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, marginTop: 8 },
   manageText: { ...font.regular, fontSize: 17, color: colors.accent },
-});
+}));

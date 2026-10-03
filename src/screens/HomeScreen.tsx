@@ -11,7 +11,7 @@ import { useReceipts } from '../context/ReceiptContext';
 import { daysLeft, openReturns } from '../utils/returns';
 import { spendByCategory } from '../utils/spend';
 import { formatCents, resolveReceiptTax, summarizeTax } from '../utils/tax';
-import { colors, font, radius } from '../theme';
+import { colors, font, radius, themedStyles } from '../theme';
 
 const monthLabel = (d: Date) => d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
 
@@ -138,7 +138,7 @@ export default function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { paddingBottom: TAB_BAR_SPACE, gap: 14 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     borderRadius: 17, backgroundColor: colors.fill,
   },
   monthText: { ...font.semibold, fontSize: 15, color: colors.text },
-  hero: { marginHorizontal: 16, backgroundColor: colors.accent, borderRadius: radius.xl, padding: 20, gap: 4 },
+  hero: { marginHorizontal: 16, backgroundColor: colors.accentFill, borderRadius: radius.xl, padding: 20, gap: 4 },
   heroLabel: { ...font.semibold, fontSize: 13, letterSpacing: 0.8, color: 'rgba(255,255,255,0.85)' },
   heroValue: { ...font.bold, fontSize: 44, lineHeight: 50, color: '#FFFFFF', fontVariant: ['tabular-nums'] },
   heroSub: { ...font.regular, fontSize: 15, color: 'rgba(255,255,255,0.9)' },
@@ -165,13 +165,13 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingHorizontal: 32, paddingTop: 24, gap: 8 },
   emptyTitle: { ...font.bold, fontSize: 22, color: colors.text },
   emptyText: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,
   },
-  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
+  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: colors.grabber },
   sheetTitle: { ...font.semibold, fontSize: 17, color: colors.text, textAlign: 'center' },
   opt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 48, backgroundColor: colors.card },
   optText: { ...font.regular, fontSize: 17, color: colors.text },
-});
+}));

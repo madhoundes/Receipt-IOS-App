@@ -12,7 +12,7 @@ import { Button, Segmented } from '../components/ui';
 import { checkTotals, formatCents, resolveReceiptTax, toCents } from '../utils/tax';
 import { persistReceiptPhoto } from '../utils/photos';
 import { triggerHaptic } from '../utils/nativeUtils';
-import { colors, font, radius, type } from '../theme';
+import { colors, font, radius, type, themedStyles, soft } from '../theme';
 import type { OcrResult } from '../services/ocr';
 import type { Receipt } from '../types';
 
@@ -245,14 +245,14 @@ export default function ScanResultScreen({ route, navigation }: any) {
                   <Text style={styles.rowLabel}>Category</Text>
                   <View style={styles.catValue}>
                     {category !== 'Other' || result ? (
-                      <View style={[styles.catChip, { backgroundColor: `${color}1F` }]}>
+                      <View style={[styles.catChip, { backgroundColor: soft(color) }]}>
                         <CategoryIcon category={category} size={20} />
                         <Text style={[styles.catChipText, { color }]} numberOfLines={1}>{category}</Text>
                       </View>
                     ) : (
                       <Text style={styles.choose}>Choose</Text>
                     )}
-                    <ChevronRight size={16} color="#AEAEB2" />
+                    <ChevronRight size={16} color={colors.chevron} />
                   </View>
                 </Pressable>
                 <InputRow label="Payment" value={payment} onChange={setPayment} placeholder="Card or cash (optional)" last />
@@ -395,7 +395,7 @@ const Banner = ({ tone, title, text, action, secondary }: {
   </View>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 76, height: 44, justifyContent: 'center', paddingHorizontal: 8, alignItems: 'flex-start' },
@@ -441,16 +441,16 @@ const styles = StyleSheet.create({
   qty: { ...font.semibold, fontSize: 13, color: colors.textSecondary, width: 26 },
   notes: { ...font.regular, fontSize: 17, color: colors.text, minHeight: 72, paddingTop: 12, paddingBottom: 12, textAlignVertical: 'top' },
   banner: { borderRadius: radius.lg, padding: 14, gap: 12, borderWidth: 1 },
-  bannerOk: { backgroundColor: colors.successSoft, borderColor: '#BFE6D3' },
+  bannerOk: { backgroundColor: colors.successSoft, borderColor: colors.accentBar },
   bannerWarn: { backgroundColor: colors.warnBg, borderColor: colors.warnBorder },
   bannerTitle: { ...font.semibold, fontSize: 17, color: colors.warnText },
   bannerText: { ...font.regular, fontSize: 15, lineHeight: 20, color: colors.warnText, marginTop: 2 },
   bannerActions: { flexDirection: 'row', gap: 10 },
-  fixBtn: { flex: 1, backgroundColor: colors.tax, borderRadius: 22, height: 44, justifyContent: 'center', alignItems: 'center' },
+  fixBtn: { flex: 1, backgroundColor: colors.taxFill, borderRadius: 22, height: 44, justifyContent: 'center', alignItems: 'center' },
   fixText: { ...font.semibold, fontSize: 17, color: '#FFFFFF' },
-  noTaxBtn: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 22, height: 44, justifyContent: 'center', alignItems: 'center' },
+  noTaxBtn: { flex: 1, backgroundColor: colors.elevated, borderRadius: 22, height: 44, justifyContent: 'center', alignItems: 'center' },
   noTaxText: { ...font.semibold, fontSize: 17, color: colors.text },
   error: { ...font.medium, fontSize: 15, color: colors.danger, paddingHorizontal: 4, marginTop: 6 },
   footer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, backgroundColor: colors.bg },
   viewerClose: { position: 'absolute', top: 60, left: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
-});
+}));

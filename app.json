@@ -5,7 +5,7 @@
     "scheme": "receiptfy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "backgroundColor": "#0B7A55"
     },
@@ -19,16 +19,22 @@
     },
     "android": {
       "package": "com.receiptfy.app",
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA"
+      ]
     },
     "plugins": [
       [
         "expo-camera",
-        { "cameraPermission": "Receipt TaX uses the camera to scan your receipts." }
+        {
+          "cameraPermission": "Receipt TaX uses the camera to scan your receipts."
+        }
       ],
       [
         "expo-image-picker",
-        { "photosPermission": "Receipt TaX imports receipt photos from your library." }
+        {
+          "photosPermission": "Receipt TaX imports receipt photos from your library."
+        }
       ]
     ]
   }

@@ -3,9 +3,9 @@ import {
   ActivityIndicator, Pressable, StyleSheet, Switch, Text, TextInput, TextInputProps, View, ViewStyle,
 } from 'react-native';
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from './icons';
-import { colors, font, radius } from '../theme';
+import { colors, font, isDark, radius, themedStyles } from '../theme';
 
-type ButtonVariant = 'primary' | 'secondary' | 'tinted' | 'dark' | 'ghost' | 'destructive' | 'onAccent' | 'ghostOnAccent';
+type ButtonVariant = 'primary' | 'secondary' | 'tinted' | 'dark' | 'glass' | 'ghost' | 'destructive' | 'onAccent' | 'ghostOnAccent';
 
 export function Button({
   title, onPress, variant = 'primary', loading = false, disabled = false, icon, style, compact = false,
@@ -20,7 +20,7 @@ export function Button({
   /** Smaller button for side-by-side pairs. */
   compact?: boolean;
 }) {
-  const v = VARIANTS[variant];
+  const v = variants()[variant];
   return (
     <Pressable
       onPress={onPress}
@@ -48,16 +48,20 @@ export function Button({
   );
 }
 
-const VARIANTS: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
-  primary: { bg: colors.accent, fg: '#FFFFFF' },
+// A function, so the colours follow the active scheme.
+const variants = (): Record<ButtonVariant, { bg: string; fg: string; border?: string }> => ({
+  primary: { bg: colors.accentFill, fg: '#FFFFFF' },
   secondary: { bg: colors.accentSoft, fg: colors.accent },
   tinted: { bg: colors.accentSoft, fg: colors.accent },
-  dark: { bg: '#000000', fg: '#FFFFFF' },
+  // Black in Light Mode, white in Dark Mode (the Sign in with Apple treatment).
+  dark: isDark() ? { bg: '#FFFFFF', fg: '#000000' } : { bg: '#000000', fg: '#FFFFFF' },
+  // For buttons that sit on the dark camera screens.
+  glass: { bg: '#2C2C2E', fg: '#FFFFFF' },
   ghost: { bg: 'transparent', fg: colors.accent },
   destructive: { bg: colors.dangerSoft, fg: colors.danger },
-  onAccent: { bg: '#FFFFFF', fg: colors.accent },
+  onAccent: { bg: '#FFFFFF', fg: '#0B7A55' },
   ghostOnAccent: { bg: 'transparent', fg: '#FFFFFF' },
-};
+});
 
 /** Grouped iOS-style field: small label above the input. */
 export function Field({
@@ -116,7 +120,7 @@ export function Divider({ label }: { label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   button: {
     height: 50, borderRadius: 25, borderWidth: 0, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 20,
@@ -130,9 +134,9 @@ const styles = StyleSheet.create({
   fieldError: { ...font.regular, fontSize: 13, color: colors.danger, paddingHorizontal: 16, paddingBottom: 8 },
   eye: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 14 },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: '#C6C6C8' },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.separator },
   dividerText: { ...font.regular, fontSize: 13, color: colors.textMuted },
-});
+}));
 
 /** iOS segmented control. */
 export function Segmented<T extends string>({ options, value, onChange, compact }: {
@@ -182,10 +186,10 @@ export function SettingRow({ label, value, onPress, toggle, onToggle, danger, fi
       </View>
       {!!value && <Text style={seg.rowValue}>{value}</Text>}
       {toggle !== undefined && (
-        <Switch value={toggle} onValueChange={onToggle} trackColor={{ true: '#0B7A55', false: '#D1D1D6' }}
-          thumbColor="#FFFFFF" ios_backgroundColor="#D1D1D6" accessibilityLabel={label} />
+        <Switch value={toggle} onValueChange={onToggle} trackColor={{ true: colors.accentFill, false: colors.border }}
+          thumbColor="#FFFFFF" ios_backgroundColor={colors.border} accessibilityLabel={label} />
       )}
-      {onPress && toggle === undefined && !danger && <ChevronRight size={16} color="#AEAEB2" />}
+      {onPress && toggle === undefined && !danger && <ChevronRight size={16} color={colors.chevron} />}
     </View>
   );
   return onPress ? <Pressable onPress={onPress} accessibilityRole="button">{content}</Pressable> : content;
@@ -201,15 +205,15 @@ export function Section({ title, children, footer }: { title?: string; children:
   );
 }
 
-const seg = StyleSheet.create({
+const seg = themedStyles(() => ({
   wrap: { flexDirection: 'row', backgroundColor: colors.fill, borderRadius: 9, padding: 2 },
   item: { flex: 1, height: 30, borderRadius: 7, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
-  on: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  on: { backgroundColor: colors.segmentOn, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   text: { ...font.regular, fontSize: 13, color: colors.text },
   textOn: { ...font.semibold, color: colors.text },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
   navBack: {
-    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.elevated,
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 2,
   },
   navText: { ...font.medium, fontSize: 17, color: colors.accent },
@@ -223,4 +227,4 @@ const seg = StyleSheet.create({
   sectionTitle: { ...font.regular, fontSize: 13, textTransform: 'uppercase', color: colors.textSecondary, paddingHorizontal: 16 },
   sectionBody: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
   footer: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16 },
-});
+}));

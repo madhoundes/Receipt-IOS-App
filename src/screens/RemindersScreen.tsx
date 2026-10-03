@@ -8,7 +8,7 @@ import { NavBar, SettingRow } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
 import { daysLeft, openReturns, windowDays } from '../utils/returns';
 import { formatCents, toCents } from '../utils/tax';
-import { colors, font, radius } from '../theme';
+import { colors, font, radius, themedStyles } from '../theme';
 
 const WINDOWS = [14, 30, 60, 90];
 const urgency = (left: number) => (left <= 3 ? colors.danger : left <= 7 ? colors.tax : colors.accent);
@@ -81,7 +81,7 @@ export default function RemindersScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, paddingBottom: 48, gap: 12 },
   big: { ...font.bold, fontSize: 28, lineHeight: 34, color: colors.text },
@@ -96,4 +96,4 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12 },
   emptyTitle: { ...font.bold, fontSize: 22, color: colors.text },
   emptyText: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
-});
+}));

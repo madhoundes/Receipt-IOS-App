@@ -7,7 +7,7 @@ import { Segmented } from '../../components/ui';
 import { useReceipts } from '../../context/ReceiptContext';
 import { inSpendRange, spendByCategory, spendRange, SpendRange } from '../../utils/spend';
 import { formatCents } from '../../utils/tax';
-import { colors, font, radius, type } from '../../theme';
+import { colors, font, radius, type, themedStyles } from '../../theme';
 
 export const CATEGORY_RANGES: { value: SpendRange; label: string }[] = [
   { value: 'month', label: 'This Month' }, { value: 'last30', label: '30 Days' }, { value: 'ytd', label: 'YTD' }, { value: 'all', label: 'All Time' },
@@ -58,11 +58,11 @@ export default function CategoriesScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { paddingBottom: TAB_BAR_SPACE, gap: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16 },
   card: { width: '48%', flexGrow: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, gap: 2 },
   name: { ...font.semibold, fontSize: 16, color: colors.text, marginTop: 10 },
   total: { ...font.bold, fontSize: 20, color: colors.text, fontVariant: ['tabular-nums'] },
-});
+}));

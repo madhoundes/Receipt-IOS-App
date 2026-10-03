@@ -8,7 +8,7 @@ import { MerchantAvatar } from '../components/MerchantAvatar';
 import { useReceipts } from '../context/ReceiptContext';
 import { Button } from '../components/ui';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, font, radius } from '../theme';
+import { colors, font, radius, themedStyles } from '../theme';
 
 /** B8 · Receipt saved. */
 export default function ScanSavedScreen({ route, navigation }: any) {
@@ -67,7 +67,7 @@ const Chip = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
   <View style={styles.chip}>{icon}<Text style={styles.chipText}>{label}</Text></View>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   body: { flex: 1, alignItems: 'center', paddingTop: 40, paddingHorizontal: 16, gap: 8 },
   title: { ...font.bold, fontSize: 28, lineHeight: 34, color: colors.text },
@@ -84,4 +84,4 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: colors.fill },
   chipText: { ...font.semibold, fontSize: 13, color: colors.text },
   actions: { padding: 16, gap: 10 },
-});
+}));

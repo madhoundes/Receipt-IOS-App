@@ -10,7 +10,7 @@ import { AuthError, isValidEmail } from '../services/auth';
 import { persistReceiptPhoto } from '../utils/photos';
 import { triggerHaptic } from '../utils/nativeUtils';
 import { initials } from './ProfileScreen';
-import { colors, font, type } from '../theme';
+import { colors, font, type, themedStyles } from '../theme';
 
 export default function EditProfileScreen({ navigation }: any) {
   const { user, updateProfile: updateAccount } = useAuth();
@@ -82,7 +82,7 @@ export default function EditProfileScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
@@ -92,4 +92,4 @@ const styles = StyleSheet.create({
   avatarText: { ...font.bold, fontSize: 38, color: colors.accent },
   link: { ...font.regular, fontSize: 17, color: colors.accent, padding: 6 },
   error: { ...font.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
-});
+}));

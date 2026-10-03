@@ -6,7 +6,7 @@ import { Button, Divider, Field, FieldGroup } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { AuthError, isValidEmail, MIN_PASSWORD_LENGTH } from '../../services/auth';
 import { triggerHaptic } from '../../utils/nativeUtils';
-import { colors, font, type } from '../../theme';
+import { colors, font, type, themedStyles } from '../../theme';
 
 export default function SignUpScreen({ navigation }: any) {
   const { signUp, signInWithApple } = useAuth();
@@ -79,7 +79,7 @@ export default function SignUpScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 },
   nav: { height: 44, justifyContent: 'center', marginBottom: 6 },
@@ -89,4 +89,4 @@ const styles = StyleSheet.create({
   switch: { alignItems: 'center', justifyContent: 'center', minHeight: 44, marginTop: 8 },
   switchText: { ...font.regular, fontSize: 15, color: colors.textSecondary },
   switchLink: { ...font.semibold, color: colors.accent },
-});
+}));

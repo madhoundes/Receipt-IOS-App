@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -14,7 +15,7 @@ import { Illustration } from '../components/Illustration';
 import { Button } from '../components/ui';
 import { ocr } from '../services/ocr';
 import { triggerHaptic } from '../utils/nativeUtils';
-import { colors, font } from '../theme';
+import { colors, font, themedStyles } from '../theme';
 
 const BRAND_DARK = '#34C98E';
 const STEPS = ['Store and date', 'Total and HST', 'Line items', 'Category and payment'];
@@ -106,6 +107,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     const blocked = !permission.canAskAgain;
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
         <View style={styles.permBody}>
           <Pressable onPress={() => navigation.goBack()} style={styles.round} accessibilityRole="button" accessibilityLabel="Close">
             <X size={20} color="#FFFFFF" />
@@ -136,8 +138,8 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
           <Button title={blocked ? 'Open Settings' : 'Allow Camera'} variant="onAccent"
             onPress={() => (blocked ? Linking.openSettings() : requestPermission())} />
           <View style={styles.permRow}>
-            <Button title="Import Photo" variant="dark" icon={<ImageIcon size={18} color="#FFFFFF" />} onPress={importPhoto} compact style={styles.permSecondary} />
-            <Button title="Enter Manually" variant="dark" icon={<Edit size={18} color="#FFFFFF" />} onPress={manualEntry} compact style={styles.permSecondary} />
+            <Button title="Import Photo" variant="glass" icon={<ImageIcon size={18} color="#FFFFFF" />} onPress={importPhoto} compact style={styles.permSecondary} />
+            <Button title="Enter Manually" variant="glass" icon={<Edit size={18} color="#FFFFFF" />} onPress={manualEntry} compact style={styles.permSecondary} />
           </View>
         </View>
       </SafeAreaView>
@@ -149,6 +151,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     const progress = done ? 1 : (step + 0.5) / STEPS.length;
     return (
       <View style={styles.container}>
+        <StatusBar style="light" />
         <Image source={{ uri: photoUri }} style={styles.readPhoto} resizeMode="contain" />
         <SafeAreaView style={styles.readTop} edges={['top']}>
           <Pressable onPress={backToCamera} style={styles.round} accessibilityRole="button" accessibilityLabel="Cancel">
@@ -207,6 +210,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   // B2 · Scan
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} enableTorch={torch} />
 
       <SafeAreaView style={styles.ui}>
@@ -262,7 +266,7 @@ const Tip = ({ Icon, title, text }: { Icon: typeof Sun; title: string; text: str
 
 const GLASS = 'rgba(40,40,42,0.7)';
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.dark },
   round: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: GLASS, alignItems: 'center', justifyContent: 'center',
@@ -327,4 +331,4 @@ const styles = StyleSheet.create({
   stepText: { ...font.regular, fontSize: 17, color: colors.text },
   failTitle: { ...font.bold, fontSize: 22, lineHeight: 28, color: colors.text, textAlign: 'center' },
   failText: { ...font.regular, fontSize: 15, lineHeight: 20, color: colors.textSecondary, textAlign: 'center', maxWidth: 300 },
-});
+}));

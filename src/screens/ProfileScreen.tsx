@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  BarChart3, Bell, ChevronRight, CreditCard, Crop, FileDown, FileText, Info, LayoutGrid, Lock, Percent, ReceiptText, Scan, Sparkles,
+  BarChart3, Bell, ChevronRight, CreditCard, Crop, FileDown, FileText, Info, LayoutGrid, Lock, Percent, ReceiptText, Scan, Sparkles, Sun,
   TrendUp, Undo, AppIcon,
 } from '../components/icons';
 import { OptionSheet, kit } from '../components/kit';
@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareJSON, triggerHaptic } from '../utils/nativeUtils';
 import { config } from '../config';
-import { colors, font, radius } from '../theme';
+import { colors, font, radius, themedStyles } from '../theme';
 import appJson from '../../app.json';
 import type { UserProfile } from '../types';
 
@@ -25,6 +25,9 @@ const TAX_RATES: Option<number>[] = [
   { value: 5, label: '5%', sub: 'GST only' },
 ];
 const TAX_NAME: Record<number, string> = { 13: 'Ontario · HST 13%', 15: 'Atlantic · HST 15%', 5: 'GST 5%' };
+const APPEARANCE: Option<'system' | 'light' | 'dark'>[] = [
+  { value: 'system', label: 'System', sub: 'Follows your device setting' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' },
+];
 const OCR_LEVELS: Option<number>[] = [
   { value: 0.5, label: 'Relaxed', sub: 'Reads more, may need more fixes' },
   { value: 0.7, label: 'Balanced', sub: 'Recommended' },
@@ -35,7 +38,7 @@ const OCR_LEVELS: Option<number>[] = [
 export default function ProfileScreen({ navigation }: any) {
   const { user, signOut, sendPasswordReset } = useAuth();
   const { userProfile: p, updateProfile, receipts, categories, deleteAllReceipts } = useReceipts();
-  const [sheet, setSheet] = useState<null | 'currency' | 'tax' | 'ocr'>(null);
+  const [sheet, setSheet] = useState<null | 'currency' | 'tax' | 'ocr' | 'appearance'>(null);
   const set = (patch: Partial<UserProfile>) => updateProfile({ ...p, ...patch });
   const photos = receipts.filter(r => r.imageName).length;
   const ocrLabel = OCR_LEVELS.find(o => o.value === p.ocrThreshold)?.label ?? `${Math.round(p.ocrThreshold * 100)}%`;
@@ -63,13 +66,14 @@ export default function ProfileScreen({ navigation }: any) {
             <Text style={styles.name} numberOfLines={1}>{user?.name}</Text>
             <Text style={styles.email} numberOfLines={1}>{user?.email}</Text>
           </View>
-          <ChevronRight size={16} color="#AEAEB2" />
+          <ChevronRight size={16} color={colors.chevron} />
         </Pressable>
 
         <Section title="Preferences">
-          <SettingRow first label="Default tax" value={TAX_NAME[p.hstDefaultPercent] ?? `${p.hstDefaultPercent}%`} onPress={() => setSheet('tax')} icon={<Tile bg={colors.tax} Icon={Percent} />} />
+          <SettingRow first label="Default tax" value={TAX_NAME[p.hstDefaultPercent] ?? `${p.hstDefaultPercent}%`} onPress={() => setSheet('tax')} icon={<Tile bg={colors.taxFill} Icon={Percent} />} />
           <SettingRow label="Currency" value={p.currency} onPress={() => setSheet('currency')} icon={<Tile bg="#0A5BC4" Icon={CreditCard} />} />
-          <SettingRow label="Manage Categories" value={String(visible)} onPress={() => navigation.navigate('ManageCategories')} icon={<Tile bg={colors.accent} Icon={LayoutGrid} />} />
+          <SettingRow label="Appearance" value={APPEARANCE.find(a => a.value === (p.appearance ?? 'system'))?.label} onPress={() => setSheet('appearance')} icon={<Tile bg="#3A3A3C" Icon={Sun} />} />
+          <SettingRow label="Manage Categories" value={String(visible)} onPress={() => navigation.navigate('ManageCategories')} icon={<Tile bg={colors.accentFill} Icon={LayoutGrid} />} />
         </Section>
 
         <Section title="Camera & intelligence">
@@ -86,7 +90,7 @@ export default function ProfileScreen({ navigation }: any) {
         </Section>
 
         <Section title="Data & storage">
-          <SettingRow first label="Export for Accountant" onPress={() => navigation.navigate('Export')} icon={<Tile bg={colors.accent} Icon={FileDown} />} />
+          <SettingRow first label="Export for Accountant" onPress={() => navigation.navigate('Export')} icon={<Tile bg={colors.accentFill} Icon={FileDown} />} />
           <SettingRow label="Insights" onPress={() => navigation.navigate('Insights')} icon={<Tile bg="#0B6E77" Icon={BarChart3} />} />
           <SettingRow label="JSON Backup" onPress={exportJson} icon={<Tile bg="#636366" Icon={FileText} />} />
           <SettingRow label="Stored" value={`${receipts.length} receipts · ${photos} ${photos === 1 ? 'photo' : 'photos'}`} icon={<Tile bg="#636366" Icon={ReceiptText} />} />
@@ -110,6 +114,8 @@ export default function ProfileScreen({ navigation }: any) {
         onPick={v => { set({ currency: v }); setSheet(null); }} onClose={() => setSheet(null)} />
       <OptionSheet visible={sheet === 'tax'} title="Default tax %" options={TAX_RATES} value={p.hstDefaultPercent}
         onPick={v => { set({ hstDefaultPercent: v }); setSheet(null); }} onClose={() => setSheet(null)} />
+      <OptionSheet visible={sheet === 'appearance'} title="Appearance" options={APPEARANCE} value={p.appearance ?? 'system'}
+        onPick={v => { setSheet(null); set({ appearance: v }); }} onClose={() => setSheet(null)} />
       <OptionSheet visible={sheet === 'ocr'} title="OCR Confidence" options={OCR_LEVELS} value={p.ocrThreshold}
         onPick={v => { set({ ocrThreshold: v }); setSheet(null); }} onClose={() => setSheet(null)} />
     </SafeAreaView>
@@ -122,7 +128,7 @@ const Tile = ({ bg, Icon }: { bg: string; Icon: AppIcon }) => (
   </View>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, paddingTop: 8, paddingBottom: 48, gap: 18 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14 },
@@ -130,4 +136,4 @@ const styles = StyleSheet.create({
   avatarText: { ...font.bold, fontSize: 22, color: colors.accent },
   name: { ...font.bold, fontSize: 20, color: colors.text },
   email: { ...font.regular, fontSize: 15, color: colors.textSecondary },
-});
+}));

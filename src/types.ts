@@ -53,6 +53,8 @@ export interface UserProfile {
       insights: boolean;
   };
   isPro: boolean;
+  /** Light, Dark, or follow the device (the default). */
+  appearance?: 'system' | 'light' | 'dark';
   /** Default return window, in days, for new return reminders. */
   returnWindowDays?: number;
 }

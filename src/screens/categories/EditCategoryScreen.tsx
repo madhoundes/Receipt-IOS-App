@@ -8,7 +8,7 @@ import { useReceipts } from '../../context/ReceiptContext';
 import { OptionSheet, kit } from '../../components/kit';
 import { Field, FieldGroup, Section, Segmented, SettingRow } from '../../components/ui';
 import { confirmAction, triggerHaptic } from '../../utils/nativeUtils';
-import { colors, font, radius, type } from '../../theme';
+import { colors, font, radius, type, themedStyles, soft, tone } from '../../theme';
 import type { CategoryDefinition, ClassifierBoost, TaxRule, Visibility } from '../../types';
 
 const COLORS = ['#1E7A35', '#B04A08', '#0A5BC4', '#B8185A', '#5A3CC2', '#0B6E77', '#B42318', '#8A6100', '#555559'];
@@ -93,8 +93,8 @@ export default function EditCategoryScreen({ route, navigation }: any) {
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={[styles.preview, { backgroundColor: `${form.color}1F` }]}>
-            <PreviewIcon size={36} color={form.color} />
+          <View style={[styles.preview, { backgroundColor: soft(tone(form.color)) }]}>
+            <PreviewIcon size={36} color={tone(form.color)} />
           </View>
 
           <Section title="Name">
@@ -110,7 +110,7 @@ export default function EditCategoryScreen({ route, navigation }: any) {
                 const on = form.color === c;
                 return (
                   <Pressable key={c} onPress={() => set({ color: c })} accessibilityRole="button" accessibilityLabel={`Color ${c}`} accessibilityState={{ selected: on }}
-                    style={[styles.ring, on && { borderColor: c }]}>
+                    style={[styles.ring, on && { borderColor: tone(c) }]}>
                     <View style={[styles.swatch, { backgroundColor: c }]} />
                   </Pressable>
                 );
@@ -124,8 +124,8 @@ export default function EditCategoryScreen({ route, navigation }: any) {
                 const on = form.iconName === name;
                 return (
                   <Pressable key={name} onPress={() => set({ iconName: name })} accessibilityRole="button" accessibilityLabel={name} accessibilityState={{ selected: on }}
-                    style={[styles.iconBtn, on && { backgroundColor: `${form.color}1F`, borderColor: form.color }]}>
-                    <Icon size={22} color={on ? form.color : colors.text} />
+                    style={[styles.iconBtn, on && { backgroundColor: soft(tone(form.color)), borderColor: tone(form.color) }]}>
+                    <Icon size={22} color={on ? tone(form.color) : colors.text} />
                   </Pressable>
                 );
               })}
@@ -204,7 +204,7 @@ const Chip = ({ label, onRemove }: { label: string; onRemove: () => void }) => (
   </View>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
@@ -228,4 +228,4 @@ const styles = StyleSheet.create({
   chipText: { ...font.regular, fontSize: 15, color: colors.text },
   addChip: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 32, paddingHorizontal: 6 },
   keywordInput: { ...font.regular, fontSize: 15, color: colors.text, minWidth: 110, padding: 0 },
-});
+}));

@@ -6,7 +6,7 @@ import { CategoryIcon } from '../../components/CategoryIcon';
 import { SearchField, kit } from '../../components/kit';
 import { NavBar, Segmented } from '../../components/ui';
 import { useReceipts } from '../../context/ReceiptContext';
-import { colors, font, type } from '../../theme';
+import { colors, font, type, themedStyles } from '../../theme';
 import type { CategoryDefinition } from '../../types';
 
 type Filter = 'pinned' | 'all' | 'hidden';
@@ -58,7 +58,7 @@ export default function ManageCategoriesScreen({ navigation }: any) {
                       <Text style={styles.name}>{c.name}</Text>
                       <Text style={type.footnote}>{n} {n === 1 ? 'receipt' : 'receipts'}</Text>
                     </View>
-                    <ChevronRight size={16} color="#AEAEB2" />
+                    <ChevronRight size={16} color={colors.chevron} />
                   </Pressable>
                 );
               })}
@@ -71,11 +71,11 @@ export default function ManageCategoriesScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, paddingTop: 8, paddingBottom: 48, gap: 14 },
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 58, paddingVertical: 8, backgroundColor: colors.card },
   name: { ...font.semibold, fontSize: 17, color: colors.text },
   note: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16 },
-});
+}));

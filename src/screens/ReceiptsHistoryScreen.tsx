@@ -8,7 +8,7 @@ import { Chips, LargeHeader, ReceiptRow, RoundButton, SearchField, TAB_BAR_SPACE
 import { Button } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, font, radius } from '../theme';
+import { colors, font, radius, themedStyles } from '../theme';
 import type { Receipt } from '../types';
 
 type SortBy = 'newest' | 'oldest' | 'highest';
@@ -157,7 +157,7 @@ export default function ReceiptsHistoryScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { paddingHorizontal: 16, paddingBottom: TAB_BAR_SPACE, paddingTop: 6 },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
@@ -174,13 +174,13 @@ const styles = StyleSheet.create({
   none: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, gap: 6 },
   emptyTitle: { ...font.bold, fontSize: 22, color: colors.text },
   emptyText: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,
   },
-  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
+  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: colors.grabber },
   sheetTitle: { ...font.semibold, fontSize: 17, color: colors.text, textAlign: 'center' },
   opt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 48, backgroundColor: colors.card },
   optText: { ...font.regular, fontSize: 17, color: colors.text },
-});
+}));

@@ -9,7 +9,7 @@ import { Button, NavBar, Segmented } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
 import { inSpendRange, spendByCategory, spendRange, spendTips, spendTrend, SpendRange } from '../utils/spend';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, font, radius, type } from '../theme';
+import { colors, font, radius, type, themedStyles } from '../theme';
 
 const RANGES: { value: SpendRange; label: string }[] = [
   { value: 'month', label: 'This Month' }, { value: 'last30', label: '30 Days' }, { value: 'ytd', label: 'YTD' }, { value: 'all', label: 'All Time' },
@@ -115,7 +115,7 @@ export default function InsightsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, paddingTop: 8, paddingBottom: 48, gap: 12 },
   grid: { flexDirection: 'row', gap: 12 },
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: CHART_H + 22 },
   barCol: { flex: 1, alignItems: 'stretch', justifyContent: 'flex-end', gap: 6 },
-  bar: { borderRadius: 6, backgroundColor: '#A9D8C5' },
+  bar: { borderRadius: 6, backgroundColor: colors.accentBar },
   barLabel: { ...font.regular, fontSize: 11, color: colors.textSecondary, textAlign: 'center' },
   catRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   catHead: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
@@ -131,4 +131,4 @@ const styles = StyleSheet.create({
   catVal: { ...font.regular, fontSize: 15, color: colors.text, fontVariant: ['tabular-nums'] },
   tip: { flexDirection: 'row', gap: 12, borderRadius: radius.lg, padding: 14 },
   empty: { alignItems: 'center', padding: 20, gap: 4 },
-});
+}));

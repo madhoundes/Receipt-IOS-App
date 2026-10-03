@@ -1,5 +1,6 @@
 // Icon set for the app: Iconsax (Linear). Import icons from here, not from the library,
 // so the whole app stays on one style. Names on the left are the ones screens use.
+import { colors } from '../theme';
 import React from 'react';
 import Svg, { Path } from 'react-native-svg';
 import * as I from 'iconsax-react-native';
@@ -17,12 +18,12 @@ export type AppIcon = React.FC<IconProps>;
 /** @deprecated use AppIcon */
 export type LucideIcon = AppIcon;
 
-const wrap = (C: I.Icon): AppIcon => ({ size = 24, color = '#111113', variant = 'Linear', style }) => (
+const wrap = (C: I.Icon): AppIcon => ({ size = 24, color = colors.text, variant = 'Linear', style }) => (
   <C size={size} color={color} variant={variant} style={style} />
 );
 
 // Iconsax has no bare cross or tick, so these two are drawn to match its 1.5 pt round stroke.
-const stroke = (d: string): AppIcon => ({ size = 24, color = '#111113', strokeWidth = 1.8, style }) => (
+const stroke = (d: string): AppIcon => ({ size = 24, color = colors.text, strokeWidth = 1.8, style }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
     <Path d={d} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
   </Svg>

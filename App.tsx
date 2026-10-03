@@ -2,7 +2,6 @@ import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './src/context/AuthContext';
 import { ReceiptProvider } from './src/context/ReceiptContext';
@@ -21,7 +20,6 @@ export default function App() {
       <SafeAreaProvider>
         <AuthProvider>
           <ReceiptProvider>
-            <StatusBar style="dark" />
             <AppNavigator />
           </ReceiptProvider>
         </AuthProvider>

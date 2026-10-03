@@ -13,7 +13,7 @@ import { confirmAction, shareCSV, shareImage, triggerHaptic } from '../utils/nat
 import { deleteReceiptPhoto } from '../utils/photos';
 import { daysLeft, returnByFor } from '../utils/returns';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
-import { colors, font, radius, type } from '../theme';
+import { colors, font, radius, type, themedStyles, soft } from '../theme';
 import type { Receipt } from '../types';
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -121,7 +121,7 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
             </View>
 
             <View style={styles.chips}>
-              <Pressable onPress={() => setPicker(true)} style={[styles.chip, { backgroundColor: `${color}1F` }]} accessibilityRole="button" accessibilityLabel={`Category ${receipt.category}. Change`}>
+              <Pressable onPress={() => setPicker(true)} style={[styles.chip, { backgroundColor: soft(color) }]} accessibilityRole="button" accessibilityLabel={`Category ${receipt.category}. Change`}>
                 <CategoryIcon category={receipt.category} size={20} />
                 <Text style={[styles.chipText, { color }]}>{receipt.category}{receipt.subcategory ? ` · ${receipt.subcategory}` : ''}</Text>
               </Pressable>
@@ -144,7 +144,7 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <Pressable onPress={applySuggestion} style={styles.warnBtn} accessibilityRole="button"><Text style={styles.warnBtnText}>Add {formatCents(tax.suggestedHstCents ?? 0)}</Text></Pressable>
-                  <Pressable onPress={markNoTax} style={[styles.warnBtn, { backgroundColor: '#FFFFFF' }]} accessibilityRole="button"><Text style={[styles.warnBtnText, { color: colors.text }]}>No tax</Text></Pressable>
+                  <Pressable onPress={markNoTax} style={[styles.warnBtn, { backgroundColor: colors.elevated }]} accessibilityRole="button"><Text style={[styles.warnBtnText, { color: colors.text }]}>No tax</Text></Pressable>
                 </View>
               </View>
             )}
@@ -238,7 +238,7 @@ const LinkRow = ({ icon, label, onPress, first }: { icon: React.ReactNode; label
   <Pressable onPress={onPress} accessibilityRole="button" style={[styles.linkRow, !first && kit.rowBorder]}>
     {icon}
     <Text style={[type.body, { flex: 1 }]}>{label}</Text>
-    <ChevronRight size={16} color="#AEAEB2" />
+    <ChevronRight size={16} color={colors.chevron} />
   </Pressable>
 );
 
@@ -249,7 +249,7 @@ const InfoRow = ({ label, value, first, accent }: { label: string; value: string
   </View>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
   navTitle: { position: 'absolute', left: 110, right: 110, textAlign: 'center', ...font.semibold, fontSize: 17, color: colors.text },
@@ -259,8 +259,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1,
   },
   paperStore: { ...font.bold, fontSize: 20, letterSpacing: 3, color: colors.paperInk, textAlign: 'center' },
-  paperMeta: { ...font.mono, fontSize: 12, color: '#6B675C', textAlign: 'center' },
-  dash: { borderBottomWidth: 1, borderStyle: 'dashed', borderColor: '#CFC9B8', marginVertical: 6 },
+  paperMeta: { ...font.mono, fontSize: 12, color: colors.paperMuted, textAlign: 'center' },
+  dash: { borderBottomWidth: 1, borderStyle: 'dashed', borderColor: colors.paperRule, marginVertical: 6 },
   paperRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   paperText: { ...font.mono, fontSize: 13, lineHeight: 20, color: colors.paperInk },
   paperTotal: { ...font.monoBold, fontSize: 17, color: colors.paperInk },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   warn: { backgroundColor: colors.warnBg, borderColor: colors.warnBorder, borderWidth: 1, borderRadius: radius.lg, padding: 14, gap: 12 },
   warnTitle: { ...font.semibold, fontSize: 17, color: colors.warnText },
   warnText: { ...font.regular, fontSize: 15, lineHeight: 20, color: colors.warnText, marginTop: 2 },
-  warnBtn: { flex: 1, height: 44, borderRadius: 22, backgroundColor: colors.tax, alignItems: 'center', justifyContent: 'center' },
+  warnBtn: { flex: 1, height: 44, borderRadius: 22, backgroundColor: colors.taxFill, alignItems: 'center', justifyContent: 'center' },
   warnBtnText: { ...font.semibold, fontSize: 17, color: '#FFFFFF' },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 48, backgroundColor: colors.card },
   infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, minHeight: 46, backgroundColor: colors.card },
@@ -283,6 +283,6 @@ const styles = StyleSheet.create({
   lockText: { ...font.semibold, fontSize: 13, color: '#FFFFFF' },
   expand: { position: 'absolute', right: 12, bottom: 12, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(12,12,13,0.78)', alignItems: 'center', justifyContent: 'center' },
   note: { backgroundColor: colors.accentSoft, borderRadius: radius.lg, padding: 14 },
-  noteText: { ...font.regular, fontSize: 15, lineHeight: 20, color: '#0B5C40' },
+  noteText: { ...font.regular, fontSize: 15, lineHeight: 20, color: colors.accentSoftText },
   noPhoto: { alignItems: 'center', gap: 6, padding: 28 },
-});
+}));

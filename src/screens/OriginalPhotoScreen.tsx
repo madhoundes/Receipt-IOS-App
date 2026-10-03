@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Info, RotateLeft, Share as ShareIcon, Trash, X } from '../components/icons';
 import { RoundButton, shortDate } from '../components/kit';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareImage, triggerHaptic } from '../utils/nativeUtils';
 import { deleteReceiptPhoto } from '../utils/photos';
-import { font } from '../theme';
+import { font, themedStyles } from '../theme';
 
 /** C6 · Original photo, full screen. Rotating only turns the view; the stored file is never edited. */
 export default function OriginalPhotoScreen({ route, navigation }: any) {
@@ -25,6 +26,7 @@ export default function OriginalPhotoScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <Image source={{ uri: receipt.imageName }} resizeMode="contain"
         style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${turns * -90}deg` }] }]} accessibilityLabel={`Original photo of the ${receipt.storeName} receipt`} />
       <SafeAreaView style={styles.ui} pointerEvents="box-none">
@@ -56,7 +58,7 @@ const Tool = ({ label, onPress, children, danger }: { label: string; onPress: ()
   </Pressable>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: '#000000' },
   ui: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 8 },
@@ -67,4 +69,4 @@ const styles = StyleSheet.create({
   bar: { alignSelf: 'stretch', flexDirection: 'row', height: 64, borderRadius: 32, backgroundColor: 'rgba(40,40,42,0.85)', paddingHorizontal: 8 },
   tool: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, minHeight: 44 },
   toolText: { ...font.medium, fontSize: 11, color: '#FFFFFF' },
-});
+}));
