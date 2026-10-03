@@ -2,6 +2,7 @@ import { Alert, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as Print from 'expo-print';
 import { Receipt } from '../types';
 import { normalizeStoreName } from '../constants';
 
@@ -98,4 +99,33 @@ export const shareJSON = async (data: unknown, filename: string) => {
     console.error('Error sharing JSON:', error);
     triggerHaptic('error');
   }
+};
+
+/** Turns report HTML into a PDF and opens the share sheet. On web it opens the browser's print dialog (Save as PDF). */
+export const sharePDF = async (html: string, filename: string) => {
+  try {
+    if (Platform.OS === 'web') { await Print.printAsync({ html }); return; }
+    const { uri } = await Print.printToFileAsync({ html });
+    const path = `${FileSystem.documentDirectory}${filename}`;
+    await FileSystem.deleteAsync(path, { idempotent: true });
+    await FileSystem.moveAsync({ from: uri, to: path });
+    await Sharing.shareAsync(path, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Export for Accountant' });
+  } catch (error) {
+    console.error('Error sharing PDF:', error);
+    triggerHaptic('error');
+    throw error;
+  }
+};
+
+/** Original photos as data URIs, for embedding in the PDF. Photos that can't be read are skipped. */
+export const photosAsDataUris = async (receipts: Receipt[]): Promise<Record<string, string>> => {
+  const out: Record<string, string> = {};
+  if (Platform.OS === 'web') return out;
+  for (const r of receipts) {
+    if (!r.imageName) continue;
+    try {
+      out[r.id] = `data:image/jpeg;base64,${await FileSystem.readAsStringAsync(r.imageName, { encoding: FileSystem.EncodingType.Base64 })}`;
+    } catch { /* photo missing on disk */ }
+  }
+  return out;
 };

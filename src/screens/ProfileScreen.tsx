@@ -10,6 +10,7 @@ import { NavBar, Section, SettingRow } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareJSON, triggerHaptic } from '../utils/nativeUtils';
+import { cancelReturnReminder } from '../utils/reminders';
 import { config } from '../config';
 import { colors, font, radius, themedStyles } from '../theme';
 import appJson from '../../app.json';
@@ -83,7 +84,7 @@ export default function ProfileScreen({ navigation }: any) {
         </Section>
 
         <Section title="Notifications & haptics">
-          <SettingRow first label="Return Reminders" value={`${p.returnWindowDays ?? 30} days`} onPress={() => navigation.navigate('Reminders')} icon={<Tile bg={colors.danger} Icon={Undo} />} />
+          <SettingRow first label="Return Reminders" value={`${p.remindDaysBefore ?? 2} days before`} onPress={() => navigation.navigate('Reminders')} icon={<Tile bg={colors.danger} Icon={Undo} />} />
           <SettingRow label="Weekly Insights" toggle={p.notifications.insights} onToggle={v => set({ notifications: { ...p.notifications, insights: v } })} icon={<Tile bg="#C2560A" Icon={Bell} />} />
           <SettingRow label="Haptic Feedback" toggle={p.hapticsEnabled} onToggle={v => set({ hapticsEnabled: v })} icon={<Tile bg="#636366" Icon={Info} />} />
           <SettingRow label="Reduce Motion" toggle={p.reduceMotion} onToggle={v => set({ reduceMotion: v })} icon={<Tile bg="#636366" Icon={TrendUp} />} />
@@ -106,7 +107,7 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={kit.card}>
           <SettingRow first label="Sign Out" danger onPress={() => confirmAction('Sign out?', undefined, 'Sign Out', signOut)} />
           <SettingRow label="Delete All Receipts" danger onPress={() => confirmAction('Delete All Receipts?',
-            'This removes every receipt on this device. This cannot be undone.', 'Delete All', () => { deleteAllReceipts(); triggerHaptic('medium'); })} />
+            'This removes every receipt on this device. This cannot be undone.', 'Delete All', () => { receipts.forEach(r => cancelReturnReminder(r.returnNotificationId)); deleteAllReceipts(); triggerHaptic('medium'); })} />
         </View>
       </ScrollView>
 

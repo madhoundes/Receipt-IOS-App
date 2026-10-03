@@ -22,3 +22,18 @@ export const openReturns = (receipts: Receipt[], now: Date): Receipt[] =>
   receipts
     .filter(r => r.returnBy && daysLeft(r.returnBy, now) >= 0)
     .sort((a, b) => new Date(a.returnBy!).getTime() - new Date(b.returnBy!).getTime());
+
+/**
+ * When to notify about a return window: 9:00 a.m., `daysBefore` days before the last return day.
+ * If that moment has passed but the window is still open, the next 9:00 a.m. is used instead.
+ * Returns null once the window has closed.
+ */
+export const reminderDate = (returnBy: string, daysBefore: number, now: Date): Date | null => {
+  const last = new Date(returnBy);
+  const lastMorning = new Date(last.getFullYear(), last.getMonth(), last.getDate(), 9);
+  const planned = new Date(last.getFullYear(), last.getMonth(), last.getDate() - daysBefore, 9);
+  if (planned > now) return planned;
+  const today9 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9);
+  const next = today9 > now ? today9 : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9);
+  return next <= lastMorning ? next : null;
+};

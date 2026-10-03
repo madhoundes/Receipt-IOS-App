@@ -135,7 +135,7 @@ export default function TaxSummaryScreen({ navigation }: any) {
               <View style={styles.sendIcon}><Briefcase size={22} color={colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={type.headline}>Send to Accountant</Text>
-                <Text style={type.footnote}>A CSV of this period’s receipts with HST</Text>
+                <Text style={type.footnote}>PDF summary or CSV for this period</Text>
               </View>
               <Pressable style={styles.exportBtn} accessibilityRole="button"
                 onPress={() => navigation.navigate('Export', { start: summary.range.start.toISOString(), end: summary.range.end.toISOString(), label })}>

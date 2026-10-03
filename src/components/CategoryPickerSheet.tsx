@@ -30,7 +30,9 @@ export function CategoryPickerSheet({ visible, category, subcategory, onClose, o
     const q = query.trim().toLowerCase();
     return categories
       .filter(c => c.visibility === 'visible')
-      .filter(c => !q || c.name.toLowerCase().includes(q) || c.aliases.some(a => a.toLowerCase().includes(q)));
+      .filter(c => !q || c.name.toLowerCase().includes(q) || c.aliases.some(a => a.toLowerCase().includes(q)))
+      // Pinned first, then the order set in Manage Categories.
+      .sort((a, b) => Number(b.isPinned) - Number(a.isPinned) || a.orderIndex - b.orderIndex);
   }, [categories, query]);
 
   const pick = (id: string) => {

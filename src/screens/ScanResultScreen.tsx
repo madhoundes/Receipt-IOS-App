@@ -7,6 +7,7 @@ import { AlertTriangle, Check, ChevronRight, Edit, Maximize2, Sparkles, X } from
 import { useReceipts } from '../context/ReceiptContext';
 import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
 import { CategoryPickerSheet } from '../components/CategoryPickerSheet';
+import { DateField, toDay } from '../components/DateField';
 import { MerchantAvatar } from '../components/MerchantAvatar';
 import { Button, Segmented } from '../components/ui';
 import { checkTotals, formatCents, resolveReceiptTax, toCents } from '../utils/tax';
@@ -21,7 +22,7 @@ const parseMoney = (s: string): number | undefined => {
   const n = parseFloat(s.replace(/[^0-9.\-]/g, ''));
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : undefined;
 };
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const todayISO = () => toDay(new Date());
 const confidenceLabel = (c: number) => (c >= 0.9 ? 'High' : c >= 0.75 ? 'Medium' : 'Low');
 
 /**
@@ -31,12 +32,15 @@ const confidenceLabel = (c: number) => (c >= 0.9 ? 'High' : c >= 0.75 ? 'Medium'
 export default function ScanResultScreen({ route, navigation }: any) {
   const photoUri: string | null = route.params?.photoUri ?? null;
   const result: OcrResult | null = route.params?.result ?? null;
+  /** Set when an existing receipt is read again from its original photo: saving updates it. */
+  const replaceId: string | undefined = route.params?.replaceId;
   const manual = !photoUri && !result;
-  const { categories, userProfile, addReceipt } = useReceipts();
+  const { categories, userProfile, addReceipt, updateReceipt, receipts } = useReceipts();
+  const existing = replaceId ? receipts.find(r => r.id === replaceId) : undefined;
 
   const [tab, setTab] = useState<'original' | 'digital'>('digital');
   const [store, setStore] = useState(result?.storeName ?? '');
-  const [date, setDate] = useState(result?.purchaseDate.slice(0, 10) ?? todayISO());
+  const [date, setDate] = useState(result ? toDay(new Date(result.purchaseDate)) : todayISO());
   // With auto-categorize off, the user always picks the category.
   const [category, setCategory] = useState(result && userProfile.autoCategorize ? result.category : 'Other');
   const [subcategory, setSubcategory] = useState(userProfile.autoCategorize ? result?.subcategory : undefined);
@@ -136,6 +140,13 @@ export default function ScanResultScreen({ route, navigation }: any) {
     if (Number.isNaN(new Date(`${date}T12:00:00`).getTime())) { setError('Use the date format YYYY-MM-DD.'); setTab('digital'); triggerHaptic('error'); return; }
     setSaving(true);
     try {
+      if (existing) {
+        // Only the digital copy changes; the original photo, notes and reminder stay as they were.
+        updateReceipt({ ...existing, ...draft, id: existing.id, imageName: existing.imageName, notes: draft.notes ?? existing.notes, paymentMethod: draft.paymentMethod ?? existing.paymentMethod });
+        triggerHaptic('success');
+        navigation.navigate('ReceiptDetail', { receiptId: existing.id });
+        return;
+      }
       const id = `r_${Date.now()}`;
       // The original photo is stored once, as captured, and never edited.
       const imageName = photoUri ? await persistReceiptPhoto(photoUri, id) : '';
@@ -158,10 +169,10 @@ export default function ScanResultScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.nav}>
         <Pressable
-          onPress={() => (manual ? navigation.goBack() : navigation.replace('CameraModal'))}
+          onPress={() => (manual || existing ? navigation.goBack() : navigation.replace('CameraModal'))}
           style={styles.navBtn} accessibilityRole="button"
         >
-          <Text style={styles.navText}>{manual ? 'Cancel' : 'Retake'}</Text>
+          <Text style={styles.navText}>{manual || existing ? 'Cancel' : 'Retake'}</Text>
         </Pressable>
         <Text style={styles.navTitle} accessibilityRole="header">{manual ? 'New Receipt' : 'Review Details'}</Text>
         <Pressable onPress={save} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button" disabled={saving}>
@@ -240,7 +251,12 @@ export default function ScanResultScreen({ route, navigation }: any) {
               <Text style={styles.sectionLabel}>DETAILS</Text>
               <View style={styles.group}>
                 <InputRow label="Store" value={store} onChange={setStore} placeholder="Store name" autoCapitalize="words" />
-                <InputRow label="Date" value={date} onChange={setDate} placeholder="YYYY-MM-DD" keyboard="numbers-and-punctuation" />
+                <View style={[styles.row, styles.rowBorderless]}>
+                  <Text style={styles.rowLabel}>Date</Text>
+                  <View style={{ flex: 1 }} />
+                  <DateField label="Purchase date" value={date} onChange={setDate} max={new Date()} />
+                  <View style={styles.rowSep} />
+                </View>
                 <Pressable onPress={() => setPicker(true)} style={styles.row} accessibilityRole="button" accessibilityLabel="Change category">
                   <Text style={styles.rowLabel}>Category</Text>
                   <View style={styles.catValue}>
@@ -298,7 +314,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
-        <Button title="Save Receipt" onPress={save} loading={saving} />
+        <Button title={existing ? 'Update Receipt' : 'Save Receipt'} onPress={save} loading={saving} />
       </View>
 
       <CategoryPickerSheet

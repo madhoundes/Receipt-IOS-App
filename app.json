@@ -35,7 +35,8 @@
         {
           "photosPermission": "Receipt TaX imports receipt photos from your library."
         }
-      ]
+      ],
+      "expo-notifications"
     ]
   }
 }

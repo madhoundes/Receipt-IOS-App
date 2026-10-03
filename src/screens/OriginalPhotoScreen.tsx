@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Info, RotateLeft, Share as ShareIcon, Trash, X } from '../components/icons';
+import { Info, RotateLeft, Share as ShareIcon, Sparkles, Trash, X } from '../components/icons';
+import { ocr } from '../services/ocr';
 import { RoundButton, shortDate } from '../components/kit';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareImage, triggerHaptic } from '../utils/nativeUtils';
@@ -14,6 +15,8 @@ export default function OriginalPhotoScreen({ route, navigation }: any) {
   const { receipts, updateReceipt } = useReceipts();
   const receipt = receipts.find(r => r.id === route.params?.receiptId);
   const [turns, setTurns] = useState(0);
+  const [reading, setReading] = useState(false);
+  const [error, setError] = useState<string>();
   if (!receipt?.imageName) return <View style={styles.container} />;
 
   const removePhoto = () =>
@@ -23,6 +26,22 @@ export default function OriginalPhotoScreen({ route, navigation }: any) {
       updateReceipt({ ...receipt, imageName: '' });
       navigation.goBack();
     });
+
+  // Reads the untouched original again and opens the review screen; saving there updates the digital copy.
+  const reRead = async () => {
+    if (reading) return;
+    setReading(true); setError(undefined);
+    try {
+      const result = await ocr.scanReceipt(receipt.imageName);
+      triggerHaptic('success');
+      navigation.navigate('ScanResult', { photoUri: receipt.imageName, result, replaceId: receipt.id });
+    } catch {
+      triggerHaptic('error');
+      setError('We couldn’t read this photo. Try again.');
+    } finally {
+      setReading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -39,9 +58,10 @@ export default function OriginalPhotoScreen({ route, navigation }: any) {
           <RoundButton dark label="Share photo" onPress={() => shareImage(receipt.imageName)}><ShareIcon size={20} color="#FFFFFF" /></RoundButton>
         </View>
         <View style={{ alignItems: 'center', gap: 14 }}>
-          <View style={styles.pill}><Info size={15} color="#FFFFFF" /><Text style={styles.pillText}>Original kept for returns and tax records</Text></View>
+          <View style={styles.pill} accessibilityLiveRegion="polite"><Info size={15} color="#FFFFFF" /><Text style={styles.pillText}>{error ?? (reading ? 'Reading the receipt again…' : 'Original kept for returns and tax records')}</Text></View>
           <View style={styles.bar}>
             <Tool label="Rotate" onPress={() => setTurns(t => (t + 1) % 4)}><RotateLeft size={22} color="#FFFFFF" /></Tool>
+            <Tool label={reading ? 'Reading' : 'Re-read'} onPress={reRead}>{reading ? <ActivityIndicator color="#FFFFFF" /> : <Sparkles size={22} color="#FFFFFF" />}</Tool>
             <Tool label="Share" onPress={() => shareImage(receipt.imageName)}><ShareIcon size={22} color="#FFFFFF" /></Tool>
             <Tool label="Delete" danger onPress={removePhoto}><Trash size={22} color="#FF6961" /></Tool>
           </View>

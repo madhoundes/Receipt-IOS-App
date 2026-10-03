@@ -1,59 +1,90 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FileText, Share as ShareIcon } from '../components/icons';
+import { DateField, fromDay, toDay } from '../components/DateField';
 import { Illustration } from '../components/Illustration';
 import { Chips, kit, shortDate } from '../components/kit';
 import { Button, Segmented, SettingRow } from '../components/ui';
+import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
-import { shareCSV, shareJSON } from '../utils/nativeUtils';
+import { photosAsDataUris, shareCSV, shareJSON, sharePDF } from '../utils/nativeUtils';
+import { buildReportHtml } from '../utils/report';
 import { formatCents, getPeriodRange, resolveReceiptTax } from '../utils/tax';
-import { colors, font, radius, type, themedStyles } from '../theme';
+import { colors, font, radius, themedStyles, type } from '../theme';
 
 type Preset = 'year' | 'lastYear' | 'quarter' | 'month' | 'custom';
-type Format = 'csv' | 'json';
+type Format = 'pdf' | 'csv' | 'json';
+const FORMAT_NOTE: Record<Format, string> = {
+  pdf: 'Summary by category and month, then every receipt',
+  csv: 'One row per receipt, for a spreadsheet',
+  json: 'Full backup of these receipts, with line items',
+};
 
-/** D4 · Export for accountant. */
+const presetRange = (preset: Exclude<Preset, 'custom'>) => {
+  const now = new Date();
+  const r = preset === 'lastYear' ? getPeriodRange('year', new Date(now.getFullYear() - 1, 0, 1)) : getPeriodRange(preset, now);
+  // getPeriodRange ends are exclusive; the To field shows the last day.
+  return { from: toDay(r.start), to: toDay(new Date(r.end.getFullYear(), r.end.getMonth(), r.end.getDate() - 1)) };
+};
+
+/** D4 · Export for accountant: PDF summary, CSV or JSON for a period. */
 export default function ExportScreen({ route, navigation }: any) {
+  const { user } = useAuth();
   const { receipts, categories, userProfile } = useReceipts();
-  const passed = route.params?.start && route.params?.end
-    ? { start: new Date(route.params.start), end: new Date(route.params.end), label: String(route.params.label ?? 'Selected period') } : null;
+  const passed = route.params?.start && route.params?.end ? {
+    from: toDay(new Date(route.params.start)),
+    to: toDay(new Date(new Date(route.params.end).getTime() - 86400000)),
+  } : null;
   const [preset, setPreset] = useState<Preset>(passed ? 'custom' : 'year');
-  const [format, setFormat] = useState<Format>('csv');
+  const [{ from, to }, setRange] = useState(passed ?? presetRange('year'));
+  const [format, setFormat] = useState<Format>('pdf');
+  const [images, setImages] = useState(false);
+  const [lineItems, setLineItems] = useState(true);
   const [noHst, setNoHst] = useState(true);
-  const [unreviewed, setUnreviewed] = useState(true);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string>();
 
-  const range = useMemo(() => {
-    const now = new Date();
-    if (preset === 'custom' && passed) return passed;
-    if (preset === 'lastYear') return getPeriodRange('year', new Date(now.getFullYear() - 1, 0, 1));
-    return getPeriodRange(preset === 'custom' ? 'year' : preset, now);
-  }, [preset]);
+  const pick = (p: Preset) => { setPreset(p); if (p !== 'custom') setRange(presetRange(p)); };
+  const setFrom = (d: string) => { setPreset('custom'); setRange(r => ({ from: d, to: d > r.to ? d : r.to })); };
+  const setTo = (d: string) => { setPreset('custom'); setRange(r => ({ from: d < r.from ? d : r.from, to: d })); };
 
-  const { list, hstCents } = useMemo(() => {
-    const resolved = receipts
-      .filter(r => { const d = new Date(r.purchaseDate); return d >= range.start && d < range.end; })
+  const { rows, hstCents, photoCount } = useMemo(() => {
+    const start = new Date(`${from}T00:00:00`), end = new Date(`${to}T23:59:59.999`);
+    const rows = receipts
+      .filter(r => { const d = new Date(r.purchaseDate); return d >= start && d <= end; })
       .map(r => resolveReceiptTax(r, categories, userProfile.hstDefaultPercent))
-      .filter(t => (noHst || t.status !== 'noTax') && (unreviewed || t.status !== 'needsReview'));
-    return { list: resolved.map(t => t.receipt), hstCents: resolved.reduce((s, t) => s + t.hstCents, 0) };
-  }, [receipts, categories, userProfile.hstDefaultPercent, range, noHst, unreviewed]);
+      .filter(t => noHst || t.status !== 'noTax');
+    return { rows, hstCents: rows.reduce((s, t) => s + t.hstCents, 0), photoCount: rows.filter(t => t.receipt.imageName).length };
+  }, [receipts, categories, userProfile.hstDefaultPercent, from, to, noHst]);
 
-  const last = new Date(range.end.getFullYear(), range.end.getMonth(), range.end.getDate() - 1);
-  const stamp = `${range.start.toISOString().slice(0, 10)}_${last.toISOString().slice(0, 10)}`;
-  const fileName = `ReceiptTaX_${stamp}.${format}`;
+  const fileName = `ReceiptTaX_${from}_${to}.${format}`;
+  const periodLabel = `${shortDate(fromDay(from).toISOString(), true)} to ${shortDate(fromDay(to).toISOString(), true)}`;
   const presets: { value: Preset; label: string }[] = [
-    ...(passed ? [{ value: 'custom' as Preset, label: passed.label }] : []),
-    { value: 'year', label: 'This Year' }, { value: 'lastYear', label: 'Last Year' }, { value: 'quarter', label: 'This Quarter' }, { value: 'month', label: 'This Month' },
+    { value: 'year', label: 'This Year' }, { value: 'lastYear', label: 'Last Year' }, { value: 'quarter', label: 'This Quarter' },
+    { value: 'month', label: 'This Month' }, { value: 'custom', label: 'Custom' },
   ];
 
   const run = async () => {
-    setBusy(true);
-    if (format === 'csv') await shareCSV(list, fileName);
-    else await shareJSON({ exportedAt: new Date().toISOString(), from: range.start, to: last, hstTotal: hstCents / 100, receipts: list }, fileName);
-    setBusy(false);
-    setDone(true);
+    setBusy(true); setError(undefined);
+    try {
+      const list = rows.map(t => t.receipt);
+      if (format === 'csv') await shareCSV(list, fileName);
+      else if (format === 'json') await shareJSON({ exportedAt: new Date().toISOString(), from, to, hstTotal: hstCents / 100, receipts: list }, fileName);
+      else {
+        const html = buildReportHtml(rows, {
+          title: 'Receipt TaX · HST summary', periodLabel, preparedFor: user?.name, lineItems,
+          images: images ? await photosAsDataUris(list) : undefined,
+        });
+        await sharePDF(html, fileName);
+      }
+      setDone(true);
+    } catch {
+      setError('The export could not be created. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -69,7 +100,7 @@ export default function ExportScreen({ route, navigation }: any) {
           <View style={styles.done} accessibilityLiveRegion="polite">
             <Illustration name="exportReady" size={200} label="Export ready" />
             <Text style={styles.doneTitle}>Export ready</Text>
-            <Text style={[type.subhead, { textAlign: 'center' }]}>{fileName} has {list.length} {list.length === 1 ? 'receipt' : 'receipts'} and {formatCents(hstCents)} of HST.</Text>
+            <Text style={[type.subhead, { textAlign: 'center' }]}>{fileName} has {rows.length} {rows.length === 1 ? 'receipt' : 'receipts'} and {formatCents(hstCents)} of HST.</Text>
           </View>
         ) : (
           <>
@@ -77,27 +108,29 @@ export default function ExportScreen({ route, navigation }: any) {
               <View style={styles.fileIcon}><FileText size={26} color={colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={type.headline} numberOfLines={1}>{fileName}</Text>
-                <Text style={type.subhead}>{list.length} {list.length === 1 ? 'receipt' : 'receipts'} · HST {formatCents(hstCents)}</Text>
-                <Text style={type.footnote}>{format === 'csv' ? 'One row per receipt: store, date, category, subtotal, HST, total' : 'Full backup of these receipts, with line items'}</Text>
+                <Text style={type.subhead}>{rows.length} {rows.length === 1 ? 'receipt' : 'receipts'} · HST {formatCents(hstCents)}</Text>
+                <Text style={type.footnote}>{FORMAT_NOTE[format]}{format === 'pdf' && images ? ` and ${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}` : ''}</Text>
               </View>
             </View>
 
             <Text style={[kit.sectionLabel, styles.label]}>Period</Text>
-            <View style={{ marginHorizontal: -16 }}><Chips options={presets} value={preset} onChange={setPreset} tint={colors.accentFill} /></View>
+            <View style={{ marginHorizontal: -16 }}><Chips options={presets} value={preset} onChange={pick} tint={colors.accentFill} /></View>
             <View style={kit.card}>
-              <SettingRow first label="From" value={shortDate(range.start.toISOString(), true)} />
-              <SettingRow label="To" value={shortDate(last.toISOString(), true)} />
+              <View style={styles.dateRow}><Text style={type.body}>From</Text><DateField label="From" value={from} onChange={setFrom} /></View>
+              <View style={[styles.dateRow, kit.rowBorder]}><Text style={type.body}>To</Text><DateField label="To" value={to} onChange={setTo} /></View>
             </View>
 
             <Text style={[kit.sectionLabel, styles.label]}>Format</Text>
-            <Segmented options={[{ value: 'csv', label: 'CSV (spreadsheet)' }, { value: 'json', label: 'JSON (with items)' }]} value={format} onChange={setFormat} />
+            <Segmented options={[{ value: 'pdf', label: 'PDF' }, { value: 'csv', label: 'CSV' }, { value: 'json', label: 'JSON' }]} value={format} onChange={setFormat} />
 
             <Text style={[kit.sectionLabel, styles.label]}>Include</Text>
             <View style={kit.card}>
               <SettingRow first label="Receipts with no HST" toggle={noHst} onToggle={setNoHst} />
-              <SettingRow label="Receipts still to review" toggle={unreviewed} onToggle={setUnreviewed} />
+              {format === 'pdf' && <SettingRow label="Line items" toggle={lineItems} onToggle={setLineItems} />}
+              {format === 'pdf' && <SettingRow label="Receipt images" sub={`${photoCount} original ${photoCount === 1 ? 'photo' : 'photos'}, one per page`} toggle={images} onToggle={setImages} />}
             </View>
-            <Text style={styles.note}>Original photos stay in the app. Share one from its receipt when your accountant asks for proof.</Text>
+            <Text style={styles.note}>The PDF groups HST by category and by month. Receipts whose tax still needs review are marked and left out of the HST total.</Text>
+            {!!error && <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>}
           </>
         )}
       </ScrollView>
@@ -105,7 +138,7 @@ export default function ExportScreen({ route, navigation }: any) {
       <View style={styles.footer}>
         {done
           ? <Button title="Export Again" variant="tinted" onPress={() => setDone(false)} />
-          : <Button title="Export and Share" icon={<ShareIcon size={20} color="#FFFFFF" />} onPress={run} loading={busy} disabled={list.length === 0} />}
+          : <Button title="Export and Share" icon={<ShareIcon size={20} color="#FFFFFF" />} onPress={run} loading={busy} disabled={rows.length === 0} />}
       </View>
     </SafeAreaView>
   );
@@ -120,7 +153,9 @@ const styles = themedStyles(() => ({
   label: { marginTop: 8 },
   file: { flexDirection: 'row', gap: 14, padding: 16, alignItems: 'center', borderRadius: radius.xl },
   fileIcon: { width: 52, height: 64, borderRadius: 8, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  dateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 50, backgroundColor: colors.card },
   note: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16 },
+  error: { ...font.regular, fontSize: 15, color: colors.danger, paddingHorizontal: 16 },
   footer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
   done: { alignItems: 'center', gap: 6, paddingTop: 40, paddingHorizontal: 16 },
   doneTitle: { ...font.bold, fontSize: 28, color: colors.text },

@@ -11,6 +11,7 @@ import { Button, Segmented } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareCSV, shareImage, triggerHaptic } from '../utils/nativeUtils';
 import { deleteReceiptPhoto } from '../utils/photos';
+import { cancelReturnReminder, scheduleReturnReminder } from '../utils/reminders';
 import { daysLeft, returnByFor } from '../utils/returns';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
 import { colors, font, radius, type, themedStyles, soft } from '../theme';
@@ -60,14 +61,24 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
     updateReceipt({ ...receipt, hstAmount: (tax.suggestedHstCents ?? 0) / 100, hstPercent: tax.percent, taxReviewed: true });
   };
   const markNoTax = () => { triggerHaptic('light'); updateReceipt({ ...receipt, hstAmount: 0, hstPercent: 0, taxReviewed: true }); };
-  const toggleReturn = () => {
+  const toggleReturn = async () => {
     triggerHaptic('light');
-    updateReceipt({ ...receipt, returnBy: receipt.returnBy ? undefined : returnByFor(receipt.purchaseDate, windowLen) });
+    if (receipt.returnBy) {
+      cancelReturnReminder(receipt.returnNotificationId);
+      updateReceipt({ ...receipt, returnBy: undefined, returnNotificationId: undefined });
+      return;
+    }
+    const next = { ...receipt, returnBy: returnByFor(receipt.purchaseDate, windowLen) };
+    updateReceipt(next);
+    // The reminder is saved first; the notification is added once permission is known.
+    const id = await scheduleReturnReminder(next, userProfile.remindDaysBefore ?? 2);
+    if (id) updateReceipt({ ...next, returnNotificationId: id });
   };
   const confirmDelete = () =>
     confirmAction('Delete Receipt?', 'This removes the digital copy and the original photo. This cannot be undone.', 'Delete', () => {
       triggerHaptic('medium');
       deleteReceiptPhoto(receipt.imageName);
+      cancelReturnReminder(receipt.returnNotificationId);
       deleteReceipt(receipt.id);
       navigation.goBack();
     });

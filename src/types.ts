@@ -25,6 +25,8 @@ export interface Receipt {
   rawText?: string;
   /** Last day the purchase can be returned (ISO). Set when the user adds a return reminder. */
   returnBy?: string;
+  /** Id of the scheduled local notification for the return reminder, if one is set. */
+  returnNotificationId?: string;
   // Brand Identity
   brandId?: string;
   brandDisplayMode?: 'logo' | 'text';
@@ -57,6 +59,8 @@ export interface UserProfile {
   appearance?: 'system' | 'light' | 'dark';
   /** Default return window, in days, for new return reminders. */
   returnWindowDays?: number;
+  /** How many days before a return window closes to send the notification. */
+  remindDaysBefore?: number;
 }
 
 export interface BrandAsset {

@@ -1,22 +1,42 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Illustration } from '../components/Illustration';
 import { MerchantAvatar } from '../components/MerchantAvatar';
 import { OptionSheet, ProgressBar, kit, shortDate } from '../components/kit';
 import { NavBar, SettingRow } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
+import { ensureReminderPermission, scheduleReturnReminder } from '../utils/reminders';
 import { daysLeft, openReturns, windowDays } from '../utils/returns';
 import { formatCents, toCents } from '../utils/tax';
 import { colors, font, radius, themedStyles } from '../theme';
 
 const WINDOWS = [14, 30, 60, 90];
+const BEFORE = [1, 2, 3, 7];
 const urgency = (left: number) => (left <= 3 ? colors.danger : left <= 7 ? colors.tax : colors.accent);
 
 /** C7 · Return reminders: receipts whose return window is still open. */
 export default function RemindersScreen({ navigation }: any) {
-  const { receipts, userProfile, updateProfile } = useReceipts();
+  const { receipts, userProfile, updateProfile, updateReceipt } = useReceipts();
   const [sheet, setSheet] = useState(false);
+  const [beforeSheet, setBeforeSheet] = useState(false);
+  const [notifications, setNotifications] = useState<boolean | null>(null);
+  const before = userProfile.remindDaysBefore ?? 2;
+
+  useEffect(() => {
+    if (Platform.OS === 'web') { setNotifications(false); return; }
+    ensureReminderPermission().then(setNotifications).catch(() => setNotifications(false));
+  }, []);
+
+  // Changing the lead time moves every scheduled notification.
+  const changeBefore = async (days: number) => {
+    setBeforeSheet(false);
+    updateProfile({ ...userProfile, remindDaysBefore: days });
+    for (const r of openReturns(receipts, new Date())) {
+      const id = await scheduleReturnReminder(r, days);
+      updateReceipt({ ...r, returnNotificationId: id });
+    }
+  };
   const open = useMemo(() => openReturns(receipts, new Date()), [receipts]);
   const days = userProfile.returnWindowDays ?? 30;
 
@@ -34,7 +54,11 @@ export default function RemindersScreen({ navigation }: any) {
           <>
             <View style={{ paddingHorizontal: 4, gap: 2 }}>
               <Text style={styles.big}>{open.length} open {open.length === 1 ? 'window' : 'windows'}</Text>
-              <Text style={styles.sub}>Windows closing within a week also show on Home.</Text>
+              <Text style={styles.sub}>
+                {notifications
+                  ? `You’ll get a notification ${before} ${before === 1 ? 'day' : 'days'} before each one closes.`
+                  : 'Windows closing within a week show on Home.'}
+              </Text>
             </View>
             {open.map(r => {
               const left = daysLeft(r.returnBy!, new Date());
@@ -68,10 +92,18 @@ export default function RemindersScreen({ navigation }: any) {
         <Text style={[kit.sectionLabel, { marginTop: 8 }]}>Defaults</Text>
         <View style={kit.card}>
           <SettingRow first label="Default return window" value={`${days} days`} onPress={() => setSheet(true)} />
+          <SettingRow label="Remind me" value={`${before} ${before === 1 ? 'day' : 'days'} before`} onPress={() => setBeforeSheet(true)} />
         </View>
-        <Text style={styles.note}>Used when you add a reminder to a receipt. Check the store’s own policy, since return periods differ.</Text>
+        <Text style={styles.note}>
+          The window is used when you add a reminder to a receipt. Check the store’s own policy, since return periods differ.
+          {notifications === false && Platform.OS !== 'web' ? ' Notifications are off for Receipt TaX, so reminders only show in the app. Turn them on in Settings to be notified.' : ''}
+        </Text>
       </ScrollView>
 
+      <OptionSheet<number>
+        visible={beforeSheet} title="Remind me" value={before} onClose={() => setBeforeSheet(false)}
+        options={BEFORE.map(d => ({ value: d, label: `${d} ${d === 1 ? 'day' : 'days'} before` }))} onPick={changeBefore}
+      />
       <OptionSheet<number>
         visible={sheet} title="Default return window" value={days} onClose={() => setSheet(false)}
         options={WINDOWS.map(w => ({ value: w, label: `${w} days` }))}
