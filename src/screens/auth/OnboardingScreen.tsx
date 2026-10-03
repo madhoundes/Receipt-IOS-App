@@ -22,7 +22,7 @@ const SLIDES: Slide[] = [
 const FEATURES: { Icon: AppIcon; tint: string; color: string; title: string; text: string }[] = [
   { Icon: Scan, tint: colors.accentSoft, color: colors.accent, title: 'Scan in seconds', text: 'Store, date, total and HST read for you' },
   { Icon: Undo, tint: colors.taxSoft, color: colors.tax, title: 'Never miss a return', text: 'The original image, always one tap away' },
-  { Icon: PieChart, tint: '#E6EFFC', color: '#0A5BC4', title: 'Tax-ready reports', text: 'HST by category, exported as PDF or CSV' },
+  { Icon: PieChart, tint: '#E6EFFC', color: '#0A5BC4', title: 'Tax-ready reports', text: 'HST by category, ready to export' },
 ];
 
 function HeroArt() {
@@ -50,7 +50,7 @@ function TaxArt() {
       <View style={styles.taxRule} />
       <View style={styles.taxRow}><Text style={styles.taxTotal}>Total</Text><Text style={styles.taxTotal}>$1,418.24</Text></View>
       <View style={styles.taxBar}>{bar.map((b, i) => <View key={i} style={{ flex: b.flex, backgroundColor: b.color }} />)}</View>
-      <View style={styles.taxFoot}><FileDown size={16} color={colors.accent} /><Text style={styles.taxFootText}>Ready to export as PDF or CSV</Text></View>
+      <View style={styles.taxFoot}><FileDown size={16} color={colors.accent} /><Text style={styles.taxFootText}>Ready to export for your accountant</Text></View>
     </View>
   );
 }
