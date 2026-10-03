@@ -23,6 +23,8 @@ export interface Receipt {
   subcategory?: string;
   notes?: string;
   rawText?: string;
+  /** Last day the purchase can be returned (ISO). Set when the user adds a return reminder. */
+  returnBy?: string;
   // Brand Identity
   brandId?: string;
   brandDisplayMode?: 'logo' | 'text';
@@ -51,6 +53,8 @@ export interface UserProfile {
       insights: boolean;
   };
   isPro: boolean;
+  /** Default return window, in days, for new return reminders. */
+  returnWindowDays?: number;
 }
 
 export interface BrandAsset {

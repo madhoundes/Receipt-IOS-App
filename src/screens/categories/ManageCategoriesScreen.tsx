@@ -1,63 +1,71 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Search, ChevronRight } from '../../components/icons';
-import { useReceipts } from '../../context/ReceiptContext';
+import { ChevronRight, Plus } from '../../components/icons';
 import { CategoryIcon } from '../../components/CategoryIcon';
-import { NavBar } from '../../components/ui';
-import { colors, font, radius, type } from '../../theme';
+import { SearchField, kit } from '../../components/kit';
+import { NavBar, Segmented } from '../../components/ui';
+import { useReceipts } from '../../context/ReceiptContext';
+import { colors, font, type } from '../../theme';
 import type { CategoryDefinition } from '../../types';
 
-const TAX_LABEL = { none: 'No tax', add: 'Tax added', included: 'Tax included' } as const;
+type Filter = 'pinned' | 'all' | 'hidden';
 
+/** E3 · Manage categories: pinned, all and hidden. */
 export default function ManageCategoriesScreen({ navigation }: any) {
-  const { categories } = useReceipts();
+  const { categories, receipts } = useReceipts();
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<Filter>('all');
   const q = search.trim().toLowerCase();
   const list = categories
     .filter(c => !q || [c.name, ...c.aliases, ...c.keywords].some(t => t.toLowerCase().includes(q)))
     .sort((a, b) => a.orderIndex - b.orderIndex);
-  const groups: [string, CategoryDefinition[]][] = [
-    ['Pinned', list.filter(c => c.isPinned && c.visibility === 'visible')],
-    ['All categories', list.filter(c => !c.isPinned && c.visibility === 'visible')],
-    ['Hidden & archived', list.filter(c => c.visibility !== 'visible')],
-  ];
+  const count = (name: string) => receipts.filter(r => r.category === name).length;
+  const pinned = list.filter(c => c.isPinned && c.visibility === 'visible');
+  const others = list.filter(c => !c.isPinned && c.visibility === 'visible');
+  const hidden = list.filter(c => c.visibility !== 'visible');
+  const groups: [string, CategoryDefinition[]][] =
+    filter === 'pinned' ? [['Pinned', pinned]]
+      : filter === 'hidden' ? [['Hidden', hidden]]
+        : [['Pinned', pinned], ['All categories', others], ['Hidden', hidden]];
+  const shown = groups.filter(([, items]) => items.length > 0);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <NavBar onBack={() => navigation.goBack()} right={
+      <NavBar onBack={() => navigation.goBack()} title="Manage Categories" right={
         <Pressable onPress={() => navigation.navigate('EditCategory', {})} style={styles.add} accessibilityRole="button" accessibilityLabel="New category">
-          <Plus size={24} color={colors.accent} strokeWidth={2.4} />
+          <Plus size={26} color={colors.accent} />
         </Pressable>} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={[type.title, { paddingHorizontal: 4 }]}>Manage Categories</Text>
-        <View style={styles.search}>
-          <Search size={17} color={colors.textMuted} />
-          <TextInput value={search} onChangeText={setSearch} placeholder="Search categories, aliases..." placeholderTextColor={colors.textMuted}
-            style={styles.searchInput} accessibilityLabel="Search categories" />
-        </View>
-        {list.length === 0 && <Text style={styles.none}>No categories found.</Text>}
-        {groups.filter(([, items]) => items.length > 0).map(([title, items]) => (
+        <View style={{ marginHorizontal: -16 }}><SearchField value={search} onChange={setSearch} placeholder="Search categories, aliases" /></View>
+        <Segmented options={[{ value: 'pinned', label: 'Pinned' }, { value: 'all', label: 'All' }, { value: 'hidden', label: 'Hidden' }]} value={filter} onChange={setFilter} />
+        {shown.length === 0 && (
+          <Text style={[type.subhead, { textAlign: 'center', marginTop: 24 }]}>
+            {q ? `No category matches “${search.trim()}”.` : filter === 'pinned' ? 'No pinned categories. Pin one from its edit screen.' : 'No hidden categories.'}
+          </Text>
+        )}
+        {shown.map(([title, items]) => (
           <View key={title} style={{ gap: 8 }}>
-            <Text style={[type.sectionLabel, { paddingHorizontal: 8 }]}>{title}</Text>
-            <View style={styles.group}>
-              {items.map((c, i) => (
-                <Pressable key={c.id} onPress={() => navigation.navigate('EditCategory', { categoryId: c.id })}
-                  style={[styles.row, i > 0 && styles.rowBorder]} accessibilityRole="button">
-                  <CategoryIcon category={c.name} size={34} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.name}>{c.name}</Text>
-                    <Text style={styles.meta}>
-                      {c.subcategories.length} subcategor{c.subcategories.length === 1 ? 'y' : 'ies'} · {TAX_LABEL[c.taxRule.mode]}
-                      {c.visibility !== 'visible' ? ` · ${c.visibility}` : ''}
-                    </Text>
-                  </View>
-                  <ChevronRight size={16} color="#AEAEB2" />
-                </Pressable>
-              ))}
+            <Text style={kit.sectionLabel}>{title}</Text>
+            <View style={kit.card}>
+              {items.map((c, i) => {
+                const n = count(c.name);
+                return (
+                  <Pressable key={c.id} onPress={() => navigation.navigate('EditCategory', { categoryId: c.id })}
+                    style={[styles.row, i > 0 && kit.rowBorder]} accessibilityRole="button" accessibilityLabel={`${c.name}, ${n} receipts. Edit`}>
+                    <CategoryIcon category={c.name} size={36} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.name}>{c.name}</Text>
+                      <Text style={type.footnote}>{n} {n === 1 ? 'receipt' : 'receipts'}</Text>
+                    </View>
+                    <ChevronRight size={16} color="#AEAEB2" />
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         ))}
+        <Text style={styles.note}>Renaming or deleting a category moves its receipts. Hidden categories stay out of pickers.</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -65,14 +73,9 @@ export default function ManageCategoriesScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
+  content: { padding: 16, paddingTop: 8, paddingBottom: 48, gap: 14 },
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
-  searchInput: { flex: 1, ...font.regular, fontSize: 16, color: colors.text },
-  none: { ...font.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center' },
-  group: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10 },
-  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  name: { ...font.bold, fontSize: 16, color: colors.text },
-  meta: { ...font.regular, fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 58, paddingVertical: 8, backgroundColor: colors.card },
+  name: { ...font.semibold, fontSize: 17, color: colors.text },
+  note: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16 },
 });

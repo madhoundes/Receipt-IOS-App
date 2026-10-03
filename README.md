@@ -2,7 +2,7 @@
 
 Snap a receipt, read the total and HST with OCR, keep the original photo, and see HST totals by week, month, quarter or year for tax time.
 
-> **V2 in progress.** This branch rebuilds the app on the new design in `design/` (green brand, system font, Iconsax icons, steady Lottie illustrations). Done so far: design foundation (`src/theme.ts`, `src/components/icons.tsx`, `src/components/ui.tsx`, `src/components/Illustration.tsx`) and flow A (Launch, Walkthrough, Sign Up, Log In) and flow B (Camera Access, Scan, Reading, Review with tax check, Category Picker, Manual Entry, Saved). Flows C to F still use the V1 layouts with the new theme and icons.
+> **V2, Light Mode.** This branch rebuilds the app on the new design in `design/` (green brand, system font, Iconsax icons, steady Lottie illustrations). All six flows are converted: A (onboarding and account), B (capture), C (receipts, search, digital copy and original photo, return reminders), D (Home, Insights, HST summary, export), E (categories) and F (profile). Tabs are Home, Receipts, Categories and HST with a round Scan button; Profile opens from the avatar on Home. Not built yet: Dark Mode, a date picker, PDF export, push notifications for return reminders, and drag to reorder categories.
 
 This is an **Expo (SDK 51) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
 

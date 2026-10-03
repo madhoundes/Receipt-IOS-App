@@ -1,43 +1,47 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Share, Image, Modal } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ChevronRight, Share2, FileText, Copy, ImageOff, AlertTriangle, X } from '../components/icons';
-import { useReceipts } from '../context/ReceiptContext';
+import {
+  AlertTriangle, ChevronLeft, ChevronRight, FileDown, Image as ImageIcon, Lock, Maximize2, More, Share as ShareIcon, Undo,
+} from '../components/icons';
 import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
-import { resolveReceiptTax, formatCents, toCents } from '../utils/tax';
-import { confirmAction, shareCSV, triggerHaptic } from '../utils/nativeUtils';
+import { CategoryPickerSheet } from '../components/CategoryPickerSheet';
+import { OptionSheet, RoundButton, kit, shortDate } from '../components/kit';
+import { Button, Segmented } from '../components/ui';
+import { useReceipts } from '../context/ReceiptContext';
+import { confirmAction, shareCSV, shareImage, triggerHaptic } from '../utils/nativeUtils';
 import { deleteReceiptPhoto } from '../utils/photos';
+import { daysLeft, returnByFor } from '../utils/returns';
+import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
 import { colors, font, radius, type } from '../theme';
 import type { Receipt } from '../types';
 
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  const today = new Date();
-  const days = Math.round((new Date(today.toDateString()).getTime() - new Date(d.toDateString()).getTime()) / 86400000);
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  return d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
-};
+const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
 
 export const receiptSummary = (r: Receipt, hstCents: number) =>
   [
-    `${r.storeName} · ${formatDate(r.purchaseDate)}`,
+    `${r.storeName} · ${longDate(r.purchaseDate)}`,
     `Category: ${r.category}${r.subcategory ? ` / ${r.subcategory}` : ''}`,
     `HST: ${formatCents(hstCents)}`,
     `Total: ${formatCents(toCents(r.totalAmount))}`,
   ].join('\n');
 
+type Action = 'category' | 'return' | 'share' | 'delete';
+
+/** C4 Receipt · Digital copy and C5 Receipt · Original. */
 export default function ReceiptDetailScreen({ route, navigation }: any) {
   const { receipts, categories, userProfile, updateReceipt, deleteReceipt } = useReceipts();
   const receipt = receipts.find(r => r.id === route.params?.receiptId);
+  const [tab, setTab] = useState<'digital' | 'original'>(route.params?.tab === 'original' ? 'original' : 'digital');
   const [notes, setNotes] = useState(receipt?.notes ?? '');
-  const [photoOpen, setPhotoOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [picker, setPicker] = useState(false);
 
   if (!receipt) {
     return (
       <SafeAreaView style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={type.headline}>Receipt not found</Text>
-        <Pressable onPress={() => navigation.goBack()} style={{ padding: 12 }}><Text style={styles.link}>Go Back</Text></Pressable>
+        <Button title="Go Back" variant="ghost" onPress={() => navigation.goBack()} />
       </SafeAreaView>
     );
   }
@@ -46,197 +50,239 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
   const totalCents = toCents(receipt.totalAmount);
   const subtotalCents = tax.status === 'taxed' ? tax.taxableCents : toCents(receipt.subtotal) || totalCents;
   const color = categoryColor(categories, receipt.category);
+  const left = receipt.returnBy ? daysLeft(receipt.returnBy, new Date()) : null;
+  const windowLen = userProfile.returnWindowDays ?? 30;
 
-  const saveNotes = () => {
-    if (notes !== (receipt.notes ?? '')) updateReceipt({ ...receipt, notes });
-  };
-
+  const saveNotes = () => { if (notes !== (receipt.notes ?? '')) updateReceipt({ ...receipt, notes }); };
+  const share = () => Share.share({ message: receiptSummary(receipt, tax.hstCents) });
   const applySuggestion = () => {
     triggerHaptic('success');
     updateReceipt({ ...receipt, hstAmount: (tax.suggestedHstCents ?? 0) / 100, hstPercent: tax.percent, taxReviewed: true });
   };
-
+  const markNoTax = () => { triggerHaptic('light'); updateReceipt({ ...receipt, hstAmount: 0, hstPercent: 0, taxReviewed: true }); };
+  const toggleReturn = () => {
+    triggerHaptic('light');
+    updateReceipt({ ...receipt, returnBy: receipt.returnBy ? undefined : returnByFor(receipt.purchaseDate, windowLen) });
+  };
   const confirmDelete = () =>
-    confirmAction('Delete Receipt?', 'This removes the receipt and its photo. This action cannot be undone.', 'Delete', () => {
+    confirmAction('Delete Receipt?', 'This removes the digital copy and the original photo. This cannot be undone.', 'Delete', () => {
       triggerHaptic('medium');
       deleteReceiptPhoto(receipt.imageName);
       deleteReceipt(receipt.id);
       navigation.goBack();
     });
+  const onAction = (a: Action) => {
+    setMenu(false);
+    if (a === 'category') setPicker(true);
+    if (a === 'return') toggleReturn();
+    if (a === 'share') share();
+    if (a === 'delete') confirmDelete();
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.nav}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.navBack} accessibilityRole="button">
-          <ChevronLeft size={24} color={colors.accent} />
-          <Text style={styles.navText}>Back</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => Share.share({ message: receiptSummary(receipt, tax.hstCents) })}
-          style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Share receipt"
-        >
-          <Share2 size={21} color={colors.accent} />
-        </Pressable>
+        <RoundButton label="Back" onPress={() => navigation.goBack()}><ChevronLeft size={20} color={colors.text} /></RoundButton>
+        <Text style={styles.navTitle} accessibilityRole="header">Receipt</Text>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <RoundButton label="Share receipt" onPress={share}><ShareIcon size={20} color={colors.text} /></RoundButton>
+          <RoundButton label="More actions" onPress={() => setMenu(true)}><More size={20} color={colors.text} /></RoundButton>
+        </View>
+      </View>
+
+      <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
+        <Segmented options={[{ value: 'digital', label: 'Digital copy' }, { value: 'original', label: 'Original' }]} value={tab} onChange={setTab} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={[styles.card, styles.hero]}>
-          <CategoryIcon category={receipt.category} size={60} />
-          <Text style={styles.store}>{receipt.storeName}</Text>
-          <Text style={styles.date}>{formatDate(receipt.purchaseDate)}</Text>
-          <Text style={styles.total}>{formatCents(totalCents)}</Text>
-          <View style={styles.chips}>
-            <Text style={[styles.chip, { color, backgroundColor: `${color}1F` }]}>{receipt.category}</Text>
-            {!!receipt.subcategory && <Text style={[styles.chip, styles.chipNeutral]}>{receipt.subcategory}</Text>}
-          </View>
-        </View>
-
-        {tax.status === 'needsReview' && (
-          <View style={styles.warn}>
-            <AlertTriangle size={20} color={colors.taxText} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.warnTitle}>{tax.reason === 'taxIncluded' ? 'Tax is included, amount not read' : 'No tax line found'}</Text>
-              <Text style={styles.warnText}>{tax.percent}% would be {formatCents(tax.suggestedHstCents ?? 0)}</Text>
-            </View>
-            <Pressable onPress={applySuggestion} style={styles.applyBtn} accessibilityRole="button">
-              <Text style={styles.applyText}>Apply</Text>
-            </Pressable>
-          </View>
-        )}
-
-        <Pressable
-          style={[styles.card, styles.photoRow]}
-          onPress={() => receipt.imageName ? setPhotoOpen(true) : undefined}
-          accessibilityRole="button"
-          accessibilityLabel="View receipt photo"
-        >
-          {receipt.imageName ? (
-            <Image source={{ uri: receipt.imageName }} style={styles.thumb} />
-          ) : (
-            <View style={[styles.thumb, styles.thumbEmpty]}><ImageOff size={20} color={colors.textMuted} /></View>
-          )}
-          <View style={{ flex: 1 }}>
-            <Text style={type.headline}>Original receipt</Text>
-            <Text style={styles.meta}>{receipt.imageName ? 'Tap to view full photo' : 'No photo for this demo receipt'}</Text>
-          </View>
-          {!!receipt.imageName && <ChevronRight size={18} color="#AEAEB2" />}
-        </Pressable>
-
-        <Text style={[type.sectionLabel, styles.section]}>Items</Text>
-        <View style={styles.card}>
-          {(receipt.items ?? []).length === 0 && <Text style={[styles.meta, { padding: 16 }]}>No line items detected.</Text>}
-          {(receipt.items ?? []).map((it, i) => (
-            <View key={i} style={[styles.row, i > 0 && styles.rowBorder]}>
-              <Text style={styles.qty}>{it.qty}×</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.itemName}>{it.name}</Text>
-                {it.qty > 1 && <Text style={styles.meta}>{formatCents(toCents(it.unitPrice))} each</Text>}
+        {tab === 'digital' ? (
+          <>
+            <View style={styles.paper}>
+              <Text style={styles.paperStore}>{receipt.storeName.toUpperCase()}</Text>
+              <Text style={styles.paperMeta}>{longDate(receipt.purchaseDate)}</Text>
+              <View style={styles.dash} />
+              {(receipt.items ?? []).length === 0 && <Text style={[styles.paperMeta, { textAlign: 'left' }]}>No line items on this receipt.</Text>}
+              {(receipt.items ?? []).map((it, i) => (
+                <View key={i} style={styles.paperRow}>
+                  <Text style={[styles.paperText, { flex: 1 }]} numberOfLines={1}>{it.qty > 1 ? `${it.qty} × ` : ''}{it.name}</Text>
+                  <Text style={styles.paperText}>{(toCents(it.amount) / 100).toFixed(2)}</Text>
+                </View>
+              ))}
+              <View style={styles.dash} />
+              <PaperRow label="Subtotal" value={(subtotalCents / 100).toFixed(2)} />
+              <PaperRow
+                label={tax.status === 'taxed' ? `HST ${tax.percent ?? ''}%` : tax.status === 'noTax' ? 'HST' : 'HST not read'}
+                value={(tax.hstCents / 100).toFixed(2)} tax />
+              <View style={[styles.paperRow, { marginTop: 6 }]}>
+                <Text style={styles.paperTotal}>TOTAL</Text>
+                <Text style={styles.paperTotal}>{formatCents(totalCents)}</Text>
               </View>
-              <Text style={type.money}>{formatCents(toCents(it.amount))}</Text>
+              {!!receipt.paymentMethod && <Text style={[styles.paperMeta, { textAlign: 'left', marginTop: 4 }]}>{receipt.paymentMethod.toUpperCase()}</Text>}
             </View>
-          ))}
-          <View style={styles.totals}>
-            <TotalRow label="Subtotal" value={formatCents(subtotalCents)} />
-            <TotalRow
-              label={tax.status === 'taxed' ? `Tax (HST ${tax.percent}%)` : tax.status === 'noTax' ? 'Tax' : 'Tax (not read)'}
-              value={formatCents(tax.hstCents)}
-            />
-            <TotalRow label="Total" value={formatCents(totalCents)} strong />
-          </View>
-        </View>
 
-        <View style={[styles.card, { marginTop: 18 }]}>
-          <View style={styles.row}>
-            <Text style={[styles.meta, { flex: 1, fontSize: 16 }]}>Payment Method</Text>
-            <Text style={styles.itemName}>{receipt.paymentMethod ?? '—'}</Text>
-          </View>
-          <View style={[styles.rowBorder, { padding: 16, gap: 6 }]}>
-            <Text style={[styles.meta, { fontSize: 16 }]}>Notes</Text>
-            <TextInput
-              value={notes} onChangeText={setNotes} onBlur={saveNotes} placeholder="Add details..."
-              placeholderTextColor={colors.placeholder} multiline style={styles.notes} accessibilityLabel="Notes"
-            />
-          </View>
-        </View>
+            <View style={styles.chips}>
+              <Pressable onPress={() => setPicker(true)} style={[styles.chip, { backgroundColor: `${color}1F` }]} accessibilityRole="button" accessibilityLabel={`Category ${receipt.category}. Change`}>
+                <CategoryIcon category={receipt.category} size={20} />
+                <Text style={[styles.chipText, { color }]}>{receipt.category}{receipt.subcategory ? ` · ${receipt.subcategory}` : ''}</Text>
+              </Pressable>
+              <Pressable onPress={() => (receipt.returnBy ? navigation.navigate('Reminders') : toggleReturn())} style={[styles.chip, { backgroundColor: colors.taxSoft }]} accessibilityRole="button">
+                <Undo size={16} color={colors.tax} />
+                <Text style={[styles.chipText, { color: colors.tax }]}>
+                  {receipt.returnBy ? (left! >= 0 ? `Return by ${shortDate(receipt.returnBy)}` : 'Return window closed') : 'Add return reminder'}
+                </Text>
+              </Pressable>
+            </View>
 
-        <View style={styles.actions}>
-          <Pressable style={styles.action} onPress={() => shareCSV([receipt], `receipt-${receipt.id}.csv`)} accessibilityRole="button">
-            <FileText size={22} color={colors.accent} />
-            <Text style={styles.actionText}>Export CSV</Text>
-          </Pressable>
-          <Pressable style={styles.action} onPress={() => Share.share({ message: receiptSummary(receipt, tax.hstCents) })} accessibilityRole="button">
-            <Copy size={22} color={colors.accent} />
-            <Text style={styles.actionText}>Copy Summary</Text>
-          </Pressable>
-        </View>
+            {tax.status === 'needsReview' && (
+              <View style={styles.warn} accessibilityLiveRegion="polite">
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <AlertTriangle size={20} color={colors.tax} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.warnTitle}>{tax.reason === 'taxIncluded' ? 'Tax is included in the price' : 'No tax line found'}</Text>
+                    <Text style={styles.warnText}>{tax.percent}% would be {formatCents(tax.suggestedHstCents ?? 0)}. It stays out of your HST total until you confirm.</Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable onPress={applySuggestion} style={styles.warnBtn} accessibilityRole="button"><Text style={styles.warnBtnText}>Add {formatCents(tax.suggestedHstCents ?? 0)}</Text></Pressable>
+                  <Pressable onPress={markNoTax} style={[styles.warnBtn, { backgroundColor: '#FFFFFF' }]} accessibilityRole="button"><Text style={[styles.warnBtnText, { color: colors.text }]}>No tax</Text></Pressable>
+                </View>
+              </View>
+            )}
 
-        <Pressable style={[styles.card, styles.delete]} onPress={confirmDelete} accessibilityRole="button">
-          <Text style={styles.deleteText}>Delete Receipt</Text>
-        </Pressable>
+            <View style={kit.card}>
+              {!!receipt.imageName && (
+                <LinkRow icon={<ImageIcon size={20} color={colors.accent} />} label="View Original Photo" onPress={() => setTab('original')} first />
+              )}
+              <LinkRow icon={<FileDown size={20} color={colors.accent} />} label="Export as CSV" first={!receipt.imageName}
+                onPress={() => shareCSV([receipt], `receipt-${receipt.id}.csv`)} />
+            </View>
+
+            <Text style={[kit.sectionLabel, { marginTop: 6 }]}>Notes</Text>
+            <View style={[kit.card, { paddingHorizontal: 16 }]}>
+              <TextInput value={notes} onChangeText={setNotes} onBlur={saveNotes} placeholder="Add a note for your accountant"
+                placeholderTextColor={colors.placeholder} multiline style={styles.notes} accessibilityLabel="Notes" />
+            </View>
+          </>
+        ) : receipt.imageName ? (
+          <>
+            <Pressable style={styles.photoBox} onPress={() => navigation.navigate('OriginalPhoto', { receiptId: receipt.id })}
+              accessibilityRole="button" accessibilityLabel="Open the original photo full screen">
+              <Image source={{ uri: receipt.imageName }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+              <View style={styles.lockBadge}><Lock size={13} color="#FFFFFF" /><Text style={styles.lockText}>Unedited original</Text></View>
+              <View style={styles.expand}><Maximize2 size={16} color="#FFFFFF" /></View>
+            </Pressable>
+            <TwoCopies />
+            <Text style={[kit.sectionLabel, { marginTop: 6 }]}>Original file</Text>
+            <View style={kit.card}>
+              <InfoRow label="Purchased" value={longDate(receipt.purchaseDate)} first />
+              <InfoRow label="Source" value="Camera or photo import" />
+              <InfoRow label="Stored" value={Platform.OS === 'web' ? 'In this browser' : 'On this device'} />
+              <Pressable onPress={() => setTab('digital')} accessibilityRole="button">
+                <InfoRow label="Linked digital copy" value="View  ›" accent />
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+              <Button title="Full Screen" variant="tinted" compact style={{ flex: 1 }} icon={<Maximize2 size={18} color={colors.accent} />}
+                onPress={() => navigation.navigate('OriginalPhoto', { receiptId: receipt.id })} />
+              <Button title="Share Photo" variant="tinted" compact style={{ flex: 1 }} icon={<ShareIcon size={18} color={colors.accent} />}
+                onPress={() => shareImage(receipt.imageName)} />
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={[kit.card, styles.noPhoto]}>
+              <ImageIcon size={28} color={colors.placeholder} />
+              <Text style={type.headline}>No original photo</Text>
+              <Text style={[type.subhead, { textAlign: 'center' }]}>This receipt was entered by hand, so only the digital copy exists.</Text>
+            </View>
+            <TwoCopies />
+          </>
+        )}
       </ScrollView>
 
-      <Modal visible={photoOpen} animationType="fade" onRequestClose={() => setPhotoOpen(false)}>
-        <View style={styles.viewer}>
-          <Image source={{ uri: receipt.imageName }} style={{ flex: 1 }} resizeMode="contain" />
-          <Pressable onPress={() => setPhotoOpen(false)} style={styles.viewerClose} accessibilityLabel="Close photo">
-            <X size={22} color="#FFFFFF" />
-          </Pressable>
-        </View>
-      </Modal>
+      <OptionSheet<Action>
+        visible={menu} onClose={() => setMenu(false)} onPick={onAction}
+        options={[
+          { value: 'category', label: 'Change Category' },
+          { value: 'return', label: receipt.returnBy ? 'Remove Return Reminder' : 'Add Return Reminder', sub: receipt.returnBy ? undefined : `${windowLen}-day window from the purchase date` },
+          { value: 'share', label: 'Share Summary' },
+          { value: 'delete', label: 'Delete Receipt', danger: true },
+        ]}
+      />
+      <CategoryPickerSheet
+        visible={picker} category={receipt.category} subcategory={receipt.subcategory} onClose={() => setPicker(false)}
+        onDone={(category, subcategory) => { updateReceipt({ ...receipt, category, subcategory }); setPicker(false); }}
+        onManage={() => navigation.navigate('ManageCategories')}
+      />
     </SafeAreaView>
   );
 }
 
-const TotalRow = ({ label, value, strong }: { label: string; value: string; strong?: boolean }) => (
-  <View style={styles.totalRow}>
-    <Text style={strong ? styles.totalStrong : styles.totalLabel}>{label}</Text>
-    <Text style={[type.money, strong && { ...font.monoBold, fontSize: 17 }]}>{value}</Text>
+const TwoCopies = () => (
+  <View style={styles.note}>
+    <Text style={styles.noteText}>
+      <Text style={font.bold}>Two copies are kept. </Text>
+      The original photo is never changed, so you always have proof for returns, warranty claims or a CRA review. The digital copy is what you search, edit and export.
+    </Text>
+  </View>
+);
+
+const PaperRow = ({ label, value, tax }: { label: string; value: string; tax?: boolean }) => (
+  <View style={styles.paperRow}>
+    <Text style={[styles.paperText, tax && { color: colors.tax, ...font.monoBold }]}>{label}</Text>
+    <Text style={[styles.paperText, tax && { color: colors.tax, ...font.monoBold }]}>{value}</Text>
+  </View>
+);
+
+const LinkRow = ({ icon, label, onPress, first }: { icon: React.ReactNode; label: string; onPress: () => void; first?: boolean }) => (
+  <Pressable onPress={onPress} accessibilityRole="button" style={[styles.linkRow, !first && kit.rowBorder]}>
+    {icon}
+    <Text style={[type.body, { flex: 1 }]}>{label}</Text>
+    <ChevronRight size={16} color="#AEAEB2" />
+  </Pressable>
+);
+
+const InfoRow = ({ label, value, first, accent }: { label: string; value: string; first?: boolean; accent?: boolean }) => (
+  <View style={[styles.infoRow, !first && kit.rowBorder]}>
+    <Text style={[type.body, { color: colors.textSecondary }]}>{label}</Text>
+    <Text style={[type.body, { flexShrink: 1, textAlign: 'right' }, accent && { color: colors.accent }]} numberOfLines={1}>{value}</Text>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  nav: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
-  navBack: { flexDirection: 'row', alignItems: 'center', height: 44, paddingRight: 8 },
-  navText: { ...font.medium, fontSize: 17, color: colors.accent },
-  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, paddingBottom: 48 },
-  card: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
-  hero: { alignItems: 'center', padding: 20, gap: 4, borderRadius: radius.xl },
-  store: { ...font.extrabold, fontSize: 22, color: colors.text, marginTop: 10 },
-  date: { ...font.regular, fontSize: 14, color: colors.textMuted },
-  total: { ...font.mono, fontSize: 40, letterSpacing: -1, color: colors.text, marginVertical: 6 },
-  chips: { flexDirection: 'row', gap: 8 },
-  chip: { ...font.bold, fontSize: 13, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, overflow: 'hidden' },
-  chipNeutral: { color: '#3A3A40', backgroundColor: colors.bg, ...font.semibold },
-  warn: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, padding: 14, borderRadius: radius.lg,
-    backgroundColor: colors.warnBg, borderWidth: 1, borderColor: colors.warnBorder,
+  nav: { height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
+  navTitle: { position: 'absolute', left: 110, right: 110, textAlign: 'center', ...font.semibold, fontSize: 17, color: colors.text },
+  content: { padding: 16, paddingTop: 10, paddingBottom: 48, gap: 12 },
+  paper: {
+    backgroundColor: colors.paper, borderRadius: 6, padding: 20, gap: 6, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.paperEdge,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1,
   },
-  warnTitle: { ...font.bold, fontSize: 15, color: colors.warnText },
-  warnText: { ...font.regular, fontSize: 13, color: colors.warnText, marginTop: 2 },
-  applyBtn: { backgroundColor: colors.accent, borderRadius: 18, paddingHorizontal: 16, height: 36, justifyContent: 'center' },
-  applyText: { ...font.bold, fontSize: 14, color: '#FFFFFF' },
-  photoRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, marginTop: 14 },
-  thumb: { width: 52, height: 68, borderRadius: 8, backgroundColor: '#F4F3EF' },
-  thumbEmpty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.separator },
-  meta: { ...font.regular, fontSize: 13, color: colors.textMuted },
-  section: { marginTop: 22, marginBottom: 8, paddingHorizontal: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, minHeight: 52 },
-  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  qty: { ...font.bold, fontSize: 13, color: colors.textMuted, width: 24 },
-  itemName: { ...font.regular, fontSize: 15, color: colors.text },
-  totals: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, padding: 16, gap: 8 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  totalLabel: { ...font.regular, fontSize: 15, color: colors.textSecondary },
-  totalStrong: { ...font.extrabold, fontSize: 17, color: colors.text },
-  notes: { ...font.regular, fontSize: 16, color: colors.text, minHeight: 44, padding: 0 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 18 },
-  action: { flex: 1, height: 76, borderRadius: radius.lg, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  actionText: { ...font.bold, fontSize: 14, color: colors.text },
-  delete: { marginTop: 18, height: 52, alignItems: 'center', justifyContent: 'center' },
-  deleteText: { ...font.semibold, fontSize: 17, color: colors.danger },
-  link: { ...font.bold, fontSize: 16, color: colors.accent },
-  viewer: { flex: 1, backgroundColor: '#000' },
-  viewerClose: { position: 'absolute', top: 60, left: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  paperStore: { ...font.bold, fontSize: 20, letterSpacing: 3, color: colors.paperInk, textAlign: 'center' },
+  paperMeta: { ...font.mono, fontSize: 12, color: '#6B675C', textAlign: 'center' },
+  dash: { borderBottomWidth: 1, borderStyle: 'dashed', borderColor: '#CFC9B8', marginVertical: 6 },
+  paperRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  paperText: { ...font.mono, fontSize: 13, lineHeight: 20, color: colors.paperInk },
+  paperTotal: { ...font.monoBold, fontSize: 17, color: colors.paperInk },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17 },
+  chipText: { ...font.semibold, fontSize: 15 },
+  warn: { backgroundColor: colors.warnBg, borderColor: colors.warnBorder, borderWidth: 1, borderRadius: radius.lg, padding: 14, gap: 12 },
+  warnTitle: { ...font.semibold, fontSize: 17, color: colors.warnText },
+  warnText: { ...font.regular, fontSize: 15, lineHeight: 20, color: colors.warnText, marginTop: 2 },
+  warnBtn: { flex: 1, height: 44, borderRadius: 22, backgroundColor: colors.tax, alignItems: 'center', justifyContent: 'center' },
+  warnBtnText: { ...font.semibold, fontSize: 17, color: '#FFFFFF' },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 48, backgroundColor: colors.card },
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, minHeight: 46, backgroundColor: colors.card },
+  notes: { ...font.regular, fontSize: 17, color: colors.text, minHeight: 64, paddingVertical: 12, textAlignVertical: 'top' },
+  photoBox: { height: 330, borderRadius: radius.xl, backgroundColor: '#26241F', overflow: 'hidden' },
+  lockBadge: {
+    position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, height: 28, paddingHorizontal: 10,
+    borderRadius: 14, backgroundColor: 'rgba(12,12,13,0.78)',
+  },
+  lockText: { ...font.semibold, fontSize: 13, color: '#FFFFFF' },
+  expand: { position: 'absolute', right: 12, bottom: 12, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(12,12,13,0.78)', alignItems: 'center', justifyContent: 'center' },
+  note: { backgroundColor: colors.accentSoft, borderRadius: radius.lg, padding: 14 },
+  noteText: { ...font.regular, fontSize: 15, lineHeight: 20, color: '#0B5C40' },
+  noPhoto: { alignItems: 'center', gap: 6, padding: 28 },
 });

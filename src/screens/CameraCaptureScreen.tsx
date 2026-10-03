@@ -21,7 +21,7 @@ const STEPS = ['Store and date', 'Total and HST', 'Line items', 'Category and pa
 
 type Phase = 'camera' | 'reading' | 'failed';
 
-export default function CameraCaptureScreen({ navigation }: any) {
+export default function CameraCaptureScreen({ navigation, route }: any) {
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const [phase, setPhase] = useState<Phase>('camera');
@@ -91,6 +91,13 @@ export default function CameraCaptureScreen({ navigation }: any) {
     setPhase('camera');
     setPhotoUri(undefined);
   };
+
+  // A photo picked elsewhere (the empty Receipts screen) goes straight to reading.
+  const importUri: string | undefined = route?.params?.importUri;
+  useEffect(() => {
+    if (importUri) analyze(importUri);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importUri]);
 
   if (!permission) return <View style={styles.container} />;
 

@@ -65,11 +65,12 @@ export default function EditProfileScreen({ navigation }: any) {
             <Pressable onPress={() => pick('library')} accessibilityRole="button"><Text style={styles.link}>Change Photo</Text></Pressable>
           </View>
           <FieldGroup>
-            <Field label="Display Name" value={name} onChangeText={t => { setName(t); setError(undefined); }} autoComplete="name" />
-            <Field label="Email Address" value={email} onChangeText={t => { setEmail(t); setError(undefined); }}
+            <Field label="Name" value={name} onChangeText={t => { setName(t); setError(undefined); }} autoComplete="name" />
+            <Field label="Email" value={email} onChangeText={t => { setEmail(t); setError(undefined); }}
               autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
           </FieldGroup>
           {!!error && <Text style={styles.error}>{error}</Text>}
+          <Text style={{ ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16, marginTop: -8 }}>Your email is used to sign in and to send exports you request.</Text>
           <Section title="Photo options">
             <SettingRow first label="Take Headshot" onPress={() => pick('camera')} icon={<Camera size={20} color={colors.accent} />} />
             <SettingRow label="Choose from Library" onPress={() => pick('library')} icon={<ImageIcon size={20} color={colors.accent} />} />
@@ -85,10 +86,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  navText: { ...font.medium, fontSize: 17, color: colors.accent },
+  navText: { ...font.regular, fontSize: 17, color: colors.accent },
   content: { padding: 16, gap: 24, paddingTop: 20 },
-  avatar: { width: 104, height: 104, borderRadius: 52, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { ...font.extrabold, fontSize: 38, color: '#FFFFFF' },
-  link: { ...font.semibold, fontSize: 16, color: colors.accent, padding: 6 },
+  avatar: { width: 104, height: 104, borderRadius: 52, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { ...font.bold, fontSize: 38, color: colors.accent },
+  link: { ...font.regular, fontSize: 17, color: colors.accent, padding: 6 },
   error: { ...font.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
 });

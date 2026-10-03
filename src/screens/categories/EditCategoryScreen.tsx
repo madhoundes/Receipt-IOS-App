@@ -207,8 +207,8 @@ export default function EditCategoryScreen({ route, navigation }: any) {
 
 const Chip = ({ label, tone, onRemove }: { label: string; tone?: 'alias'; onRemove: () => void }) => (
   <View style={[styles.chip, tone === 'alias' && { backgroundColor: colors.accentSoft }]}>
-    <Text style={[styles.chipText, tone === 'alias' && { color: '#0050A8' }]}>{label}</Text>
-    <Pressable onPress={onRemove} accessibilityLabel={`Remove ${label}`} hitSlop={8}><X size={13} color={tone === 'alias' ? '#0050A8' : '#3A3A40'} /></Pressable>
+    <Text style={[styles.chipText, tone === 'alias' && { color: colors.accent }]}>{label}</Text>
+    <Pressable onPress={onRemove} accessibilityLabel={`Remove ${label}`} hitSlop={8}><X size={13} color={tone === 'alias' ? colors.accent : '#3A3A40'} /></Pressable>
   </View>
 );
 

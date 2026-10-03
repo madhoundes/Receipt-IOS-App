@@ -145,7 +145,7 @@ export function Segmented<T extends string>({ options, value, onChange, compact 
         return (
           <Pressable key={o.value} onPress={() => onChange(o.value)} style={[seg.item, on && seg.on]}
             accessibilityRole="tab" accessibilityState={{ selected: on }}>
-            <Text style={[seg.text, compact && { fontSize: 13 }, on && seg.textOn]} numberOfLines={1}>{o.label}</Text>
+            <Text style={[seg.text, compact && { fontSize: 13 }, on && seg.textOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -203,7 +203,7 @@ export function Section({ title, children, footer }: { title?: string; children:
 
 const seg = StyleSheet.create({
   wrap: { flexDirection: 'row', backgroundColor: colors.fill, borderRadius: 9, padding: 2 },
-  item: { flex: 1, height: 30, borderRadius: 7, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  item: { flex: 1, height: 30, borderRadius: 7, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
   on: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   text: { ...font.regular, fontSize: 13, color: colors.text },
   textOn: { ...font.semibold, color: colors.text },
