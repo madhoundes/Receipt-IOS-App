@@ -12,8 +12,7 @@ type Block = { q: string; a: string };
 const PRIVACY: Block[] = [
   { q: 'What the app stores', a: 'Your receipts: the original photo and the digital copy (store, date, items, amounts, category, notes). Your name, email and settings.' },
   { q: 'Where it is stored', a: 'On this device, inside the app. Original photos are kept in the app’s own folder and are never edited.' },
-  // TODO(ocr): once a real reading service is connected, say here where the photo is sent and how long it is kept.
-  { q: 'Reading a receipt', a: 'This version reads receipts with built-in sample data, so no photo leaves your device.' },
+  { q: 'Reading a receipt', a: 'The text on the photo is read on your phone. The photo is not uploaded anywhere. The first time you scan, the app downloads the reader once, so it needs the internet then.' },
   { q: 'Sharing', a: 'Nothing is shared unless you choose to: exporting a PDF, CSV or JSON file, or sharing a receipt or its photo, opens the share sheet and you pick where it goes.' },
   { q: 'Notifications', a: 'Return reminders and the weekly summary are scheduled on your device. They are not sent from a server.' },
   { q: 'Deleting your data', a: 'Delete a receipt from its screen, or use Profile → Delete All Receipts. Removing the app removes everything stored in it.' },
@@ -21,7 +20,7 @@ const PRIVACY: Block[] = [
 ];
 
 const HELP: Block[] = [
-  { q: 'How do I add a receipt?', a: 'Tap the round Scan button, fit the whole receipt in the frame and take the photo. You can also import a photo or enter a receipt by hand.' },
+  { q: 'How do I add a receipt?', a: 'Tap the round Scan button, fit the whole receipt in the frame and take the photo, or hold the phone still and it captures by itself. You can also import a photo or enter a receipt by hand.' },
   { q: 'Why does a receipt say “HST to review”?', a: 'No tax amount was read. Open it and tap “Add” to use the suggested amount, or “No tax” if the purchase had none. Until then it stays out of your HST total.' },
   { q: 'What are the two copies?', a: 'The Original is the photo exactly as captured, kept as proof for returns, warranty claims or a CRA review. The Digital copy is the record you search, edit and export.' },
   { q: 'How do return reminders work?', a: 'Open a receipt and tap “Add return reminder”. You get a notification before the window closes. Change the window and the lead time in Profile → Return Reminders.' },

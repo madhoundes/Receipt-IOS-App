@@ -144,7 +144,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
         // Only the digital copy changes; the original photo, notes and reminder stay as they were.
         updateReceipt({ ...existing, ...draft, id: existing.id, imageName: existing.imageName, notes: draft.notes ?? existing.notes, paymentMethod: draft.paymentMethod ?? existing.paymentMethod });
         triggerHaptic('success');
-        navigation.navigate('ReceiptDetail', { receiptId: existing.id });
+        navigation.popTo('ReceiptDetail', { receiptId: existing.id });
         return;
       }
       const id = `r_${Date.now()}`;

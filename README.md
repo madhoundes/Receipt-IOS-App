@@ -4,7 +4,7 @@ Snap a receipt, read the total and HST with OCR, keep the original photo, and se
 
 > **V2.** This branch rebuilds the app on the new design in `design/` (green brand, system font, Iconsax icons, steady Lottie illustrations), in Light and Dark Mode (Profile → Appearance: System, Light or Dark). All six flows are converted: A (onboarding and account), B (capture), C (receipts, search, digital copy and original photo, return reminders with local notifications), D (Home, Insights, HST summary, export as PDF, CSV or JSON), E (categories, with reordering) and F (profile). Tabs are Home, Receipts, Categories and HST with a round Scan button; Profile opens from the avatar on Home. Run `npm install` after pulling: this version adds `@react-native-community/datetimepicker`, `expo-print` and `expo-notifications`. Still mock: receipt reading (OCR) and sign-in. Not built: cropping the original photo.
 
-This is an **Expo (SDK 51) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
+This is an **Expo (SDK 57) / React Native** prototype. The UI and on-device logic work end to end with mock auth and demo data, ready for a developer to connect the real backend, auth and store release.
 
 The earlier web version (Vite + Gemini) lives in `legacy-web/` for reference only; it is not part of the app build.
 

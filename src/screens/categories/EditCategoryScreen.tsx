@@ -71,14 +71,14 @@ export default function EditCategoryScreen({ route, navigation }: any) {
 
   const doDelete = () => confirmAction('Delete Category?',
     receiptCount ? `Its ${receiptCount} receipt${receiptCount === 1 ? '' : 's'} will move to Other. This action cannot be undone.` : 'This action cannot be undone.',
-    'Delete', () => { deleteCategory(form.id); navigation.navigate('ManageCategories'); });
+    'Delete', () => { deleteCategory(form.id); navigation.popTo('ManageCategories'); });
 
   const doMerge = (targetId: string) => {
     const target = categories.find(c => c.id === targetId);
     setMergeOpen(false);
     if (!target) return;
     confirmAction(`Merge into ${target.name}?`, `${receiptCount} receipt${receiptCount === 1 ? '' : 's'} will move to ${target.name}, and ${form.name} will be removed.`,
-      'Merge', () => { mergeCategory(form.id, target.id); navigation.navigate('ManageCategories'); });
+      'Merge', () => { mergeCategory(form.id, target.id); navigation.popTo('ManageCategories'); });
   };
 
   const PreviewIcon = ICONS.find(i => i[0] === form.iconName)?.[1] ?? Box;

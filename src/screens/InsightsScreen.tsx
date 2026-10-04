@@ -32,7 +32,7 @@ export default function InsightsScreen({ navigation }: any) {
 
   const max = Math.max(1, ...data.trend.map(b => b.totalCents));
   const peak = data.trend.findIndex(b => b.totalCents === max && max > 1);
-  const goHst = () => navigation.navigate('Main', { screen: 'HST' });
+  const goHst = () => navigation.popTo('Main', { screen: 'HST' });
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -76,7 +76,7 @@ export default function InsightsScreen({ navigation }: any) {
             <View style={[kit.card, styles.pad]}>
               <View style={styles.cardHead}>
                 <Text style={type.headline}>Top Categories</Text>
-                <Pressable onPress={() => navigation.navigate('Main', { screen: 'Categories' })} accessibilityRole="button" hitSlop={8}>
+                <Pressable onPress={() => navigation.popTo('Main', { screen: 'Categories' })} accessibilityRole="button" hitSlop={8}>
                   <Text style={kit.link}>See all</Text>
                 </Pressable>
               </View>

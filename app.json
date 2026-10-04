@@ -6,11 +6,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0B7A55"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.receiptfy.app",
@@ -48,6 +43,14 @@
         "expo-notifications",
         {
           "color": "#0B7A55"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "backgroundColor": "#0B7A55"
         }
       ]
     ],
