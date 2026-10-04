@@ -1,20 +1,22 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { useReceipts } from '../../context/ReceiptContext';
 import { CategoryIcon } from '../../components/CategoryIcon';
+import { LargeHeader, SearchField, TAB_BAR_SPACE, kit } from '../../components/kit';
 import { Segmented } from '../../components/ui';
+import { useReceipts } from '../../context/ReceiptContext';
 import { inSpendRange, spendByCategory, spendRange, SpendRange } from '../../utils/spend';
 import { formatCents } from '../../utils/tax';
-import { colors, fonts, radius, type } from '../../theme';
+import { colors, font, radius, type, themedStyles } from '../../theme';
 
-const RANGES: SpendRange[] = ['month', 'last30', 'ytd', 'all'];
-const LABEL: Record<string, string> = { month: 'This Month', last30: '30 Days', ytd: 'YTD', all: 'All Time' };
+export const CATEGORY_RANGES: { value: SpendRange; label: string }[] = [
+  { value: 'month', label: 'This Month' }, { value: 'last30', label: '30 Days' }, { value: 'ytd', label: 'YTD' }, { value: 'all', label: 'All Time' },
+];
 
+/** E1 · Categories: spend per category for a period. */
 export default function CategoriesScreen({ navigation }: any) {
   const { receipts, categories } = useReceipts();
-  const [range, setRange] = useState<SpendRange>('last30');
+  const [range, setRange] = useState<SpendRange>('month');
   const [search, setSearch] = useState('');
 
   const cards = useMemo(() => {
@@ -30,33 +32,24 @@ export default function CategoriesScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={type.largeTitle}>Categories</Text>
-        <Pressable onPress={() => navigation.navigate('ManageCategories')} style={styles.headerBtn}
-          accessibilityRole="button" accessibilityLabel="Manage categories">
-          <SlidersHorizontal size={20} color={colors.accent} />
-        </Pressable>
-      </View>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Segmented compact options={RANGES.map(r => ({ value: r, label: LABEL[r] }))} value={range} onChange={setRange} />
-        <View style={styles.search}>
-          <Search size={17} color={colors.textMuted} />
-          <TextInput value={search} onChangeText={setSearch} placeholder="Search categories..." placeholderTextColor={colors.textMuted}
-            style={styles.searchInput} accessibilityLabel="Search categories" />
-        </View>
-        {cards.length === 0 && <Text style={styles.none}>No categories found.</Text>}
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <LargeHeader title="Categories" right={
+          <Pressable onPress={() => navigation.navigate('ManageCategories')} accessibilityRole="button" hitSlop={8} style={{ height: 44, justifyContent: 'center' }}>
+            <Text style={kit.link}>Manage</Text>
+          </Pressable>
+        } />
+        <SearchField value={search} onChange={setSearch} placeholder="Search categories" />
+        <View style={{ paddingHorizontal: 16 }}><Segmented options={CATEGORY_RANGES} value={range} onChange={setRange} /></View>
+        {cards.length === 0 && <Text style={[type.subhead, { textAlign: 'center', marginTop: 24 }]}>No category matches “{search.trim()}”.</Text>}
         <View style={styles.grid}>
           {cards.map(({ def, spend }) => (
             <Pressable key={def.id} style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
-              onPress={() => navigation.navigate('CategoryDetail', { categoryId: def.id, range })} accessibilityRole="button">
-              <View style={styles.cardTop}>
-                <CategoryIcon category={def.name} size={36} />
-                <Text style={styles.count}>{spend ? `${spend.count} receipt${spend.count === 1 ? '' : 's'}` : 'No receipts'}</Text>
-              </View>
-              <View>
-                <Text style={styles.name} numberOfLines={1}>{def.name}</Text>
-                <Text style={[styles.total, !spend && { color: colors.textMuted }]}>{formatCents(spend?.totalCents ?? 0)}</Text>
-              </View>
+              onPress={() => navigation.navigate('CategoryDetail', { categoryId: def.id, range })} accessibilityRole="button"
+              accessibilityLabel={`${def.name}, ${formatCents(spend?.totalCents ?? 0)}, ${spend?.count ?? 0} receipts`}>
+              <CategoryIcon category={def.name} size={38} />
+              <Text style={styles.name} numberOfLines={1}>{def.name}</Text>
+              <Text style={[styles.total, !spend && { color: colors.placeholder }]}>{formatCents(spend?.totalCents ?? 0)}</Text>
+              <Text style={type.footnote}>{spend ? `${spend.count} ${spend.count === 1 ? 'receipt' : 'receipts'}` : 'No receipts'}</Text>
             </Pressable>
           ))}
         </View>
@@ -65,18 +58,11 @@ export default function CategoriesScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, height: 56 },
-  headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, gap: 14, paddingBottom: 40 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
-  searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  none: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 20 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { width: '48%', flexGrow: 1, height: 112, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, justifyContent: 'space-between' },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  count: { fontFamily: fonts.semibold, fontSize: 12, color: colors.textMuted },
-  name: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  total: { fontFamily: fonts.mono, fontSize: 15, color: colors.text, marginTop: 1 },
-});
+  content: { paddingBottom: TAB_BAR_SPACE, gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16 },
+  card: { width: '48%', flexGrow: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, gap: 2 },
+  name: { ...font.semibold, fontSize: 16, color: colors.text, marginTop: 10 },
+  total: { ...font.bold, fontSize: 20, color: colors.text, fontVariant: ['tabular-nums'] },
+}));

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowRight, ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft } from '../../components/icons';
 import { Button, Divider, Field, FieldGroup } from '../../components/ui';
-import { AppleIcon } from '../../components/AppleIcon';
 import { useAuth } from '../../context/AuthContext';
 import { AuthError, isValidEmail, MIN_PASSWORD_LENGTH } from '../../services/auth';
 import { triggerHaptic } from '../../utils/nativeUtils';
-import { colors, fonts, type } from '../../theme';
+import { colors, font, type, themedStyles } from '../../theme';
 
 export default function SignUpScreen({ navigation }: any) {
   const { signUp, signInWithApple } = useAuth();
@@ -46,33 +45,33 @@ export default function SignUpScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {navigation.canGoBack() && (
-            <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Back" style={styles.back}>
-              <ChevronLeft size={24} color={colors.accent} />
-            </Pressable>
-          )}
-          <Text style={type.largeTitle}>Create Account</Text>
-          <Text style={[type.subhead, styles.sub]}>Start tracking your expenses today.</Text>
+          <View style={styles.nav}>
+            {navigation.canGoBack() && (
+              <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Back" style={styles.back} hitSlop={6}>
+                <ChevronLeft size={22} color={colors.text} />
+              </Pressable>
+            )}
+          </View>
+          <Text style={type.largeTitle} accessibilityRole="header">Create your account</Text>
+          <Text style={styles.sub}>Your receipts sync to every device you sign in on.</Text>
+
+          <Button title="Sign up with Apple" variant="dark" onPress={apple} loading={loading === 'apple'} disabled={!!loading} />
+          <Divider label="or" />
 
           <FieldGroup>
-            <Field label="Full name" placeholder="Jane Appleseed" value={name} onChangeText={setName}
+            <Field label="Name" placeholder="Your name" value={name} onChangeText={setName}
               autoComplete="name" textContentType="name" error={errors.name} returnKeyType="next" />
             <Field label="Email" placeholder="you@example.com" value={email} onChangeText={setEmail}
               autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" error={errors.email} />
             <Field label="Password" placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`} value={password} onChangeText={setPassword}
               secure autoComplete="new-password" textContentType="newPassword" error={errors.password} onSubmitEditing={submit} />
           </FieldGroup>
+          <Text style={styles.terms}>By continuing you agree to the Terms and Privacy Policy. Totals are for your records, not tax advice.</Text>
 
-          <Button title="Sign Up" onPress={submit} loading={loading === 'email'} disabled={!!loading}
-            icon={<ArrowRight size={20} color="#FFFFFF" />} style={{ marginTop: 20 }} />
-          <Divider label="or" />
-          <Button title="Continue with Apple" variant="dark" onPress={apple} loading={loading === 'apple'} disabled={!!loading}
-            icon={<AppleIcon color="#FFFFFF" />} />
+          <Button title="Create Account" onPress={submit} loading={loading === 'email'} disabled={!!loading} />
 
-          <View style={{ flex: 1, minHeight: 32 }} />
-          <Text style={styles.terms}>By signing up, you agree to our Terms of Service and Privacy Policy.</Text>
           <Pressable onPress={() => navigation.navigate('Login')} accessibilityRole="link" style={styles.switch}>
-            <Text style={styles.switchText}>Already have an account? <Text style={styles.link}>Log In</Text></Text>
+            <Text style={styles.switchText}>Already have an account? <Text style={styles.switchLink}>Log In</Text></Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -80,13 +79,14 @@ export default function SignUpScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 },
-  back: { width: 44, height: 44, marginLeft: -10, justifyContent: 'center', alignItems: 'center' },
-  sub: { marginTop: 8, marginBottom: 24, fontSize: 17 },
-  terms: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted, textAlign: 'center' },
-  switch: { alignItems: 'center', paddingVertical: 12 },
-  switchText: { fontFamily: fonts.regular, fontSize: 15, color: '#3A3A40' },
-  link: { fontFamily: fonts.bold, color: colors.accent },
-});
+  content: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 },
+  nav: { height: 44, justifyContent: 'center', marginBottom: 6 },
+  back: { width: 44, height: 44, justifyContent: 'center' },
+  sub: { ...font.regular, fontSize: 17, color: colors.textSecondary, marginTop: 6, marginBottom: 16 },
+  terms: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16, marginTop: 8, marginBottom: 14 },
+  switch: { alignItems: 'center', justifyContent: 'center', minHeight: 44, marginTop: 8 },
+  switchText: { ...font.regular, fontSize: 15, color: colors.textSecondary },
+  switchLink: { ...font.semibold, color: colors.accent },
+}));

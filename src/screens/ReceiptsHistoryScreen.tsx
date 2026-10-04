@@ -1,175 +1,186 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, SectionList, Pressable, TextInput } from 'react-native';
+import { Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Share, ChevronRight, Percent, Camera, X } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Check, Scan, Sort } from '../components/icons';
+import { Illustration } from '../components/Illustration';
+import { Chips, LargeHeader, ReceiptRow, RoundButton, SearchField, TAB_BAR_SPACE, kit, shortDate } from '../components/kit';
+import { Button } from '../components/ui';
 import { useReceipts } from '../context/ReceiptContext';
-import { CategoryIcon } from '../components/CategoryIcon';
-import { summarizeTax, formatCents, toCents } from '../utils/tax';
-import { shareCSV } from '../utils/nativeUtils';
-import { colors, fonts, radius, type } from '../theme';
+import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
+import { colors, font, radius, themedStyles } from '../theme';
 import type { Receipt } from '../types';
 
-const DAY = 86400000;
-const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+type SortBy = 'newest' | 'oldest' | 'highest';
+const SORTS: { value: SortBy; label: string }[] = [
+  { value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'highest', label: 'Highest amount' },
+];
 
-/** Today / This week / This month / older months, newest first. */
-const sectionFor = (iso: string, now: Date) => {
-  const d = new Date(iso);
-  const days = Math.round((startOfDay(now) - startOfDay(d)) / DAY);
-  if (days <= 0) return 'Today';
-  if (days < 7) return 'This week';
-  if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) return 'Earlier this month';
-  return d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
-};
-
+/** Text a search runs against: store, category, notes, line items and the amount. */
+const haystack = (r: Receipt) =>
+  [r.storeName, r.category, r.subcategory, r.notes, r.paymentMethod, r.totalAmount.toFixed(2), ...(r.items ?? []).map(i => i.name)]
+    .filter(Boolean).join(' ').toLowerCase();
 const matches = (r: Receipt, q: string) => {
-  const hay = [r.storeName, r.category, r.subcategory, r.notes, r.totalAmount.toFixed(2)].filter(Boolean).join(' ').toLowerCase();
-  return q.toLowerCase().split(/\s+/).filter(Boolean).every(term => hay.includes(term));
+  const hay = haystack(r);
+  return q.toLowerCase().replace(/\$/g, '').split(/\s+/).filter(Boolean).every(term => hay.includes(term));
+};
+/** Meta line for a search hit: shows the matching line item when the store name didn't match. */
+const hitMeta = (r: Receipt, q: string) => {
+  const term = q.trim().toLowerCase();
+  const item = (r.items ?? []).find(i => i.name.toLowerCase().includes(term));
+  return `${shortDate(r.purchaseDate)} · ${item ? item.name : r.subcategory ?? r.category}`;
 };
 
+/** C1 Receipts, C2 empty state and C3 search results. */
 export default function ReceiptsHistoryScreen({ navigation }: any) {
   const { receipts, userProfile, categories } = useReceipts();
   const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('All');
+  const [sort, setSort] = useState<SortBy>('newest');
+  const [sortOpen, setSortOpen] = useState(false);
+  const q = search.trim();
 
-  const monthTax = useMemo(
-    () => summarizeTax(receipts, categories, userProfile.hstDefaultPercent, 'month', new Date()),
-    [receipts, categories, userProfile.hstDefaultPercent]
-  );
+  const chips = useMemo(() => {
+    const used = categories.filter(c => receipts.some(r => r.category === c.name)).map(c => c.name);
+    return ['All', ...used].map(c => ({ value: c, label: c }));
+  }, [categories, receipts]);
 
-  const sections = useMemo(() => {
-    const now = new Date();
-    const list = [...receipts].filter(r => !search || matches(r, search))
-      .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+  const { sections, list, hstCents, spendCents } = useMemo(() => {
+    const list = receipts
+      .filter(r => cat === 'All' || r.category === cat)
+      .filter(r => !q || matches(r, q))
+      .sort((a, b) => sort === 'highest'
+        ? b.totalAmount - a.totalAmount
+        : (new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime()) * (sort === 'oldest' ? -1 : 1));
+    const hst = (rs: Receipt[]) => rs.reduce((s, r) => s + resolveReceiptTax(r, categories, userProfile.hstDefaultPercent).hstCents, 0);
     const map = new Map<string, Receipt[]>();
-    for (const r of list) {
-      const key = sectionFor(r.purchaseDate, now);
+    if (sort === 'highest' || q) map.set(q ? 'Results' : 'Highest amount', list);
+    else for (const r of list) {
+      const key = new Date(r.purchaseDate).toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
       map.set(key, [...(map.get(key) ?? []), r]);
     }
-    return [...map.entries()].map(([title, data]) => ({ title, data }));
-  }, [receipts, search]);
+    return {
+      list, hstCents: hst(list), spendCents: list.reduce((s, r) => s + toCents(r.totalAmount), 0),
+      sections: [...map.entries()].map(([title, data]) => ({ title, data, hstCents: hst(data) })),
+    };
+  }, [receipts, categories, userProfile.hstDefaultPercent, cat, q, sort]);
 
-  const empty = receipts.length === 0;
+  const importPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
+    if (!res.canceled && res.assets[0]) navigation.navigate('CameraModal', { importUri: res.assets[0].uri });
+  };
+
+  if (receipts.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <LargeHeader title="Receipts" />
+        <View style={styles.empty}>
+          <Illustration name="emptyReceipts" size={200} label="No receipts yet" />
+          <Text style={styles.emptyTitle}>No receipts yet</Text>
+          <Text style={styles.emptyText}>Scan a paper receipt or import a photo. The store, total and HST are read for you.</Text>
+          <Button title="Scan a Receipt" icon={<Scan size={20} color="#FFFFFF" />} onPress={() => navigation.navigate('CameraModal')}
+            style={{ paddingHorizontal: 28, marginTop: 12 }} />
+          <Button title="Import from Photos" variant="ghost" onPress={importPhoto} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={type.largeTitle}>History</Text>
-        {!empty && (
-          <Pressable
-            onPress={() => shareCSV(sections.flatMap(s => s.data), 'receipts.csv')}
-            style={styles.headerBtn} accessibilityRole="button" accessibilityLabel="Export CSV"
-          >
-            <Share size={20} color={colors.accent} />
-          </Pressable>
-        )}
-      </View>
+      <LargeHeader title="Receipts" right={
+        <RoundButton label="Sort" onPress={() => setSortOpen(true)}><Sort size={20} color={colors.text} /></RoundButton>
+      } />
+      <SearchField value={search} onChange={setSearch} placeholder="Search stores, items, amounts" />
+      <View style={{ height: 10 }} />
+      <Chips options={chips} value={cat} onChange={setCat} />
 
-      <View style={styles.search}>
-        <Search size={17} color={colors.textMuted} />
-        <TextInput
-          value={search} onChangeText={setSearch} placeholder="Search store, amount, category…"
-          placeholderTextColor={colors.textMuted} style={styles.searchInput} accessibilityLabel="Search receipts"
-          returnKeyType="search" clearButtonMode="while-editing"
-        />
-        {!!search && (
-          <Pressable onPress={() => setSearch('')} accessibilityLabel="Clear search" hitSlop={8}><X size={16} color={colors.textMuted} /></Pressable>
-        )}
-      </View>
-
-      {empty ? (
-        <View style={styles.empty}>
-          <View style={styles.emptyArt}>
-            <View style={styles.emptyPaper}>
-              <View style={[styles.line, { width: 30, backgroundColor: '#D1D1D6' }]} />
-              <View style={[styles.line, { width: 40 }]} /><View style={[styles.line, { width: 34 }]} /><View style={[styles.line, { width: 38 }]} />
+      <SectionList
+        sections={sections}
+        keyExtractor={r => r.id}
+        stickySectionHeadersEnabled={false}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        ListHeaderComponent={q && list.length > 0 ? (
+          <View style={styles.summary} accessibilityLiveRegion="polite">
+            <View>
+              <Text style={styles.summaryLabel}>{list.length} {list.length === 1 ? 'receipt matches' : 'receipts match'}</Text>
+              <Text style={styles.summaryValue}>{formatCents(spendCents)}</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.summaryLabel}>HST paid</Text>
+              <Text style={[styles.summaryValue, { color: colors.tax }]}>{formatCents(hstCents)}</Text>
             </View>
           </View>
-          <Text style={styles.emptyTitle}>No receipts yet</Text>
-          <Text style={styles.emptyText}>Capture your first receipt using the camera button.</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => navigation.navigate('CameraModal')} accessibilityRole="button">
-            <Camera size={20} color="#FFFFFF" /><Text style={styles.emptyBtnText}>Open Camera</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={r => r.id}
-          stickySectionHeadersEnabled={false}
-          contentContainerStyle={styles.list}
-          keyboardShouldPersistTaps="handled"
-          ListHeaderComponent={!search ? (
-            <Pressable style={styles.taxCard} onPress={() => navigation.navigate('TaxSummary')} accessibilityRole="button"
-              accessibilityLabel={`HST this month ${formatCents(monthTax.hstCents)}`}>
-              <View style={styles.taxIcon}><Percent size={20} color="#B4480A" /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.taxLabel}>HST this month</Text>
-                <Text style={styles.taxValue}>{formatCents(monthTax.hstCents)}</Text>
-              </View>
-              {monthTax.needsReview.length > 0 && <Text style={styles.pill}>{monthTax.needsReview.length} to review</Text>}
-              <ChevronRight size={18} color="#AEAEB2" />
-            </Pressable>
-          ) : null}
-          ListEmptyComponent={<Text style={styles.noResults}>No receipts match “{search}”.</Text>}
-          renderSectionHeader={({ section }) => <Text style={[type.sectionLabel, styles.sectionTitle]}>{section.title}</Text>}
-          renderItem={({ item, index, section }) => (
-            <Pressable
-              onPress={() => navigation.navigate('ReceiptDetail', { receiptId: item.id })}
-              style={({ pressed }) => [
-                styles.row, index === 0 && styles.rowFirst, index === section.data.length - 1 && styles.rowLast,
-                index > 0 && styles.rowBorder, pressed && { backgroundColor: '#F7F7FA' },
-              ]}
-              accessibilityRole="button"
-            >
-              <CategoryIcon category={item.category} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.store} numberOfLines={1}>{item.storeName}</Text>
-                <Text style={styles.meta} numberOfLines={1}>{item.category}{item.subcategory ? ` · ${item.subcategory}` : ''}</Text>
-              </View>
-              <Text style={styles.amount}>{formatCents(toCents(item.totalAmount))}</Text>
-              <ChevronRight size={16} color="#AEAEB2" />
-            </Pressable>
-          )}
-        />
-      )}
+        ) : null}
+        ListEmptyComponent={
+          <View style={styles.none}>
+            <Illustration name="noResults" size={160} label="No results" />
+            <Text style={styles.emptyTitle}>No matches</Text>
+            <Text style={styles.emptyText}>{q ? `Nothing matches “${q}”. Try a store name, an item or an amount like “86”.` : 'No receipts in this category yet.'}</Text>
+          </View>
+        }
+        ListFooterComponent={q && list.length > 0
+          ? <Text style={styles.hint}>Searching store names, line items and amounts. Try “$86” or “towels”.</Text> : null}
+        renderSectionHeader={({ section }) => (
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionText}>{section.title}</Text>
+            {!q && <Text style={styles.sectionText}>HST {formatCents(section.hstCents)}</Text>}
+          </View>
+        )}
+        renderItem={({ item, index, section }) => (
+          <View style={[index === 0 && styles.first, index === section.data.length - 1 && styles.last, { overflow: 'hidden' }]}>
+            <ReceiptRow receipt={item} first={index === 0} highlight={q || undefined} meta={q ? hitMeta(item, q) : undefined}
+              onPress={() => navigation.navigate('ReceiptDetail', { receiptId: item.id })} />
+          </View>
+        )}
+      />
 
-      <Pressable style={styles.fab} onPress={() => navigation.navigate('CameraModal')} accessibilityRole="button" accessibilityLabel="Scan a receipt">
-        <Camera size={28} color="#FFFFFF" />
-      </Pressable>
+      <Modal visible={sortOpen} transparent animationType="fade" onRequestClose={() => setSortOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setSortOpen(false)} accessibilityLabel="Close" />
+        <View style={styles.sheet}>
+          <View style={styles.grabber} />
+          <Text style={styles.sheetTitle}>Sort receipts</Text>
+          <View style={kit.card}>
+            {SORTS.map((o, i) => (
+              <Pressable key={o.value} onPress={() => { setSort(o.value); setSortOpen(false); }} accessibilityRole="button"
+                accessibilityState={{ selected: sort === o.value }} style={[styles.opt, i > 0 && kit.rowBorder]}>
+                <Text style={[styles.optText, sort === o.value && font.semibold]}>{o.label}</Text>
+                {sort === o.value && <Check size={20} color={colors.accent} />}
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, height: 56 },
-  headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.fill, marginHorizontal: 16, marginTop: 8, marginBottom: 8, paddingHorizontal: 12, height: 44, borderRadius: radius.md },
-  searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  list: { paddingHorizontal: 16, paddingBottom: 120 },
-  taxCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, marginTop: 8 },
-  taxIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.taxSoft, alignItems: 'center', justifyContent: 'center' },
-  taxLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textSecondary },
-  taxValue: { fontFamily: fonts.monoBold, fontSize: 20, color: colors.text },
-  pill: { fontFamily: fonts.bold, fontSize: 12, color: colors.warnText, backgroundColor: colors.warnBg, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, overflow: 'hidden' },
-  sectionTitle: { marginTop: 20, marginBottom: 8, paddingHorizontal: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, paddingHorizontal: 14, paddingVertical: 12 },
-  rowFirst: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
-  rowLast: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
-  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  store: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  amount: { fontFamily: fonts.mono, fontSize: 16, color: colors.text },
-  noResults: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 40 },
-  fab: {
-    position: 'absolute', right: 20, bottom: 20, width: 60, height: 60, borderRadius: 30, backgroundColor: colors.accent,
-    alignItems: 'center', justifyContent: 'center', shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 14, shadowOffset: { width: 0, height: 10 }, elevation: 6,
+  list: { paddingHorizontal: 16, paddingBottom: TAB_BAR_SPACE, paddingTop: 6 },
+  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
+  sectionText: { ...font.regular, fontSize: 13, color: colors.textSecondary, textTransform: 'uppercase', fontVariant: ['tabular-nums'] },
+  first: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
+  last: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
+  summary: {
+    flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.warnBg, borderRadius: radius.lg, padding: 14, marginTop: 10,
   },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 8, paddingBottom: 80 },
-  emptyArt: { width: 150, height: 150, borderRadius: 75, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  emptyPaper: { width: 64, height: 80, borderRadius: 10, backgroundColor: '#FFFFFF', padding: 12, gap: 6, transform: [{ rotate: '-6deg' }] },
-  line: { height: 4, borderRadius: 2, backgroundColor: '#ECECF0' },
-  emptyTitle: { fontFamily: fonts.extrabold, fontSize: 22, color: colors.text },
-  emptyText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.textSecondary, textAlign: 'center' },
-  emptyBtn: { marginTop: 14, height: 52, paddingHorizontal: 24, borderRadius: radius.lg, backgroundColor: colors.accent, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  emptyBtnText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
-});
+  summaryLabel: { ...font.regular, fontSize: 13, color: colors.textSecondary },
+  summaryValue: { ...font.bold, fontSize: 20, color: colors.text, fontVariant: ['tabular-nums'] },
+  hint: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 10 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingBottom: TAB_BAR_SPACE, gap: 8 },
+  none: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, gap: 6 },
+  emptyTitle: { ...font.bold, fontSize: 22, color: colors.text },
+  emptyText: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
+  sheet: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,
+  },
+  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: colors.grabber },
+  sheetTitle: { ...font.semibold, fontSize: 17, color: colors.text, textAlign: 'center' },
+  opt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 48, backgroundColor: colors.card },
+  optText: { ...font.regular, fontSize: 17, color: colors.text },
+}));

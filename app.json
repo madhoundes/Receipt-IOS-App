@@ -1,36 +1,56 @@
 {
   "expo": {
-    "name": "Receiptfy",
+    "name": "Receipt TaX",
     "slug": "receiptfy",
     "scheme": "receiptfy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
-      "backgroundColor": "#0062CC"
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B7A55"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.receiptfy.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Receiptfy uses the camera to scan your receipts.",
-        "NSPhotoLibraryUsageDescription": "Receiptfy imports receipt photos from your library."
-      }
+        "NSCameraUsageDescription": "Receipt TaX uses the camera to scan your receipts.",
+        "NSPhotoLibraryUsageDescription": "Receipt TaX imports receipt photos from your library."
+      },
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.receiptfy.app",
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B7A55"
+      },
+      "versionCode": 1
     },
     "plugins": [
       [
         "expo-camera",
-        { "cameraPermission": "Receiptfy uses the camera to scan your receipts." }
+        {
+          "cameraPermission": "Receipt TaX uses the camera to scan your receipts."
+        }
       ],
       [
         "expo-image-picker",
-        { "photosPermission": "Receiptfy imports receipt photos from your library." }
+        {
+          "photosPermission": "Receipt TaX imports receipt photos from your library."
+        }
       ],
-      "expo-font"
-    ]
+      [
+        "expo-notifications",
+        {
+          "color": "#0B7A55"
+        }
+      ]
+    ],
+    "icon": "./assets/icon.png"
   }
 }

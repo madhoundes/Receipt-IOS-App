@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ShoppingBasket, Utensils, Fuel, Pill, Home, MonitorSmartphone, Shirt, Zap, Car, Clapperboard, Wrench, Box, Plus, X, LucideIcon,
-} from 'lucide-react-native';
+} from '../../components/icons';
 import { useReceipts } from '../../context/ReceiptContext';
-import { CategoryIcon } from '../../components/CategoryIcon';
-import { Section, Segmented, SettingRow } from '../../components/ui';
+import { OptionSheet, kit } from '../../components/kit';
+import { Field, FieldGroup, Section, Segmented, SettingRow } from '../../components/ui';
 import { confirmAction, triggerHaptic } from '../../utils/nativeUtils';
-import { colors, fonts, radius, type } from '../../theme';
+import { colors, font, radius, type, themedStyles, soft, tone } from '../../theme';
 import type { CategoryDefinition, ClassifierBoost, TaxRule, Visibility } from '../../types';
 
-const COLORS = ['#12805C', '#B4480A', '#B42318', '#0E7C8C', '#0062CC', '#4A34B8', '#B0266E', '#8A6100', '#475467'];
+const COLORS = ['#1E7A35', '#B04A08', '#0A5BC4', '#B8185A', '#5A3CC2', '#0B6E77', '#B42318', '#8A6100', '#555559'];
 const ICONS: [string, LucideIcon][] = [
   ['ShoppingBasket', ShoppingBasket], ['Utensils', Utensils], ['Fuel', Fuel], ['Pill', Pill], ['Home', Home], ['MonitorSmartphone', MonitorSmartphone],
   ['Shirt', Shirt], ['Zap', Zap], ['Car', Car], ['Clapperboard', Clapperboard], ['Wrench', Wrench], ['Box', Box],
 ];
 const TAX_HELP: Record<TaxRule['mode'], string> = {
-  included: 'Tax is included in the price (e.g. Gas).',
-  add: 'Tax is added on top (Retail).',
-  none: 'No tax is applied (Basic Groceries).',
+  included: 'Tax is included in the price, as it is at the pump.',
+  add: 'Tax is added on top of the price, as in most stores.',
+  none: 'No tax applies, as with basic groceries.',
 };
+const BOOSTS: { value: ClassifierBoost; label: string; sub?: string }[] = [
+  { value: 'none', label: 'Normal' }, { value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High', sub: 'Wins when a receipt could fit several categories' },
+];
 
 const blank = (): CategoryDefinition => ({
-  id: `cat_${Date.now()}`, name: '', iconName: 'Box', color: COLORS[4], visibility: 'visible', aliases: [], keywords: [],
+  id: `cat_${Date.now()}`, name: '', iconName: 'Box', color: COLORS[5], visibility: 'visible', aliases: [], keywords: [],
   subcategories: [], taxRule: { mode: 'add' }, isPinned: false, orderIndex: 999, classifierBoost: 'none',
 });
 
@@ -34,6 +38,7 @@ export default function EditCategoryScreen({ route, navigation }: any) {
   const [newSub, setNewSub] = useState('');
   const [newKeyword, setNewKeyword] = useState('');
   const [mergeOpen, setMergeOpen] = useState(false);
+  const [boostOpen, setBoostOpen] = useState(false);
   const [error, setError] = useState<string>();
   const set = (patch: Partial<CategoryDefinition>) => setForm(f => ({ ...f, ...patch }));
   const isOther = existing?.name === 'Other';
@@ -68,39 +73,48 @@ export default function EditCategoryScreen({ route, navigation }: any) {
     receiptCount ? `Its ${receiptCount} receipt${receiptCount === 1 ? '' : 's'} will move to Other. This action cannot be undone.` : 'This action cannot be undone.',
     'Delete', () => { deleteCategory(form.id); navigation.navigate('ManageCategories'); });
 
-  const doMerge = (target: CategoryDefinition) => {
+  const doMerge = (targetId: string) => {
+    const target = categories.find(c => c.id === targetId);
     setMergeOpen(false);
+    if (!target) return;
     confirmAction(`Merge into ${target.name}?`, `${receiptCount} receipt${receiptCount === 1 ? '' : 's'} will move to ${target.name}, and ${form.name} will be removed.`,
       'Merge', () => { mergeCategory(form.id, target.id); navigation.navigate('ManageCategories'); });
   };
+
+  const PreviewIcon = ICONS.find(i => i[0] === form.iconName)?.[1] ?? Box;
+  const plural = `${receiptCount} receipt${receiptCount === 1 ? '' : 's'}`;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.nav}>
         <Pressable onPress={() => navigation.goBack()} style={styles.navBtn} accessibilityRole="button"><Text style={styles.navText}>Cancel</Text></Pressable>
-        <Text style={type.headline}>{existing ? 'Edit Category' : 'New Category'}</Text>
-        <Pressable onPress={save} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button"><Text style={[styles.navText, { fontFamily: fonts.bold }]}>Save</Text></Pressable>
+        <Text style={type.headline} accessibilityRole="header">{existing ? 'Edit Category' : 'New Category'}</Text>
+        <Pressable onPress={save} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button"><Text style={[styles.navText, font.semibold]}>Save</Text></Pressable>
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={{ alignItems: 'center', gap: 12 }}>
-            <View style={[styles.preview, { backgroundColor: `${form.color}1F` }]}>
-              {React.createElement(ICONS.find(i => i[0] === form.iconName)?.[1] ?? Box, { size: 36, color: form.color })}
-            </View>
-            <View style={styles.nameBox}>
-              <Text style={styles.label}>Category Name</Text>
-              <TextInput value={form.name} onChangeText={name => { set({ name }); setError(undefined); }} placeholder="e.g. Hobbies"
-                placeholderTextColor={colors.placeholder} style={styles.nameInput} editable={!isOther} accessibilityLabel="Category name" />
-            </View>
-            {!!error && <Text style={styles.error}>{error}</Text>}
+          <View style={[styles.preview, { backgroundColor: soft(tone(form.color)) }]}>
+            <PreviewIcon size={36} color={tone(form.color)} />
           </View>
+
+          <Section title="Name">
+            <FieldGroup>
+              <Field label="Name" value={form.name} onChangeText={name => { set({ name }); setError(undefined); }} placeholder="e.g. Hobbies"
+                editable={!isOther} error={error} />
+            </FieldGroup>
+          </Section>
 
           <Section title="Color">
             <View style={styles.swatches}>
-              {COLORS.map(c => (
-                <Pressable key={c} onPress={() => set({ color: c })} accessibilityRole="button" accessibilityLabel={`Color ${c}`} accessibilityState={{ selected: form.color === c }}
-                  style={[styles.swatch, { backgroundColor: c }, form.color === c && { borderWidth: 3, borderColor: '#FFFFFF', shadowColor: c, shadowOpacity: 1, shadowRadius: 0, shadowOffset: { width: 0, height: 0 }, elevation: 2 }]} />
-              ))}
+              {COLORS.map(c => {
+                const on = form.color === c;
+                return (
+                  <Pressable key={c} onPress={() => set({ color: c })} accessibilityRole="button" accessibilityLabel={`Color ${c}`} accessibilityState={{ selected: on }}
+                    style={[styles.ring, on && { borderColor: tone(c) }]}>
+                    <View style={[styles.swatch, { backgroundColor: c }]} />
+                  </Pressable>
+                );
+              })}
             </View>
           </Section>
 
@@ -109,136 +123,109 @@ export default function EditCategoryScreen({ route, navigation }: any) {
               {ICONS.map(([name, Icon]) => {
                 const on = form.iconName === name;
                 return (
-                  <Pressable key={name} onPress={() => set({ iconName: name })} style={[styles.iconBtn, on && { backgroundColor: `${form.color}1F` }]}
-                    accessibilityRole="button" accessibilityLabel={name} accessibilityState={{ selected: on }}>
-                    <Icon size={22} color={on ? form.color : '#3A3A40'} />
+                  <Pressable key={name} onPress={() => set({ iconName: name })} accessibilityRole="button" accessibilityLabel={name} accessibilityState={{ selected: on }}
+                    style={[styles.iconBtn, on && { backgroundColor: soft(tone(form.color)), borderColor: tone(form.color) }]}>
+                    <Icon size={22} color={on ? tone(form.color) : colors.text} />
                   </Pressable>
                 );
               })}
             </View>
           </Section>
 
-          <Section title="Subcategories & Default" footer="Select the circle to mark as default.">
+          <Section title="Subcategories & default" footer="Tap a subcategory to make it the default for new receipts.">
             {form.subcategories.map((s, i) => (
-              <View key={s.id} style={[styles.subRow, i > 0 && styles.rowBorder]}>
-                <Pressable onPress={() => set({ defaultSubcategoryId: s.id })} accessibilityRole="radio" accessibilityState={{ checked: s.id === defaultSubId }} hitSlop={8}
-                  style={[styles.radio, s.id === defaultSubId && { borderWidth: 7, borderColor: colors.accent }]} />
-                <Text style={styles.subName}>{s.name}</Text>
-                {s.id === defaultSubId && <Text style={styles.defaultTag}>Default</Text>}
-                <Pressable onPress={() => set({ subcategories: form.subcategories.filter(x => x.id !== s.id) })} accessibilityLabel={`Remove ${s.name}`} hitSlop={8}>
-                  <X size={18} color={colors.textMuted} />
+              <View key={s.id} style={[styles.subRow, i > 0 && kit.rowBorder]}>
+                <Pressable onPress={() => set({ defaultSubcategoryId: s.id })} accessibilityRole="radio" accessibilityState={{ checked: s.id === defaultSubId }}
+                  style={styles.subMain}>
+                  <Text style={styles.subName}>{s.name}</Text>
+                  {s.id === defaultSubId && <Text style={styles.defaultTag}>Default</Text>}
+                </Pressable>
+                <Pressable onPress={() => set({ subcategories: form.subcategories.filter(x => x.id !== s.id) })} accessibilityRole="button"
+                  accessibilityLabel={`Remove ${s.name}`} hitSlop={10} style={styles.remove}>
+                  <X size={16} color={colors.placeholder} />
                 </Pressable>
               </View>
             ))}
-            <View style={[styles.subRow, form.subcategories.length > 0 && styles.rowBorder]}>
+            <View style={[styles.subRow, form.subcategories.length > 0 && kit.rowBorder]}>
               <Plus size={22} color={colors.accent} />
-              <TextInput value={newSub} onChangeText={setNewSub} onSubmitEditing={addSub} placeholder="Add subcategory..." placeholderTextColor={colors.placeholder}
+              <TextInput value={newSub} onChangeText={setNewSub} onSubmitEditing={addSub} onBlur={addSub} placeholder="Add subcategory" placeholderTextColor={colors.accent}
                 style={styles.subInput} returnKeyType="done" accessibilityLabel="Add subcategory" />
             </View>
           </Section>
 
-          <Section title="Tax Behavior" footer={TAX_HELP[form.taxRule.mode]}>
-            <View style={{ padding: 8 }}>
-              <Segmented value={form.taxRule.mode} onChange={mode => set({ taxRule: { ...form.taxRule, mode } })}
-                options={[{ value: 'included', label: 'Included' }, { value: 'add', label: 'Add' }, { value: 'none', label: 'None' }]} />
-            </View>
-          </Section>
+          <View style={{ gap: 8 }}>
+            <Text style={kit.sectionLabel}>Tax behavior</Text>
+            <Segmented value={form.taxRule.mode} onChange={mode => set({ taxRule: { ...form.taxRule, mode } })}
+              options={[{ value: 'included', label: 'Included' }, { value: 'add', label: 'Added' }, { value: 'none', label: 'None' }]} />
+            <Text style={styles.foot}>{TAX_HELP[form.taxRule.mode]}</Text>
+          </View>
 
-          <Section title="Smart Classification" footer="Receiptfy uses these keywords to auto-detect this category.">
+          <Section title="Smart classification" footer="Receipts that mention these words are sorted here automatically.">
             <View style={styles.chips}>
-              {form.aliases.map(a => <Chip key={`a${a}`} label={a} tone="alias" onRemove={() => set({ aliases: form.aliases.filter(x => x !== a) })} />)}
+              {form.aliases.map(a => <Chip key={`a${a}`} label={a} onRemove={() => set({ aliases: form.aliases.filter(x => x !== a) })} />)}
               {form.keywords.map(k => <Chip key={`k${k}`} label={k} onRemove={() => set({ keywords: form.keywords.filter(x => x !== k) })} />)}
+              <View style={styles.addChip}>
+                <Plus size={16} color={colors.accent} />
+                <TextInput value={newKeyword} onChangeText={setNewKeyword} onSubmitEditing={addKeyword} onBlur={addKeyword} placeholder="Add keyword"
+                  placeholderTextColor={colors.accent} style={styles.keywordInput} returnKeyType="done" accessibilityLabel="Add keyword" autoCapitalize="none" />
+              </View>
             </View>
-            <TextInput value={newKeyword} onChangeText={setNewKeyword} onSubmitEditing={addKeyword} placeholder="Add keyword alias..."
-              placeholderTextColor={colors.placeholder} style={styles.keywordInput} returnKeyType="done" accessibilityLabel="Add keyword alias" />
-          </Section>
-
-          <Section title="Classifier Priority">
-            <View style={{ padding: 8 }}>
-              <Segmented<ClassifierBoost> compact value={form.classifierBoost} onChange={classifierBoost => set({ classifierBoost })}
-                options={[{ value: 'none', label: 'Normal' }, { value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High' }]} />
+            <View style={kit.rowBorder}>
+              <SettingRow first label="Classifier priority" value={BOOSTS.find(b => b.value === form.classifierBoost)?.label} onPress={() => setBoostOpen(true)} />
             </View>
           </Section>
 
           <Section title="Visibility">
-            <View style={{ padding: 8 }}>
-              <Segmented<Visibility> value={form.visibility} onChange={visibility => set({ visibility })}
-                options={[{ value: 'visible', label: 'Visible' }, { value: 'hidden', label: 'Hidden' }, { value: 'archived', label: 'Archived' }]} />
-            </View>
-          </Section>
-
-          <Section>
-            <SettingRow first label="Pin to Top" toggle={form.isPinned} onToggle={isPinned => set({ isPinned })} />
-            {existing && !isOther && (
-              <SettingRow label="Merge Into" value="Select Category" onPress={() => setMergeOpen(true)}
-                sub={receiptCount ? `${receiptCount} receipt${receiptCount === 1 ? '' : 's'} in this category` : undefined} />
-            )}
+            <SettingRow first label="Pin to top" toggle={form.isPinned} onToggle={isPinned => set({ isPinned })} />
+            <SettingRow label="Show in pickers" toggle={form.visibility === 'visible'} onToggle={v => set({ visibility: (v ? 'visible' : 'hidden') as Visibility })} />
           </Section>
 
           {existing && !isOther && (
-            <Pressable style={styles.delete} onPress={doDelete} accessibilityRole="button"><Text style={styles.deleteText}>Delete Category</Text></Pressable>
+            <Section footer={receiptCount ? `${plural} in this category. Merging or deleting moves them.` : undefined}>
+              <SettingRow first label="Merge into…" onPress={() => setMergeOpen(true)} />
+              <SettingRow label="Delete Category" danger onPress={doDelete} />
+            </Section>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal visible={mergeOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setMergeOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
-          <View style={styles.nav}>
-            <Pressable onPress={() => setMergeOpen(false)} style={styles.navBtn}><Text style={styles.navText}>Cancel</Text></Pressable>
-            <Text style={type.headline}>Merge Into</Text>
-            <View style={styles.navBtn} />
-          </View>
-          <FlatList
-            data={categories.filter(c => c.id !== form.id)}
-            keyExtractor={c => c.id}
-            contentContainerStyle={{ padding: 16 }}
-            renderItem={({ item, index }) => (
-              <Pressable onPress={() => doMerge(item)} style={[styles.pickRow, index === 0 && styles.pickFirst, index > 0 && styles.rowBorder]} accessibilityRole="button">
-                <CategoryIcon category={item.name} size={32} />
-                <Text style={styles.subName}>{item.name}</Text>
-              </Pressable>
-            )}
-          />
-        </View>
-      </Modal>
+      <OptionSheet<string> visible={mergeOpen} title={`Merge ${form.name} into`} onClose={() => setMergeOpen(false)} onPick={doMerge}
+        options={categories.filter(c => c.id !== form.id).map(c => ({ value: c.id, label: c.name }))} />
+      <OptionSheet<ClassifierBoost> visible={boostOpen} title="Classifier priority" value={form.classifierBoost} options={BOOSTS}
+        onClose={() => setBoostOpen(false)} onPick={classifierBoost => { set({ classifierBoost }); setBoostOpen(false); }} />
     </SafeAreaView>
   );
 }
 
-const Chip = ({ label, tone, onRemove }: { label: string; tone?: 'alias'; onRemove: () => void }) => (
-  <View style={[styles.chip, tone === 'alias' && { backgroundColor: colors.accentSoft }]}>
-    <Text style={[styles.chipText, tone === 'alias' && { color: '#0050A8' }]}>{label}</Text>
-    <Pressable onPress={onRemove} accessibilityLabel={`Remove ${label}`} hitSlop={8}><X size={13} color={tone === 'alias' ? '#0050A8' : '#3A3A40'} /></Pressable>
+const Chip = ({ label, onRemove }: { label: string; onRemove: () => void }) => (
+  <View style={styles.chip}>
+    <Text style={styles.chipText}>{label}</Text>
+    <Pressable onPress={onRemove} accessibilityRole="button" accessibilityLabel={`Remove ${label}`} hitSlop={10}><X size={13} color={colors.textSecondary} /></Pressable>
   </View>
 );
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
-  content: { padding: 16, gap: 22, paddingBottom: 48 },
-  preview: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  nameBox: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 10 },
-  label: { fontFamily: fonts.semibold, fontSize: 12, color: colors.textSecondary },
-  nameInput: { fontFamily: fonts.semibold, fontSize: 17, color: colors.text, paddingVertical: 4 },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.danger },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 14, gap: 8 },
-  swatch: { width: 32, height: 32, borderRadius: 16 },
-  icons: { flexDirection: 'row', flexWrap: 'wrap', padding: 10, gap: 8 },
-  iconBtn: { width: '14.5%', aspectRatio: 1, borderRadius: 12, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  subRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 50 },
-  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#C7C7CC' },
-  subName: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  defaultTag: { fontFamily: fonts.bold, fontSize: 12, color: colors.textSecondary },
-  subInput: { flex: 1, fontFamily: fonts.regular, fontSize: 16, color: colors.text, paddingVertical: 12 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14, paddingBottom: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.bg, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
-  chipText: { fontFamily: fonts.semibold, fontSize: 13, color: '#3A3A40' },
-  keywordInput: { marginHorizontal: 14, marginBottom: 14, height: 40, borderRadius: 10, backgroundColor: colors.bg, paddingHorizontal: 12, fontFamily: fonts.regular, fontSize: 15, color: colors.text },
-  delete: { height: 52, borderRadius: radius.lg, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  deleteText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.danger },
-  pickRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, minHeight: 52, backgroundColor: colors.card },
-  pickFirst: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
-});
+  navText: { ...font.regular, fontSize: 17, color: colors.accent },
+  content: { padding: 16, paddingBottom: 48, gap: 20 },
+  preview: { alignSelf: 'center', width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, padding: 12 },
+  ring: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  swatch: { width: 30, height: 30, borderRadius: 15 },
+  icons: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 12 },
+  iconBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.bg, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  subRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 8, minHeight: 46, backgroundColor: colors.card },
+  subMain: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44, gap: 8 },
+  subName: { ...font.regular, fontSize: 17, color: colors.text },
+  defaultTag: { ...font.bold, fontSize: 13, color: colors.accent },
+  remove: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
+  subInput: { flex: 1, ...font.regular, fontSize: 17, color: colors.text, paddingVertical: 10 },
+  foot: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.bg },
+  chipText: { ...font.regular, fontSize: 15, color: colors.text },
+  addChip: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 32, paddingHorizontal: 6 },
+  keywordInput: { ...font.regular, fontSize: 15, color: colors.text, minWidth: 110, padding: 0 },
+}));

@@ -23,10 +23,11 @@ export const buildDemoReceipts = (): Receipt[] => [
     id: 'demo_3', imageName: '', storeName: 'Best Buy', purchaseDate: daysAgo(2), totalAmount: 249.99, subtotal: 221.23,
     hstAmount: 28.76, hstPercent: 13, category: 'Electronics', subcategory: 'Gadgets', paymentMethod: 'VISA •••• 4242',
     items: [{ name: 'Sony Headphones', qty: 1, unitPrice: 221.23, amount: 221.23 }], notes: 'Noise cancelling headphones.',
+    returnBy: daysAgo(2 - 30),
   },
   {
     id: 'demo_4', imageName: '', storeName: 'Dollarama', purchaseDate: daysAgo(3), totalAmount: 14.5, hstAmount: 1.89,
-    category: 'Household', subcategory: 'Supplies',
+    category: 'Household', subcategory: 'Supplies', returnBy: daysAgo(3 - 7),
     items: [{ name: 'Cleaning Wipes', qty: 2, unitPrice: 4, amount: 8 }, { name: 'Notebook', qty: 1, unitPrice: 3.5, amount: 3.5 }],
   },
   { id: 'demo_5', imageName: '', storeName: 'Costco', purchaseDate: daysAgo(4), totalAmount: 215.97, category: 'Groceries', subcategory: 'Food Retail' },

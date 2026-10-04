@@ -100,7 +100,7 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   notifications: {
     ocr: true,
     share: true,
-    insights: true
+    insights: false
   },
   isPro: false
 };
@@ -138,7 +138,7 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
     taxRule: { mode: 'add' }, isPinned: false, orderIndex: 4, classifierBoost: 'low'
   },
   {
-    id: 'cat_6', name: "Electronics", iconName: "MonitorSmartphone", color: "#0062CC", visibility: 'visible',
+    id: 'cat_6', name: "Electronics", iconName: "MonitorSmartphone", color: "#0B7A55", visibility: 'visible',
     aliases: [], keywords: [],
     subcategories: [{ id: 's16', name: "Gadgets" }, { id: 's17', name: "Computers" }, { id: 's18', name: "Accessories" }],
     taxRule: { mode: 'add' }, isPinned: false, orderIndex: 5, classifierBoost: 'low'

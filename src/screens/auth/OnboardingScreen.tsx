@@ -1,18 +1,76 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, useWindowDimensions, Pressable, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowRight, Camera, ScanLine, Percent, Layers, BarChart3, ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Scan, Undo, PieChart, LayoutGrid, BarChart3, Check, FileDown, AppIcon } from '../../components/icons';
+import { Button } from '../../components/ui';
+import { Illustration } from '../../components/Illustration';
 import { useAuth } from '../../context/AuthContext';
 import { triggerHaptic } from '../../utils/nativeUtils';
-import { colors, fonts, radius } from '../../theme';
+import { colors, font, soft, themedStyles, tone } from '../../theme';
 
-const SLIDES = [
-  { key: 'welcome', title: 'Welcome to Receiptfy', subtitle: 'Snap, auto-scan, and track your spend — without the spreadsheet.', Icon: Camera, tint: '#E3EEFF', color: colors.accent },
-  { key: 'capture', title: 'Capture and extract', subtitle: 'Take a photo. OCR auto-fills store, date, total, and tax.', Icon: ScanLine, tint: '#DDF1F4', color: '#0E7C8C' },
-  { key: 'tax', title: 'Tax‑ready & discounts', subtitle: 'Applies Canadian HST (13%) by default and captures line‑item discounts. Export clean CSV for tax time.', Icon: Percent, tint: '#DDF4EA', color: colors.success },
-  { key: 'organize', title: 'Organize effortlessly', subtitle: 'Smart suggestions for categories. Search everything later.', Icon: Layers, tint: '#E9E6FB', color: '#4A34B8' },
-  { key: 'insights', title: 'See where money goes', subtitle: 'Weekly and monthly insights, plus tips to help you save.', Icon: BarChart3, tint: '#FDEBDD', color: colors.tax },
+type Slide = { key: string; title: string; subtitle: string; art: 'hero' | 'scan' | 'tax' | 'organize' | 'insights' };
+
+// A2 Welcome (1 of 5) and A3 Walkthrough
+const SLIDES: Slide[] = [
+  { key: 'welcome', art: 'hero', title: 'Every receipt.\nEvery dollar of HST.', subtitle: 'Scan once. Keep it for returns, and hand your accountant a clean tax year.' },
+  { key: 'capture', art: 'scan', title: 'Capture and extract', subtitle: 'Take a photo. The store, date, total and tax are read for you.' },
+  { key: 'tax', art: 'tax', title: 'Tax-ready, the Canadian way', subtitle: 'HST at 13% is applied by default, zero-rated groceries are kept apart, and line-item discounts are captured.' },
+  { key: 'organize', art: 'organize', title: 'Organize effortlessly', subtitle: 'Receipts sort themselves into categories. Search everything later.' },
+  { key: 'insights', art: 'insights', title: 'See where money goes', subtitle: 'Monthly totals and HST by category, ready whenever you need them.' },
 ];
+
+// A function, so the colours follow the active scheme.
+const features = (): { Icon: AppIcon; tint: string; color: string; title: string; text: string }[] => [
+  { Icon: Scan, tint: colors.accentSoft, color: colors.accent, title: 'Scan in seconds', text: 'Store, date, total and HST read for you' },
+  { Icon: Undo, tint: colors.taxSoft, color: colors.tax, title: 'Never miss a return', text: 'The original image, always one tap away' },
+  { Icon: PieChart, tint: soft(tone('#0A5BC4')), color: tone('#0A5BC4'), title: 'Tax-ready reports', text: 'HST by category, ready to export' },
+];
+
+function HeroArt() {
+  return (
+    <View style={styles.hero}>
+      <Illustration name="hero" size={260} label="A receipt is scanned line by line, then a saved badge appears" />
+      <View style={[styles.chip, styles.chipHst]}><Text style={styles.chipHstText}>HST $2.10</Text></View>
+      <View style={[styles.chip, styles.chipSaved]}>
+        <View style={styles.chipTick}><Check size={14} color="#FFFFFF" strokeWidth={3} /></View>
+        <Text style={styles.chipSavedText}>Saved to Grocery</Text>
+      </View>
+    </View>
+  );
+}
+
+function TaxArt() {
+  const bar = [
+    { flex: 34, color: '#B04A08' }, { flex: 22, color: '#0A5BC4' }, { flex: 18, color: '#0B6E77' }, { flex: 26, color: '#B8185A' },
+  ];
+  return (
+    <View style={styles.taxCard}>
+      <Text style={styles.taxLabel}>SEPTEMBER · ONTARIO</Text>
+      <View style={styles.taxRow}><Text style={styles.taxText}>Subtotal</Text><Text style={styles.taxText}>$1,233.87</Text></View>
+      <View style={styles.taxRow}><Text style={styles.taxHst}>HST 13%</Text><Text style={styles.taxHst}>$184.37</Text></View>
+      <View style={styles.taxRule} />
+      <View style={styles.taxRow}><Text style={styles.taxTotal}>Total</Text><Text style={styles.taxTotal}>$1,418.24</Text></View>
+      <View style={styles.taxBar}>{bar.map((b, i) => <View key={i} style={{ flex: b.flex, backgroundColor: b.color }} />)}</View>
+      <View style={styles.taxFoot}><FileDown size={16} color={colors.accent} /><Text style={styles.taxFootText}>Ready to export for your accountant</Text></View>
+    </View>
+  );
+}
+
+function IconArt({ Icon, tint, color }: { Icon: AppIcon; tint: string; color: string }) {
+  return (
+    <View style={[styles.iconCircle, { backgroundColor: tint }]}>
+      <View style={styles.iconTile}><Icon size={72} color={color} /></View>
+    </View>
+  );
+}
+
+function Art({ kind }: { kind: Slide['art'] }) {
+  if (kind === 'hero') return <HeroArt />;
+  if (kind === 'tax') return <TaxArt />;
+  if (kind === 'scan') return <IconArt Icon={Scan} tint={colors.accentSoft} color={colors.accent} />;
+  if (kind === 'organize') return <IconArt Icon={LayoutGrid} tint={soft(tone('#5A3CC2'))} color={tone('#5A3CC2')} />;
+  return <IconArt Icon={BarChart3} tint={colors.taxSoft} color={colors.tax} />;
+}
 
 export default function OnboardingScreen({ navigation }: any) {
   const { width } = useWindowDimensions();
@@ -39,13 +97,12 @@ export default function OnboardingScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
-        {index > 0 ? (
-          <Pressable onPress={() => goTo(index - 1)} accessibilityRole="button" accessibilityLabel="Back" style={styles.iconBtn}>
-            <ChevronLeft size={24} color={colors.accent} />
-          </Pressable>
-        ) : <View style={styles.iconBtn} />}
+        <Pressable onPress={() => (index > 0 ? goTo(index - 1) : navigation.goBack())} accessibilityRole="button"
+          accessibilityLabel="Back" style={styles.iconBtn} hitSlop={6}>
+          <ChevronLeft size={22} color={colors.text} />
+        </Pressable>
         {!last && (
-          <Pressable onPress={finish} accessibilityRole="button" style={styles.skip}>
+          <Pressable onPress={finish} accessibilityRole="button" style={styles.skip} hitSlop={6}>
             <Text style={styles.skipText}>Skip</Text>
           </Pressable>
         )}
@@ -62,60 +119,79 @@ export default function OnboardingScreen({ navigation }: any) {
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
         renderItem={({ item }) => (
           <View style={[styles.slide, { width }]}>
-            <View style={styles.art}>
-              <View style={[styles.artCircle, { backgroundColor: item.tint }]} />
-              <View style={[styles.artTile, { shadowColor: item.color }]}>
-                <item.Icon size={72} color={item.color} strokeWidth={1.6} />
-              </View>
-            </View>
-            <Text style={styles.title}>{item.title}</Text>
+            <View style={styles.art}><Art kind={item.art} /></View>
+            <Text style={styles.title} accessibilityRole="header">{item.title}</Text>
             <Text style={styles.subtitle}>{item.subtitle}</Text>
+            {item.art === 'hero' && (
+              <View style={styles.features}>
+                {features().map(f => (
+                  <View key={f.title} style={styles.feature}>
+                    <View style={[styles.featureIcon, { backgroundColor: f.tint }]}><f.Icon size={22} color={f.color} /></View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.featureTitle}>{f.title}</Text>
+                      <Text style={styles.featureText}>{f.text}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         )}
       />
 
       <View style={styles.bottom}>
         <View style={styles.dots} accessibilityLabel={`Step ${index + 1} of ${SLIDES.length}`}>
-          {SLIDES.map((s, i) => (
-            <View key={s.key} style={[styles.dot, i === index && styles.dotActive]} />
-          ))}
+          {SLIDES.map((s, i) => <View key={s.key} style={[styles.dot, i === index && styles.dotActive]} />)}
         </View>
-        <Pressable
-          onPress={last ? finish : () => goTo(index + 1)}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.next, last && styles.nextWide, pressed && { opacity: 0.9 }]}
-        >
-          <Text style={styles.nextText}>{last ? 'Get Started' : 'Next'}</Text>
-          <ArrowRight size={20} color="#FFFFFF" strokeWidth={2.4} />
-        </Pressable>
+        <Button title={last ? 'Get Started' : 'Continue'} onPress={last ? finish : () => goTo(index + 1)} />
       </View>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const shadow = { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 3 };
+
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
-  topBar: { height: 52, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 },
-  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  skip: { paddingHorizontal: 12, height: 44, justifyContent: 'center' },
-  skipText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent },
-  slide: { flex: 1, paddingHorizontal: 28, justifyContent: 'center' },
-  art: { height: 320, alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
-  artCircle: { position: 'absolute', width: 290, height: 290, borderRadius: 145 },
-  artTile: {
-    width: 150, height: 150, borderRadius: 40, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
-    shadowOpacity: 0.2, shadowRadius: 24, shadowOffset: { width: 0, height: 14 }, elevation: 6,
-  },
-  title: { fontFamily: fonts.extrabold, fontSize: 34, lineHeight: 38, letterSpacing: -1, color: colors.text, marginBottom: 12 },
-  subtitle: { fontFamily: fonts.regular, fontSize: 17, lineHeight: 25, color: colors.textSecondary },
-  bottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 16, paddingTop: 8 },
-  dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#C7C7CC' },
-  dotActive: { width: 24, backgroundColor: colors.accent },
-  next: {
-    height: 56, paddingLeft: 26, paddingRight: 22, borderRadius: radius.pill, backgroundColor: colors.accent,
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-  },
-  nextWide: { paddingLeft: 28 },
-  nextText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
-});
+  topBar: { height: 44, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16 },
+  iconBtn: { width: 44, height: 44, justifyContent: 'center' },
+  skip: { height: 44, justifyContent: 'center' },
+  skipText: { ...font.regular, fontSize: 17, color: colors.accent },
+  slide: { paddingHorizontal: 24 },
+  art: { height: 290, alignItems: 'center', justifyContent: 'center' },
+  title: { ...font.bold, fontSize: 32, lineHeight: 38, letterSpacing: -0.4, color: colors.text, textAlign: 'center', marginTop: 4 },
+  subtitle: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center', marginTop: 10 },
+
+  hero: { width: 300, height: 280, alignItems: 'center', justifyContent: 'center' },
+  chip: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 6, ...shadow },
+  chipHst: { right: 0, top: 34, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.taxSoft },
+  chipHstText: { ...font.bold, fontSize: 13, color: colors.tax },
+  chipSaved: { left: 0, bottom: 30, paddingVertical: 8, paddingLeft: 8, paddingRight: 12, borderRadius: 18, backgroundColor: colors.elevated },
+  chipTick: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.accentFill, alignItems: 'center', justifyContent: 'center' },
+  chipSavedText: { ...font.semibold, fontSize: 13, color: colors.text },
+
+  features: { gap: 16, marginTop: 24, paddingHorizontal: 8 },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  featureIcon: { width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  featureTitle: { ...font.semibold, fontSize: 17, color: colors.text },
+  featureText: { ...font.regular, fontSize: 15, color: colors.textSecondary, marginTop: 1 },
+
+  taxCard: { width: 250, backgroundColor: colors.card, borderRadius: 22, padding: 20, gap: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 36, shadowOffset: { width: 0, height: 18 }, elevation: 6 },
+  taxLabel: { ...font.semibold, fontSize: 12, letterSpacing: 0.5, color: colors.textSecondary },
+  taxRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  taxText: { ...font.regular, fontSize: 15, color: colors.text, fontVariant: ['tabular-nums'] },
+  taxHst: { ...font.semibold, fontSize: 15, color: colors.tax, fontVariant: ['tabular-nums'] },
+  taxRule: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator },
+  taxTotal: { ...font.bold, fontSize: 17, color: colors.text, fontVariant: ['tabular-nums'] },
+  taxBar: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', gap: 2 },
+  taxFoot: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  taxFootText: { ...font.semibold, fontSize: 13, color: colors.accent },
+
+  iconCircle: { width: 250, height: 250, borderRadius: 125, alignItems: 'center', justifyContent: 'center' },
+  iconTile: { width: 140, height: 140, borderRadius: 36, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center', ...shadow },
+
+  bottom: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 8, gap: 16 },
+  dots: { flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.grabber },
+  dotActive: { width: 18, backgroundColor: colors.accent },
+}));

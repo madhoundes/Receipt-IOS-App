@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Image as ImageIcon } from 'lucide-react-native';
+import { Camera, Image as ImageIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { Field, FieldGroup, Section, SettingRow } from '../components/ui';
@@ -10,7 +10,7 @@ import { AuthError, isValidEmail } from '../services/auth';
 import { persistReceiptPhoto } from '../utils/photos';
 import { triggerHaptic } from '../utils/nativeUtils';
 import { initials } from './ProfileScreen';
-import { colors, fonts, type } from '../theme';
+import { colors, font, type, themedStyles } from '../theme';
 
 export default function EditProfileScreen({ navigation }: any) {
   const { user, updateProfile: updateAccount } = useAuth();
@@ -53,7 +53,7 @@ export default function EditProfileScreen({ navigation }: any) {
         <Pressable onPress={() => navigation.goBack()} style={styles.navBtn} accessibilityRole="button"><Text style={styles.navText}>Cancel</Text></Pressable>
         <Text style={type.headline}>Edit Profile</Text>
         <Pressable onPress={save} disabled={saving} style={[styles.navBtn, { alignItems: 'flex-end' }]} accessibilityRole="button">
-          <Text style={[styles.navText, { fontFamily: fonts.bold }, saving && { opacity: 0.5 }]}>{saving ? 'Saving…' : 'Save'}</Text>
+          <Text style={[styles.navText, { ...font.bold }, saving && { opacity: 0.5 }]}>{saving ? 'Saving…' : 'Save'}</Text>
         </Pressable>
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -65,11 +65,12 @@ export default function EditProfileScreen({ navigation }: any) {
             <Pressable onPress={() => pick('library')} accessibilityRole="button"><Text style={styles.link}>Change Photo</Text></Pressable>
           </View>
           <FieldGroup>
-            <Field label="Display Name" value={name} onChangeText={t => { setName(t); setError(undefined); }} autoComplete="name" />
-            <Field label="Email Address" value={email} onChangeText={t => { setEmail(t); setError(undefined); }}
+            <Field label="Name" value={name} onChangeText={t => { setName(t); setError(undefined); }} autoComplete="name" />
+            <Field label="Email" value={email} onChangeText={t => { setEmail(t); setError(undefined); }}
               autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
           </FieldGroup>
           {!!error && <Text style={styles.error}>{error}</Text>}
+          <Text style={{ ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16, marginTop: -8 }}>Your email is used to sign in and to send exports you request.</Text>
           <Section title="Photo options">
             <SettingRow first label="Take Headshot" onPress={() => pick('camera')} icon={<Camera size={20} color={colors.accent} />} />
             <SettingRow label="Choose from Library" onPress={() => pick('library')} icon={<ImageIcon size={20} color={colors.accent} />} />
@@ -81,14 +82,14 @@ export default function EditProfileScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
   nav: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navBtn: { minWidth: 70, height: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
+  navText: { ...font.regular, fontSize: 17, color: colors.accent },
   content: { padding: 16, gap: 24, paddingTop: 20 },
-  avatar: { width: 104, height: 104, borderRadius: 52, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: fonts.extrabold, fontSize: 38, color: '#FFFFFF' },
-  link: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent, padding: 6 },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
-});
+  avatar: { width: 104, height: 104, borderRadius: 52, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { ...font.bold, fontSize: 38, color: colors.accent },
+  link: { ...font.regular, fontSize: 17, color: colors.accent, padding: 6 },
+  error: { ...font.medium, fontSize: 14, color: colors.danger, paddingHorizontal: 4 },
+}));

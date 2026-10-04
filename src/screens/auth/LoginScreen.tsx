@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowRight, ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft } from '../../components/icons';
 import { Button, Divider, Field, FieldGroup } from '../../components/ui';
-import { AppleIcon } from '../../components/AppleIcon';
 import { useAuth } from '../../context/AuthContext';
 import { AuthError, isValidEmail } from '../../services/auth';
 import { triggerHaptic } from '../../utils/nativeUtils';
-import { colors, fonts, type } from '../../theme';
+import { colors, font, type, themedStyles } from '../../theme';
 
 export default function LoginScreen({ navigation }: any) {
   const { signIn, signInWithApple, sendPasswordReset, completeOnboarding } = useAuth();
@@ -55,13 +54,18 @@ export default function LoginScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {navigation.canGoBack() && (
-            <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Back" style={styles.back}>
-              <ChevronLeft size={24} color={colors.accent} />
-            </Pressable>
-          )}
-          <Text style={type.largeTitle}>Welcome back</Text>
-          <Text style={[type.subhead, styles.sub]}>Log in to pick up where you left off.</Text>
+          <View style={styles.nav}>
+            {navigation.canGoBack() && (
+              <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Back" style={styles.back} hitSlop={6}>
+                <ChevronLeft size={22} color={colors.text} />
+              </Pressable>
+            )}
+          </View>
+          <Text style={type.largeTitle} accessibilityRole="header">Welcome back</Text>
+          <Text style={styles.sub}>Log in to pick up where you left off.</Text>
+
+          <Button title="Continue with Apple" variant="dark" onPress={apple} loading={loading === 'apple'} disabled={!!loading} />
+          <Divider label="or" />
 
           <FieldGroup>
             <Field label="Email" placeholder="you@example.com" value={email} onChangeText={setEmail}
@@ -75,15 +79,10 @@ export default function LoginScreen({ navigation }: any) {
             <Text style={styles.link}>{loading === 'reset' ? 'Sending…' : 'Forgot password?'}</Text>
           </Pressable>
 
-          <Button title="Log In" onPress={submit} loading={loading === 'email'} disabled={!!loading}
-            icon={<ArrowRight size={20} color="#FFFFFF" />} />
-          <Divider label="or" />
-          <Button title="Continue with Apple" variant="dark" onPress={apple} loading={loading === 'apple'} disabled={!!loading}
-            icon={<AppleIcon color="#FFFFFF" />} />
+          <Button title="Log In" onPress={submit} loading={loading === 'email'} disabled={!!loading} />
 
-          <View style={{ flex: 1, minHeight: 32 }} />
           <Pressable onPress={() => navigation.navigate('SignUp')} accessibilityRole="link" style={styles.switch}>
-            <Text style={styles.switchText}>New to Receiptfy? <Text style={styles.link}>Create an account</Text></Text>
+            <Text style={styles.switchText}>New to Receipt TaX? <Text style={styles.switchLink}>Create an account</Text></Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -91,14 +90,16 @@ export default function LoginScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 },
-  back: { width: 44, height: 44, marginLeft: -10, justifyContent: 'center', alignItems: 'center' },
-  sub: { marginTop: 8, marginBottom: 24, fontSize: 17 },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.danger, marginTop: 10, paddingHorizontal: 4 },
-  forgot: { alignSelf: 'flex-end', paddingVertical: 12 },
-  switch: { alignItems: 'center', paddingVertical: 12 },
-  switchText: { fontFamily: fonts.regular, fontSize: 15, color: '#3A3A40' },
-  link: { fontFamily: fonts.bold, fontSize: 15, color: colors.accent },
-});
+  content: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 },
+  nav: { height: 44, justifyContent: 'center', marginBottom: 6 },
+  back: { width: 44, height: 44, justifyContent: 'center' },
+  sub: { ...font.regular, fontSize: 17, color: colors.textSecondary, marginTop: 6, marginBottom: 16 },
+  error: { ...font.regular, fontSize: 13, color: colors.danger, marginTop: 8, paddingHorizontal: 16 },
+  forgot: { alignSelf: 'flex-end', height: 44, justifyContent: 'center', paddingHorizontal: 4 },
+  link: { ...font.regular, fontSize: 15, color: colors.accent },
+  switch: { alignItems: 'center', justifyContent: 'center', minHeight: 44, marginTop: 8 },
+  switchText: { ...font.regular, fontSize: 15, color: colors.textSecondary },
+  switchLink: { ...font.semibold, color: colors.accent },
+}));

@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator, Pressable, StyleSheet, Switch, Text, TextInput, TextInputProps, View, ViewStyle,
 } from 'react-native';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react-native';
-import { colors, fonts, radius } from '../theme';
+import { ChevronLeft, ChevronRight, Eye, EyeOff } from './icons';
+import { colors, font, isDark, radius, themedStyles } from '../theme';
 
-type ButtonVariant = 'primary' | 'secondary' | 'dark' | 'ghost' | 'onAccent' | 'ghostOnAccent';
+type ButtonVariant = 'primary' | 'secondary' | 'tinted' | 'dark' | 'glass' | 'ghost' | 'destructive' | 'onAccent' | 'ghostOnAccent';
 
 export function Button({
-  title, onPress, variant = 'primary', loading = false, disabled = false, icon, style,
+  title, onPress, variant = 'primary', loading = false, disabled = false, icon, style, compact = false,
 }: {
   title: string;
   onPress: () => void;
@@ -17,8 +17,10 @@ export function Button({
   disabled?: boolean;
   icon?: React.ReactNode;
   style?: ViewStyle;
+  /** Smaller button for side-by-side pairs. */
+  compact?: boolean;
 }) {
-  const v = VARIANTS[variant];
+  const v = variants()[variant];
   return (
     <Pressable
       onPress={onPress}
@@ -28,6 +30,7 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         { backgroundColor: v.bg, borderColor: v.border ?? v.bg },
+        compact && { height: 46, borderRadius: 23, paddingHorizontal: 8, gap: 6 },
         (disabled || loading) && { opacity: 0.6 },
         pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 },
         style,
@@ -38,21 +41,27 @@ export function Button({
       ) : (
         <>
           {icon}
-          <Text style={[styles.buttonText, { color: v.fg }]}>{title}</Text>
+          <Text style={[styles.buttonText, compact && { fontSize: 14 }, { color: v.fg }]} numberOfLines={1}>{title}</Text>
         </>
       )}
     </Pressable>
   );
 }
 
-const VARIANTS: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
-  primary: { bg: colors.accent, fg: '#FFFFFF' },
-  secondary: { bg: '#FFFFFF', fg: colors.text, border: colors.border },
-  dark: { bg: colors.text, fg: '#FFFFFF' },
+// A function, so the colours follow the active scheme.
+const variants = (): Record<ButtonVariant, { bg: string; fg: string; border?: string }> => ({
+  primary: { bg: colors.accentFill, fg: '#FFFFFF' },
+  secondary: { bg: colors.accentSoft, fg: colors.accent },
+  tinted: { bg: colors.accentSoft, fg: colors.accent },
+  // Black in Light Mode, white in Dark Mode (the Sign in with Apple treatment).
+  dark: isDark() ? { bg: '#FFFFFF', fg: '#000000' } : { bg: '#000000', fg: '#FFFFFF' },
+  // For buttons that sit on the dark camera screens.
+  glass: { bg: '#2C2C2E', fg: '#FFFFFF' },
   ghost: { bg: 'transparent', fg: colors.accent },
-  onAccent: { bg: '#FFFFFF', fg: '#0B2A55' },
+  destructive: { bg: colors.dangerSoft, fg: colors.danger },
+  onAccent: { bg: '#FFFFFF', fg: '#0B7A55' },
   ghostOnAccent: { bg: 'transparent', fg: '#FFFFFF' },
-};
+});
 
 /** Grouped iOS-style field: small label above the input. */
 export function Field({
@@ -60,8 +69,8 @@ export function Field({
 }: TextInputProps & { label: string; error?: string; secure?: boolean }) {
   const [hidden, setHidden] = useState(!!secure);
   return (
-    <View style={styles.field}>
-      <View style={{ flex: 1 }}>
+    <View>
+      <View style={styles.field}>
         <Text style={styles.fieldLabel}>{label}</Text>
         <TextInput
           {...input}
@@ -70,19 +79,19 @@ export function Field({
           placeholderTextColor={colors.placeholder}
           style={styles.fieldInput}
         />
-        {!!error && <Text style={styles.fieldError}>{error}</Text>}
+        {secure && (
+          <Pressable
+            onPress={() => setHidden(h => !h)}
+            accessibilityRole="button"
+            accessibilityLabel={hidden ? 'Show password' : 'Hide password'}
+            style={styles.eye}
+            hitSlop={8}
+          >
+            {hidden ? <Eye size={20} color={colors.textMuted} /> : <EyeOff size={20} color={colors.textMuted} />}
+          </Pressable>
+        )}
       </View>
-      {secure && (
-        <Pressable
-          onPress={() => setHidden(h => !h)}
-          accessibilityRole="button"
-          accessibilityLabel={hidden ? 'Show password' : 'Hide password'}
-          style={styles.eye}
-          hitSlop={8}
-        >
-          {hidden ? <Eye size={20} color={colors.textMuted} /> : <EyeOff size={20} color={colors.textMuted} />}
-        </Pressable>
-      )}
+      {!!error && <Text style={styles.fieldError}>{error}</Text>}
     </View>
   );
 }
@@ -111,23 +120,23 @@ export function Divider({ label }: { label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   button: {
-    height: 56, borderRadius: radius.lg, borderWidth: 1.5, flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 20,
+    height: 50, borderRadius: 25, borderWidth: 0, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 20,
   },
-  buttonText: { fontFamily: fonts.bold, fontSize: 17 },
+  buttonText: { ...font.semibold, fontSize: 17 },
   group: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 16 },
-  field: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, minHeight: 64 },
-  fieldLabel: { fontFamily: fonts.semibold, fontSize: 12, color: colors.textSecondary },
-  fieldInput: { fontFamily: fonts.regular, fontSize: 17, color: colors.text, paddingVertical: 4 },
-  fieldError: { fontFamily: fonts.medium, fontSize: 12, color: colors.danger, marginTop: 2 },
+  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginLeft: 16 },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingLeft: 16, paddingRight: 8, minHeight: 48 },
+  fieldLabel: { ...font.regular, fontSize: 17, color: colors.text, width: 92 },
+  fieldInput: { ...font.regular, flex: 1, fontSize: 17, color: colors.text, paddingVertical: 10, minWidth: 0 },
+  fieldError: { ...font.regular, fontSize: 13, color: colors.danger, paddingHorizontal: 16, paddingBottom: 8 },
   eye: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
-});
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 14 },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.separator },
+  dividerText: { ...font.regular, fontSize: 13, color: colors.textMuted },
+}));
 
 /** iOS segmented control. */
 export function Segmented<T extends string>({ options, value, onChange, compact }: {
@@ -140,7 +149,7 @@ export function Segmented<T extends string>({ options, value, onChange, compact 
         return (
           <Pressable key={o.value} onPress={() => onChange(o.value)} style={[seg.item, on && seg.on]}
             accessibilityRole="tab" accessibilityState={{ selected: on }}>
-            <Text style={[seg.text, compact && { fontSize: 13 }, on && seg.textOn]} numberOfLines={1}>{o.label}</Text>
+            <Text style={[seg.text, compact && { fontSize: 13 }, on && seg.textOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -154,9 +163,8 @@ export function NavBar({ onBack, backLabel = 'Back', title, right }: {
 }) {
   return (
     <View style={seg.nav}>
-      <Pressable onPress={onBack} style={seg.navBack} accessibilityRole="button" accessibilityLabel={backLabel}>
-        <ChevronLeft size={24} color={colors.accent} />
-        <Text style={seg.navText} numberOfLines={1}>{backLabel}</Text>
+      <Pressable onPress={onBack} style={seg.navBack} accessibilityRole="button" accessibilityLabel={backLabel} hitSlop={6}>
+        <ChevronLeft size={20} color={colors.text} />
       </Pressable>
       {!!title && <Text style={seg.navTitle} numberOfLines={1}>{title}</Text>}
       <View style={seg.navRight}>{right}</View>
@@ -178,10 +186,10 @@ export function SettingRow({ label, value, onPress, toggle, onToggle, danger, fi
       </View>
       {!!value && <Text style={seg.rowValue}>{value}</Text>}
       {toggle !== undefined && (
-        <Switch value={toggle} onValueChange={onToggle} trackColor={{ true: '#1F8F4E', false: '#D1D1D6' }}
-          thumbColor="#FFFFFF" ios_backgroundColor="#D1D1D6" accessibilityLabel={label} />
+        <Switch value={toggle} onValueChange={onToggle} trackColor={{ true: colors.accentFill, false: colors.border }}
+          thumbColor="#FFFFFF" ios_backgroundColor={colors.border} accessibilityLabel={label} />
       )}
-      {onPress && toggle === undefined && !danger && <ChevronRight size={16} color="#AEAEB2" />}
+      {onPress && toggle === undefined && !danger && <ChevronRight size={16} color={colors.chevron} />}
     </View>
   );
   return onPress ? <Pressable onPress={onPress} accessibilityRole="button">{content}</Pressable> : content;
@@ -197,23 +205,26 @@ export function Section({ title, children, footer }: { title?: string; children:
   );
 }
 
-const seg = StyleSheet.create({
-  wrap: { flexDirection: 'row', backgroundColor: colors.fill, borderRadius: 10, padding: 2 },
-  item: { flex: 1, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  on: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
-  text: { fontFamily: fonts.semibold, fontSize: 14, color: '#3A3A40' },
-  textOn: { fontFamily: fonts.bold, color: colors.text },
-  nav: { height: 48, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
-  navBack: { flexDirection: 'row', alignItems: 'center', height: 44, paddingRight: 8, maxWidth: '40%' },
-  navText: { fontFamily: fonts.medium, fontSize: 17, color: colors.accent },
-  navTitle: { position: 'absolute', left: 100, right: 100, textAlign: 'center', fontFamily: fonts.bold, fontSize: 17, color: colors.text },
+const seg = themedStyles(() => ({
+  wrap: { flexDirection: 'row', backgroundColor: colors.fill, borderRadius: 9, padding: 2 },
+  item: { flex: 1, height: 30, borderRadius: 7, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
+  on: { backgroundColor: colors.segmentOn, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  text: { ...font.regular, fontSize: 13, color: colors.text },
+  textOn: { ...font.semibold, color: colors.text },
+  nav: { height: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
+  navBack: {
+    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.elevated,
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 2,
+  },
+  navText: { ...font.medium, fontSize: 17, color: colors.accent },
+  navTitle: { position: 'absolute', left: 80, right: 80, textAlign: 'center', ...font.semibold, fontSize: 17, color: colors.text },
   navRight: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, minHeight: 52, paddingVertical: 8, backgroundColor: colors.card },
-  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  rowLabel: { fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  rowSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  rowValue: { fontFamily: fonts.regular, fontSize: 16, color: colors.textSecondary },
-  sectionTitle: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', color: colors.textSecondary, paddingHorizontal: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 48, paddingVertical: 8, backgroundColor: colors.card },
+  rowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+  rowLabel: { ...font.regular, fontSize: 17, color: colors.text },
+  rowSub: { ...font.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  rowValue: { ...font.regular, fontSize: 17, color: colors.textSecondary },
+  sectionTitle: { ...font.regular, fontSize: 13, textTransform: 'uppercase', color: colors.textSecondary, paddingHorizontal: 16 },
   sectionBody: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
-  footer: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 8 },
-});
+  footer: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 16 },
+}));
