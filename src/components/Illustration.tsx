@@ -2,6 +2,7 @@ import React from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 
+import { useReceipts } from '../context/ReceiptContext';
 import { SOURCES, IllustrationName } from './illustrationSources';
 
 export type { IllustrationName };
@@ -10,7 +11,10 @@ export type { IllustrationName };
 export function Illustration({ name, size = 240, label, loop = true }: {
   name: IllustrationName; size?: number; label?: string; loop?: boolean;
 }) {
-  const [reduce, setReduce] = React.useState(false);
+  const { userProfile } = useReceipts();
+  const [system, setReduce] = React.useState(false);
+  // Either the device setting or the app's own Reduce Motion switch stops the loop.
+  const reduce = system || userProfile.reduceMotion;
   React.useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduce).catch(() => {});
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduce);

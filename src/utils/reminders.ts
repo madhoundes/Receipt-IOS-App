@@ -47,3 +47,18 @@ export async function scheduleReturnReminder(receipt: Receipt, daysBefore: numbe
     trigger: { date: when },
   });
 }
+
+const WEEKLY_ID = 'weekly-insights';
+
+/** Turns the weekly summary notification (Sundays, 6 p.m.) on or off. Resolves true when it is scheduled. */
+export async function setWeeklyInsights(on: boolean): Promise<boolean> {
+  if (!supported) return false;
+  await Notifications.cancelScheduledNotificationAsync(WEEKLY_ID).catch(() => {});
+  if (!on || !(await ensureReminderPermission())) return false;
+  await Notifications.scheduleNotificationAsync({
+    identifier: WEEKLY_ID,
+    content: { title: 'Your week in receipts', body: 'See what you spent this week and how much HST you paid.' },
+    trigger: { weekday: 1, hour: 18, minute: 0, repeats: true },
+  });
+  return true;
+}

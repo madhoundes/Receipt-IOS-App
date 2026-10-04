@@ -100,7 +100,7 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   notifications: {
     ocr: true,
     share: true,
-    insights: true
+    insights: false
   },
   isPro: false
 };

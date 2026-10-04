@@ -7,6 +7,8 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#0B7A55"
     },
     "ios": {
@@ -15,13 +17,19 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Receipt TaX uses the camera to scan your receipts.",
         "NSPhotoLibraryUsageDescription": "Receipt TaX imports receipt photos from your library."
-      }
+      },
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.receiptfy.app",
       "permissions": [
         "CAMERA"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B7A55"
+      },
+      "versionCode": 1
     },
     "plugins": [
       [
@@ -36,7 +44,13 @@
           "photosPermission": "Receipt TaX imports receipt photos from your library."
         }
       ],
-      "expo-notifications"
-    ]
+      [
+        "expo-notifications",
+        {
+          "color": "#0B7A55"
+        }
+      ]
+    ],
+    "icon": "./assets/icon.png"
   }
 }

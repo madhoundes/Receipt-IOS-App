@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  BarChart3, Bell, ChevronRight, CreditCard, Crop, FileDown, FileText, Info, LayoutGrid, Lock, Percent, ReceiptText, Scan, Sparkles, Sun,
+  BarChart3, Bell, ChevronRight, CreditCard, FileDown, FileText, Info, LayoutGrid, Lock, Percent, ReceiptText, Scan, Sparkles, Sun,
   TrendUp, Undo, AppIcon,
 } from '../components/icons';
 import { OptionSheet, kit } from '../components/kit';
@@ -10,8 +10,7 @@ import { NavBar, Section, SettingRow } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareJSON, triggerHaptic } from '../utils/nativeUtils';
-import { cancelReturnReminder } from '../utils/reminders';
-import { config } from '../config';
+import { cancelReturnReminder, setWeeklyInsights } from '../utils/reminders';
 import { colors, font, radius, themedStyles } from '../theme';
 import appJson from '../../app.json';
 import type { UserProfile } from '../types';
@@ -45,6 +44,12 @@ export default function ProfileScreen({ navigation }: any) {
   const ocrLabel = OCR_LEVELS.find(o => o.value === p.ocrThreshold)?.label ?? `${Math.round(p.ocrThreshold * 100)}%`;
   const visible = categories.filter(c => c.visibility === 'visible').length;
 
+  // The switch only stays on if the weekly notification was really scheduled.
+  const toggleWeekly = async (on: boolean) => {
+    const scheduled = await setWeeklyInsights(on);
+    set({ notifications: { ...p.notifications, insights: on && scheduled } });
+    if (on && !scheduled && Platform.OS !== 'web') Alert.alert('Notifications are off', 'Turn on notifications for Receipt TaX in Settings to get the weekly summary.');
+  };
   const exportJson = () => shareJSON({ exportedAt: new Date().toISOString(), profile: p, categories, receipts }, 'receipt-tax-backup.json');
   const changePassword = () => user && confirmAction('Reset password?', `We'll email a reset link to ${user.email}.`, 'Send Link', async () => {
     await sendPasswordReset(user.email);
@@ -79,13 +84,12 @@ export default function ProfileScreen({ navigation }: any) {
 
         <Section title="Camera & intelligence">
           <SettingRow first label="Auto-Categorize" toggle={p.autoCategorize} onToggle={v => set({ autoCategorize: v })} icon={<Tile bg="#5A3CC2" Icon={Sparkles} />} />
-          <SettingRow label="Auto-Crop Receipts" toggle={p.autoCrop} onToggle={v => set({ autoCrop: v })} icon={<Tile bg="#0B6E77" Icon={Crop} />} />
           <SettingRow label="OCR Confidence" value={ocrLabel} onPress={() => setSheet('ocr')} icon={<Tile bg="#3A3A3C" Icon={Scan} />} />
         </Section>
 
         <Section title="Notifications & haptics">
           <SettingRow first label="Return Reminders" value={`${p.remindDaysBefore ?? 2} days before`} onPress={() => navigation.navigate('Reminders')} icon={<Tile bg={colors.danger} Icon={Undo} />} />
-          <SettingRow label="Weekly Insights" toggle={p.notifications.insights} onToggle={v => set({ notifications: { ...p.notifications, insights: v } })} icon={<Tile bg="#C2560A" Icon={Bell} />} />
+          <SettingRow label="Weekly Insights" toggle={p.notifications.insights} onToggle={toggleWeekly} sub="Sundays at 6 p.m." icon={<Tile bg="#C2560A" Icon={Bell} />} />
           <SettingRow label="Haptic Feedback" toggle={p.hapticsEnabled} onToggle={v => set({ hapticsEnabled: v })} icon={<Tile bg="#636366" Icon={Info} />} />
           <SettingRow label="Reduce Motion" toggle={p.reduceMotion} onToggle={v => set({ reduceMotion: v })} icon={<Tile bg="#636366" Icon={TrendUp} />} />
         </Section>
@@ -99,8 +103,8 @@ export default function ProfileScreen({ navigation }: any) {
 
         <Section title="Account & support">
           <SettingRow first label="Change Password" onPress={changePassword} icon={<Tile bg="#636366" Icon={Lock} />} />
-          <SettingRow label="Help and FAQ" onPress={() => Linking.openURL(`mailto:${config.supportEmail}`)} icon={<Tile bg="#0A5BC4" Icon={Info} />} />
-          <SettingRow label="Privacy Policy" onPress={() => Linking.openURL(config.privacyUrl)} icon={<Tile bg="#0B6E77" Icon={Lock} />} />
+          <SettingRow label="Help and FAQ" onPress={() => navigation.navigate('Info', { kind: 'help' })} icon={<Tile bg="#0A5BC4" Icon={Info} />} />
+          <SettingRow label="Privacy Policy" onPress={() => navigation.navigate('Info', { kind: 'privacy' })} icon={<Tile bg="#0B6E77" Icon={Lock} />} />
           <SettingRow label="About" value={`v${appJson.expo.version}`} onPress={about} icon={<Tile bg="#636366" Icon={ReceiptText} />} />
         </Section>
 

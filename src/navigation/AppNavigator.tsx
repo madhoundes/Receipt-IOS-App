@@ -26,6 +26,7 @@ import ScanResultScreen from '../screens/ScanResultScreen';
 import ScanSavedScreen from '../screens/ScanSavedScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import InfoScreen from '../screens/InfoScreen';
 import InsightsScreen from '../screens/InsightsScreen';
 import CategoriesScreen from '../screens/categories/CategoriesScreen';
 import CategoryDetailScreen from '../screens/categories/CategoryDetailScreen';
@@ -74,6 +75,7 @@ export function AppStack() {
       {/* F · Profile */}
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={modal} />
+      <Stack.Screen name="Info" component={InfoScreen} />
     </Stack.Navigator>
   );
 }
