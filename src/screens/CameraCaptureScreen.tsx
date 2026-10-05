@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Accelerometer } from 'expo-sensors';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Animated, {
@@ -13,7 +14,7 @@ import {
 } from '../components/icons';
 import { Illustration } from '../components/Illustration';
 import { Button } from '../components/ui';
-import { ocr } from '../services/ocr';
+import { ocr, OcrError } from '../services/ocr';
 import { triggerHaptic } from '../utils/nativeUtils';
 import { colors, font, themedStyles } from '../theme';
 
@@ -21,6 +22,12 @@ const BRAND_DARK = '#34C98E';
 const STEPS = ['Store and date', 'Total and HST', 'Line items', 'Category and payment'];
 
 type Phase = 'camera' | 'reading' | 'failed';
+
+// Auto capture: the shot is taken once the phone has been held still for this long.
+const STEADY_MS = 1300;
+const STEADY_DELTA = 0.035; // change in acceleration (in g) between two readings that still counts as still
+const RETRY_COOLDOWN_MS = 6000;
+const MAX_MISSES = 3;
 
 export default function CameraCaptureScreen({ navigation, route }: any) {
   const [permission, requestPermission] = useCameraPermissions();
@@ -30,6 +37,12 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string>();
+  const [failure, setFailure] = useState<'not-receipt' | 'unreachable' | 'failed'>('failed');
+  const [auto, setAuto] = useState(true);
+  const [holding, setHolding] = useState(false);
+  const busy = useRef(false);
+  const misses = useRef(0);
+  const cooldownUntil = useRef(0);
   const cameraRef = useRef<CameraView>(null);
   // Bumped when the user backs out, so a late OCR result is ignored.
   const run = useRef(0);
@@ -44,7 +57,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
 
   const manualEntry = () => navigation.replace('ScanResult', { photoUri: null, result: null });
 
-  const analyze = async (uri: string) => {
+  const analyze = async (uri: string, fromCamera = false) => {
     const id = ++run.current;
     setError(undefined);
     setPhotoUri(uri);
@@ -58,9 +71,25 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
       setDone(true);
       triggerHaptic('success');
       setTimeout(() => { if (id === run.current) navigation.replace('ScanResult', { photoUri: uri, result }); }, 350);
-    } catch {
+    } catch (e) {
       if (id !== run.current) return;
       triggerHaptic('error');
+      const code = e instanceof OcrError ? e.code : 'failed';
+      if (fromCamera && code === 'not-receipt') {
+        // The automatic shot found no receipt: go back to the live camera instead of showing an error screen.
+        misses.current += 1;
+        cooldownUntil.current = Date.now() + RETRY_COOLDOWN_MS;
+        if (misses.current >= MAX_MISSES) {
+          setAuto(false);
+          setError('Auto capture paused. Tap the shutter when the receipt is in the frame.');
+        } else {
+          setError('No receipt found. Move closer and hold steady.');
+        }
+        setPhase('camera');
+        setPhotoUri(undefined);
+        return;
+      }
+      setFailure(code);
       setPhase('failed');
     } finally {
       clearInterval(timer);
@@ -68,7 +97,8 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   };
 
   const capture = async () => {
-    if (!cameraRef.current || phase !== 'camera') return;
+    if (!cameraRef.current || phase !== 'camera' || busy.current) return;
+    busy.current = true;
     triggerHaptic('medium');
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
@@ -76,14 +106,40 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
       const small = await ImageManipulator.manipulateAsync(photo.uri, [{ resize: { width: 1400 } }], {
         compress: 0.8, format: ImageManipulator.SaveFormat.JPEG,
       });
-      await analyze(small.uri);
+      await analyze(small.uri, true);
     } catch {
       setError('The camera could not take a photo. Please try again.');
+    } finally {
+      busy.current = false;
     }
   };
 
+  // Auto capture: watch how much the phone moves; once it has been still for a moment, take the shot.
+  const captureRef = useRef(capture);
+  captureRef.current = capture;
+  useEffect(() => {
+    if (!auto || phase !== 'camera' || !permission?.granted) { setHolding(false); return; }
+    let last: { x: number; y: number; z: number } | undefined;
+    let stillSince = 0;
+    Accelerometer.setUpdateInterval(120);
+    const sub = Accelerometer.addListener(a => {
+      const moved = last ? Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z) : 1;
+      last = a;
+      const now = Date.now();
+      if (busy.current || now < cooldownUntil.current || moved > STEADY_DELTA * 3) { stillSince = 0; setHolding(h => (h ? false : h)); return; }
+      if (!stillSince) stillSince = now;
+      setHolding(h => (h ? h : true));
+      if (now - stillSince >= STEADY_MS) {
+        stillSince = 0;
+        setHolding(false);
+        captureRef.current();
+      }
+    });
+    return () => sub.remove();
+  }, [auto, phase, permission?.granted]);
+
   const importPhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
     if (!res.canceled && res.assets[0]) await analyze(res.assets[0].uri);
   };
 
@@ -91,6 +147,8 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     run.current += 1;
     setPhase('camera');
     setPhotoUri(undefined);
+    setError(undefined);
+    cooldownUntil.current = Date.now() + 2000;
   };
 
   // A photo picked elsewhere (the empty Receipts screen) goes straight to reading.
@@ -122,8 +180,8 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
             <Text style={styles.permTitle} accessibilityRole="header">{blocked ? 'Camera Is Turned Off' : 'Camera Access Needed'}</Text>
             <Text style={styles.permText}>
               {blocked
-                ? 'Turn the camera on for Receipt TaX in Settings, or import a photo or type the receipt in.'
-                : 'Receipt TaX uses the camera only to photograph receipts. Photos stay in the app.'}
+                ? 'Turn the camera on for Maplestub in Settings, or import a photo or type the receipt in.'
+                : 'Maplestub uses the camera only to photograph receipts. Photos stay in the app.'}
             </Text>
           </View>
 
@@ -164,8 +222,12 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
           {phase === 'failed' ? (
             <View style={{ alignItems: 'center', gap: 6 }} accessibilityLiveRegion="polite">
               <Illustration name="scanFailed" size={140} label="We could not read the receipt" />
-              <Text style={styles.failTitle}>We couldn’t read that receipt</Text>
-              <Text style={styles.failText}>Try again with better light and the whole receipt in the frame, or type it in.</Text>
+              <Text style={styles.failTitle}>{failure === 'unreachable' ? 'The reader couldn’t start' : failure === 'not-receipt' ? 'No receipt in that photo' : 'We couldn’t read that receipt'}</Text>
+              <Text style={styles.failText}>
+                {failure === 'unreachable'
+                  ? 'The text reader needs the internet once to download. Connect to Wi-Fi and try again, or type the receipt in.'
+                  : 'Try again with better light and the whole receipt in the frame, or type it in.'}
+              </Text>
               <View style={{ alignSelf: 'stretch', gap: 10, marginTop: 14 }}>
                 <Button title="Try Again" onPress={() => analyze(photoUri)} />
                 <Button title="Enter Manually" variant="tinted" onPress={manualEntry} />
@@ -218,6 +280,11 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
           <Pressable onPress={() => navigation.goBack()} style={styles.round} accessibilityRole="button" accessibilityLabel="Close">
             <X size={20} color="#FFFFFF" />
           </Pressable>
+          <Pressable onPress={() => { setAuto(a => !a); setError(undefined); misses.current = 0; }} style={[styles.autoPill, auto && styles.autoPillOn]}
+            accessibilityRole="button" accessibilityLabel={auto ? 'Turn auto capture off' : 'Turn auto capture on'} accessibilityState={{ selected: auto }}>
+            <Scan size={16} color={auto ? '#0C0C0D' : '#FFFFFF'} />
+            <Text style={[styles.autoText, auto && { color: '#0C0C0D' }]}>{auto ? 'Auto' : 'Manual'}</Text>
+          </Pressable>
           <Pressable onPress={() => setTorch(t => !t)} style={styles.round} accessibilityRole="button"
             accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'} accessibilityState={{ selected: torch }}>
             {torch ? <Zap size={20} color="#FFD60A" variant="Bold" /> : <ZapOff size={20} color="#FFFFFF" />}
@@ -234,7 +301,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
           </View>
           <Animated.View entering={FadeIn} style={styles.hint} accessibilityLiveRegion="polite">
             {error ? <Sun size={16} color="#FFB057" /> : <Scan size={16} color={BRAND_DARK} />}
-            <Text style={styles.hintText}>{error ?? 'Fit the whole receipt in the frame'}</Text>
+            <Text style={styles.hintText}>{error ?? (auto ? (holding ? 'Hold steady, capturing…' : 'Point at the receipt and hold still') : 'Fit the whole receipt in the frame')}</Text>
           </Animated.View>
         </View>
 
@@ -300,6 +367,12 @@ const styles = themedStyles(() => ({
     flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(12,12,13,0.78)',
     paddingHorizontal: 14, height: 36, borderRadius: 18, maxWidth: '88%',
   },
+  autoPill: {
+    height: 44, paddingHorizontal: 16, borderRadius: 22, backgroundColor: GLASS, flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  autoPillOn: { backgroundColor: BRAND_DARK },
+  autoText: { ...font.semibold, fontSize: 15, color: '#FFFFFF' },
   hintText: { ...font.semibold, fontSize: 15, color: '#FFFFFF', flexShrink: 1 },
   controls: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 28, paddingTop: 16, paddingBottom: 12,

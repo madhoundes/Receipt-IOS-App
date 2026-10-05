@@ -10,7 +10,7 @@ const supported = Platform.OS !== 'web';
 export function initReminders() {
   if (!supported) return;
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({ shouldShowAlert: true, shouldPlaySound: false, shouldSetBadge: false }),
+    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
   });
 }
 
@@ -44,7 +44,7 @@ export async function scheduleReturnReminder(receipt: Receipt, daysBefore: numbe
       body: `${formatCents(toCents(receipt.totalAmount))} · return by ${last}. The original receipt photo is in the app.`,
       data: { receiptId: receipt.id },
     },
-    trigger: { date: when },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when },
   });
 }
 
@@ -58,7 +58,7 @@ export async function setWeeklyInsights(on: boolean): Promise<boolean> {
   await Notifications.scheduleNotificationAsync({
     identifier: WEEKLY_ID,
     content: { title: 'Your week in receipts', body: 'See what you spent this week and how much HST you paid.' },
-    trigger: { weekday: 1, hour: 18, minute: 0, repeats: true },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: 1, hour: 18, minute: 0 },
   });
   return true;
 }

@@ -8,11 +8,13 @@ import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
 import { CategoryPickerSheet } from '../components/CategoryPickerSheet';
 import { OptionSheet, RoundButton, kit, shortDate } from '../components/kit';
 import { Button, Segmented } from '../components/ui';
+import { MerchantAvatar, hasBrandLogo } from '../components/MerchantAvatar';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareCSV, shareImage, triggerHaptic } from '../utils/nativeUtils';
 import { deleteReceiptPhoto } from '../utils/photos';
 import { cancelReturnReminder, scheduleReturnReminder } from '../utils/reminders';
 import { daysLeft, returnByFor } from '../utils/returns';
+import { buildCsv } from '../utils/csv';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
 import { colors, font, radius, type, themedStyles, soft } from '../theme';
 import type { Receipt } from '../types';
@@ -109,6 +111,9 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
         {tab === 'digital' ? (
           <>
             <View style={styles.paper}>
+              {hasBrandLogo(receipt.storeName) && (
+                <View style={{ alignItems: 'center', marginBottom: 10 }}><MerchantAvatar name={receipt.storeName} category={receipt.category} size={64} badge={false} /></View>
+              )}
               <Text style={styles.paperStore}>{receipt.storeName.toUpperCase()}</Text>
               <Text style={styles.paperMeta}>{longDate(receipt.purchaseDate)}</Text>
               <View style={styles.dash} />
@@ -165,7 +170,7 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
                 <LinkRow icon={<ImageIcon size={20} color={colors.accent} />} label="View Original Photo" onPress={() => setTab('original')} first />
               )}
               <LinkRow icon={<FileDown size={20} color={colors.accent} />} label="Export as CSV" first={!receipt.imageName}
-                onPress={() => shareCSV([receipt], `receipt-${receipt.id}.csv`)} />
+                onPress={() => shareCSV(buildCsv([tax]), `receipt-${receipt.id}.csv`)} />
             </View>
 
             <Text style={[kit.sectionLabel, { marginTop: 6 }]}>Notes</Text>

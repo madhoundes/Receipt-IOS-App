@@ -9,7 +9,7 @@ import { Scheme, setScheme } from '../theme';
 export function useAppScheme(): Scheme {
   const device = useColorScheme();
   const { userProfile } = useReceipts();
-  const pref = userProfile.appearance ?? 'system';
+  const pref = userProfile.appearance ?? 'light';
   const scheme: Scheme = pref === 'system' ? (device === 'dark' ? 'dark' : 'light') : pref;
   setScheme(scheme);
   return scheme;

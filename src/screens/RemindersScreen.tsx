@@ -96,7 +96,7 @@ export default function RemindersScreen({ navigation }: any) {
         </View>
         <Text style={styles.note}>
           The window is used when you add a reminder to a receipt. Check the store’s own policy, since return periods differ.
-          {notifications === false && Platform.OS !== 'web' ? ' Notifications are off for Receipt TaX, so reminders only show in the app. Turn them on in Settings to be notified.' : ''}
+          {notifications === false && Platform.OS !== 'web' ? ' Notifications are off for Maplestub, so reminders only show in the app. Turn them on in Settings to be notified.' : ''}
         </Text>
       </ScrollView>
 

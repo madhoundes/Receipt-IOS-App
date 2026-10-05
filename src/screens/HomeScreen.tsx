@@ -165,7 +165,7 @@ const styles = themedStyles(() => ({
   empty: { alignItems: 'center', paddingHorizontal: 32, paddingTop: 24, gap: 8 },
   emptyTitle: { ...font.bold, fontSize: 22, color: colors.text },
   emptyText: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
+  backdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: colors.backdrop },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,

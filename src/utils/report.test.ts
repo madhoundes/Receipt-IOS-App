@@ -6,7 +6,7 @@ const row = (id: string, store: string, total: number, hstCents: number, status 
   receipt: { id, storeName: store, purchaseDate: new Date(2026, 8, 12, 12).toISOString(), totalAmount: total, category: 'Household', ...extra },
   status, hstCents, taxableCents: 0,
 });
-const base = { title: 'Receipt TaX', periodLabel: 'Sep 2026', lineItems: false };
+const base = { title: 'Maplestub', periodLabel: 'Sep 2026', lineItems: false };
 
 test('report totals add up and stores are escaped', () => {
   const html = buildReportHtml([row('a', 'A & <B>', 11.3, 130), row('b', 'Shop', 22.6, 260)], base);
@@ -28,4 +28,13 @@ test('line items and photos only appear when asked for', () => {
   const full = buildReportHtml([r], { ...base, lineItems: true, images: { a: 'data:image/jpeg;base64,AAAA' } });
   assert.ok(full.includes('2 × Bins $8.00'));
   assert.ok(full.includes('<img src="data:image/jpeg;base64,AAAA">'));
+});
+
+test('a receipts-to-review table lists receipts without tax and estimates their HST', () => {
+  const r = row('a', 'Esso', 65, 0, 'needsReview', {});
+  (r as any).suggestedHstCents = 748;
+  const html = buildReportHtml([r, row('b', 'Shop', 11.3, 130)], base);
+  assert.ok(html.includes('Receipts to review'));
+  assert.ok(html.includes('about $7.48'));
+  assert.ok(!buildReportHtml([row('b', 'Shop', 11.3, 130)], base).includes('Receipts to review'));
 });

@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './src/context/AuthContext';
 import { ReceiptProvider } from './src/context/ReceiptContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import { OcrHost } from './src/components/OcrHost';
 import { initReminders } from './src/utils/reminders';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -23,6 +24,7 @@ export default function App() {
         <AuthProvider>
           <ReceiptProvider>
             <AppNavigator />
+            <OcrHost />
           </ReceiptProvider>
         </AuthProvider>
       </SafeAreaProvider>

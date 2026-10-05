@@ -170,7 +170,7 @@ export function OptionSheet<T extends string | number>({ visible, title, options
 }
 
 export const kit = themedStyles(() => ({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
+  backdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: colors.backdrop },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,

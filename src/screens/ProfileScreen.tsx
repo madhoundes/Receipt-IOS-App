@@ -48,16 +48,16 @@ export default function ProfileScreen({ navigation }: any) {
   const toggleWeekly = async (on: boolean) => {
     const scheduled = await setWeeklyInsights(on);
     set({ notifications: { ...p.notifications, insights: on && scheduled } });
-    if (on && !scheduled && Platform.OS !== 'web') Alert.alert('Notifications are off', 'Turn on notifications for Receipt TaX in Settings to get the weekly summary.');
+    if (on && !scheduled && Platform.OS !== 'web') Alert.alert('Notifications are off', 'Turn on notifications for Maplestub in Settings to get the weekly summary.');
   };
-  const exportJson = () => shareJSON({ exportedAt: new Date().toISOString(), profile: p, categories, receipts }, 'receipt-tax-backup.json');
+  const exportJson = () => shareJSON({ exportedAt: new Date().toISOString(), profile: p, categories, receipts }, 'maplestub-backup.json');
   const changePassword = () => user && confirmAction('Reset password?', `We'll email a reset link to ${user.email}.`, 'Send Link', async () => {
     await sendPasswordReset(user.email);
     triggerHaptic('success');
   });
   const about = () => {
     const text = `Version ${appJson.expo.version}\nTotals come from the tax read on each receipt. Check with your accountant before filing.`;
-    if (Platform.OS === 'web') window.alert(`Receipt TaX\n${text}`); else Alert.alert('Receipt TaX', text);
+    if (Platform.OS === 'web') window.alert(`Maplestub\n${text}`); else Alert.alert('Maplestub', text);
   };
 
   return (
@@ -78,7 +78,7 @@ export default function ProfileScreen({ navigation }: any) {
         <Section title="Preferences">
           <SettingRow first label="Default tax" value={TAX_NAME[p.hstDefaultPercent] ?? `${p.hstDefaultPercent}%`} onPress={() => setSheet('tax')} icon={<Tile bg={colors.taxFill} Icon={Percent} />} />
           <SettingRow label="Currency" value={p.currency} onPress={() => setSheet('currency')} icon={<Tile bg="#0A5BC4" Icon={CreditCard} />} />
-          <SettingRow label="Appearance" value={APPEARANCE.find(a => a.value === (p.appearance ?? 'system'))?.label} onPress={() => setSheet('appearance')} icon={<Tile bg="#3A3A3C" Icon={Sun} />} />
+          <SettingRow label="Appearance" value={APPEARANCE.find(a => a.value === (p.appearance ?? 'light'))?.label} onPress={() => setSheet('appearance')} icon={<Tile bg="#3A3A3C" Icon={Sun} />} />
           <SettingRow label="Manage Categories" value={String(visible)} onPress={() => navigation.navigate('ManageCategories')} icon={<Tile bg={colors.accentFill} Icon={LayoutGrid} />} />
         </Section>
 
@@ -119,7 +119,7 @@ export default function ProfileScreen({ navigation }: any) {
         onPick={v => { set({ currency: v }); setSheet(null); }} onClose={() => setSheet(null)} />
       <OptionSheet visible={sheet === 'tax'} title="Default tax %" options={TAX_RATES} value={p.hstDefaultPercent}
         onPick={v => { set({ hstDefaultPercent: v }); setSheet(null); }} onClose={() => setSheet(null)} />
-      <OptionSheet visible={sheet === 'appearance'} title="Appearance" options={APPEARANCE} value={p.appearance ?? 'system'}
+      <OptionSheet visible={sheet === 'appearance'} title="Appearance" options={APPEARANCE} value={p.appearance ?? 'light'}
         onPick={v => { setSheet(null); set({ appearance: v }); }} onClose={() => setSheet(null)} />
       <OptionSheet visible={sheet === 'ocr'} title="OCR Confidence" options={OCR_LEVELS} value={p.ocrThreshold}
         onPick={v => { set({ ocrThreshold: v }); setSheet(null); }} onClose={() => setSheet(null)} />

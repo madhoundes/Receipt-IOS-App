@@ -82,7 +82,7 @@ export default function LoginScreen({ navigation }: any) {
           <Button title="Log In" onPress={submit} loading={loading === 'email'} disabled={!!loading} />
 
           <Pressable onPress={() => navigation.navigate('SignUp')} accessibilityRole="link" style={styles.switch}>
-            <Text style={styles.switchText}>New to Receipt TaX? <Text style={styles.switchLink}>Create an account</Text></Text>
+            <Text style={styles.switchText}>New to Maplestub? <Text style={styles.switchLink}>Create an account</Text></Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

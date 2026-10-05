@@ -117,3 +117,19 @@ export const TAXONOMY: Record<string, string[]> = {
   "Services": ["Repair", "Professional", "Cleaning"],
   "Other": ["General"]
 };
+/** What reading a receipt photo produces. */
+export interface OcrResult {
+  storeName: string;
+  purchaseDate: string; // ISO
+  totalAmount: number;
+  subtotal?: number;
+  hstAmount?: number;
+  hstPercent?: number;
+  items: ReceiptItem[];
+  category: string;
+  subcategory?: string;
+  /** The tax was worked out from subtotal and total because no tax line was read. */
+  hstInferred?: boolean;
+  /** 0 to 1: how sure the reader is about the key values. */
+  confidence: number;
+}

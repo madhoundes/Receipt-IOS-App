@@ -66,7 +66,7 @@ export default function ReceiptsHistoryScreen({ navigation }: any) {
   }, [receipts, categories, userProfile.hstDefaultPercent, cat, q, sort]);
 
   const importPhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
     if (!res.canceled && res.assets[0]) navigation.navigate('CameraModal', { importUri: res.assets[0].uri });
   };
 
@@ -174,7 +174,7 @@ const styles = themedStyles(() => ({
   none: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, gap: 6 },
   emptyTitle: { ...font.bold, fontSize: 22, color: colors.text },
   emptyText: { ...font.regular, fontSize: 17, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.backdrop },
+  backdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: colors.backdrop },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 12,

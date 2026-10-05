@@ -87,7 +87,7 @@ export const getBrandAsset = (storeName: string): BrandAsset | null => {
 
 export const DEFAULT_USER_PROFILE: UserProfile = {
   name: "Guest User",
-  email: "guest@receiptfy.app",
+  email: "guest@maplestub.app",
   currency: "CAD",
   hstDefaultPercent: 13,
   reduceMotion: false,
