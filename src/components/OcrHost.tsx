@@ -22,6 +22,9 @@ export function OcrHost() {
         javaScriptEnabled onMessage={e => engineHost.message(e.nativeEvent.data)} cacheEnabled
         onError={() => engineHost.message(JSON.stringify({ type: 'loadError' }))}
         onHttpError={() => engineHost.message(JSON.stringify({ type: 'loadError' }))}
+        // iOS can stop the page to free memory (the camera is open at the same time). Start it again.
+        onContentProcessDidTerminate={() => engineHost.message(JSON.stringify({ type: 'crashed' }))}
+        onRenderProcessGone={() => engineHost.message(JSON.stringify({ type: 'crashed' }))}
       />
     </View>
   );

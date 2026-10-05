@@ -51,15 +51,21 @@ export const ocrEngineHtml = `<!doctype html><html><head><meta charset="utf-8"><
   });
 
   async function scan(id, b64) {
+    let canvas;
+    // Tell the app the photo arrived, so it knows this page is alive.
+    send({ type: 'started', id });
     try {
       if (typeof Tesseract === 'undefined') throw new Error('engine missing');
       const worker = await getWorker();
-      const canvas = await prepare(b64);
+      canvas = await prepare(b64);
       const { data } = await worker.recognize(canvas);
       send({ type: 'result', id, text: data.text });
     } catch (e) {
       workerPromise = undefined;
       send({ type: 'error', id, message: String((e && e.message) || e) });
+    } finally {
+      // Give the picture memory back right away, so a second and third scan have room.
+      if (canvas) { canvas.width = 0; canvas.height = 0; }
     }
   }
   window.__scan = (id, b64) => { scan(id, b64); true; };

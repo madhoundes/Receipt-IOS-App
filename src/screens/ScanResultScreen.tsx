@@ -3,6 +3,8 @@ import {
   Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ZoomableImage } from '../components/ZoomableImage';
 import { AlertTriangle, Check, ChevronRight, Edit, Maximize2, Sparkles, X } from '../components/icons';
 import { useReceipts } from '../context/ReceiptContext';
 import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
@@ -44,8 +46,8 @@ export default function ScanResultScreen({ route, navigation }: any) {
   // With auto-categorize off, the user always picks the category.
   const [category, setCategory] = useState(result && userProfile.autoCategorize ? result.category : 'Other');
   const [subcategory, setSubcategory] = useState(userProfile.autoCategorize ? result?.subcategory : undefined);
-  const [payment, setPayment] = useState('');
-  const [notes, setNotes] = useState('');
+  const [payment, setPayment] = useState<string>(route.params?.payment ?? '');
+  const [notes, setNotes] = useState<string>(route.params?.notes ?? '');
   const [subtotal, setSubtotal] = useState(toInput(result?.subtotal));
   const [hst, setHst] = useState(toInput(result?.hstAmount));
   const [hstPercent, setHstPercent] = useState(
@@ -325,7 +327,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
 
       <Modal visible={viewer} animationType="fade" onRequestClose={() => setViewer(false)}>
         <View style={{ flex: 1, backgroundColor: '#000' }}>
-          {!!photoUri && <Image source={{ uri: photoUri }} style={{ flex: 1 }} resizeMode="contain" />}
+          {!!photoUri && <GestureHandlerRootView style={{ flex: 1 }}><ZoomableImage uri={photoUri} label="Receipt photo. Pinch or double tap to zoom" /></GestureHandlerRootView>}
           <Pressable onPress={() => setViewer(false)} style={styles.viewerClose} accessibilityRole="button" accessibilityLabel="Close photo">
             <X size={22} color="#FFFFFF" />
           </Pressable>

@@ -141,12 +141,15 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
                 <CategoryIcon category={receipt.category} size={20} />
                 <Text style={[styles.chipText, { color }]}>{receipt.category}{receipt.subcategory ? ` · ${receipt.subcategory}` : ''}</Text>
               </Pressable>
-              <Pressable onPress={() => (receipt.returnBy ? navigation.navigate('Reminders') : toggleReturn())} style={[styles.chip, { backgroundColor: colors.taxSoft }]} accessibilityRole="button">
-                <Undo size={16} color={colors.tax} />
-                <Text style={[styles.chipText, { color: colors.tax }]}>
-                  {receipt.returnBy ? (left! >= 0 ? `Return by ${shortDate(receipt.returnBy)}` : 'Return window closed') : 'Add return reminder'}
-                </Text>
-              </Pressable>
+              {/* Shown only when the user asked for a return reminder on this receipt (More menu). */}
+              {!!receipt.returnBy && (
+                <Pressable onPress={() => setMenu(true)} style={[styles.chip, { backgroundColor: colors.taxSoft }]} accessibilityRole="button" accessibilityLabel="Return reminder. Open options">
+                  <Undo size={16} color={colors.tax} />
+                  <Text style={[styles.chipText, { color: colors.tax }]}>
+                    {left! >= 0 ? `Return by ${shortDate(receipt.returnBy)}` : 'Return window closed'}
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
             {tax.status === 'needsReview' && (

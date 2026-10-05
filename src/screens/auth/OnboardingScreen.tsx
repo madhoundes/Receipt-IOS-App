@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, useWindowDimensions, Pressable, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Scan, Undo, PieChart, LayoutGrid, BarChart3, Check, FileDown, AppIcon } from '../../components/icons';
+import { ChevronLeft, Scan, Image as ImageIcon, PieChart, LayoutGrid, BarChart3, Check, FileDown, AppIcon } from '../../components/icons';
 import { Button } from '../../components/ui';
 import { Illustration } from '../../components/Illustration';
 import { useAuth } from '../../context/AuthContext';
@@ -12,7 +12,7 @@ type Slide = { key: string; title: string; subtitle: string; art: 'hero' | 'scan
 
 // A2 Welcome (1 of 5) and A3 Walkthrough
 const SLIDES: Slide[] = [
-  { key: 'welcome', art: 'hero', title: 'Every receipt.\nEvery dollar of HST.', subtitle: 'Scan once. Keep it for returns, and hand your accountant a clean tax year.' },
+  { key: 'welcome', art: 'hero', title: 'Every receipt.\nEvery dollar of HST.', subtitle: 'Scan once. Keep the original, and hand your accountant a clean tax year.' },
   { key: 'capture', art: 'scan', title: 'Capture and extract', subtitle: 'Take a photo. The store, date, total and tax are read for you.' },
   { key: 'tax', art: 'tax', title: 'Tax-ready, the Canadian way', subtitle: 'HST at 13% is applied by default, zero-rated groceries are kept apart, and line-item discounts are captured.' },
   { key: 'organize', art: 'organize', title: 'Organize effortlessly', subtitle: 'Receipts sort themselves into categories. Search everything later.' },
@@ -22,7 +22,7 @@ const SLIDES: Slide[] = [
 // A function, so the colours follow the active scheme.
 const features = (): { Icon: AppIcon; tint: string; color: string; title: string; text: string }[] => [
   { Icon: Scan, tint: colors.accentSoft, color: colors.accent, title: 'Scan in seconds', text: 'Store, date, total and HST read for you' },
-  { Icon: Undo, tint: colors.taxSoft, color: colors.tax, title: 'Never miss a return', text: 'The original image, always one tap away' },
+  { Icon: ImageIcon, tint: colors.taxSoft, color: colors.tax, title: 'Keep the original', text: 'The receipt photo, one tap away. Zoom in any time' },
   { Icon: PieChart, tint: soft(tone('#0A5BC4')), color: tone('#0A5BC4'), title: 'Tax-ready reports', text: 'HST by category, ready to export' },
 ];
 

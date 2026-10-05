@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertTriangle, Briefcase, ChevronLeft, ChevronRight } from '../components/icons';
@@ -20,10 +20,18 @@ const PERIODS: { value: TaxPeriod; label: string }[] = [
 const CHART_H = 84;
 
 /** D3 · HST summary for a month, quarter or tax year. */
-export default function TaxSummaryScreen({ navigation }: any) {
+export default function TaxSummaryScreen({ navigation, route }: any) {
   const { receipts, categories, userProfile, updateReceipt } = useReceipts();
   const [period, setPeriod] = useState<TaxPeriod>('year');
   const [anchor, setAnchor] = useState(() => new Date());
+  // Home opens this tab on the period it was showing.
+  const wanted: TaxPeriod | undefined = route?.params?.period;
+  const wantedAnchor: string | undefined = route?.params?.anchor;
+  useEffect(() => {
+    if (!wanted || !PERIODS.some(p => p.value === wanted)) return;
+    setPeriod(wanted);
+    if (wantedAnchor) setAnchor(new Date(wantedAnchor));
+  }, [wanted, wantedAnchor]);
 
   const summary = useMemo(
     () => summarizeTax(receipts, categories, userProfile.hstDefaultPercent, period, anchor),

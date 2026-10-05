@@ -9,17 +9,16 @@ import { Button, Segmented, SettingRow } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
 import { buildCsv } from '../utils/csv';
-import { photosAsDataUris, shareCSV, shareJSON, sharePDF } from '../utils/nativeUtils';
+import { photosAsDataUris, shareCSV, sharePDF } from '../utils/nativeUtils';
 import { buildReportHtml } from '../utils/report';
 import { formatCents, getPeriodRange, resolveReceiptTax } from '../utils/tax';
 import { colors, font, radius, themedStyles, type } from '../theme';
 
 type Preset = 'year' | 'lastYear' | 'quarter' | 'month' | 'custom';
-type Format = 'pdf' | 'csv' | 'json';
+type Format = 'pdf' | 'csv';
 const FORMAT_NOTE: Record<Format, string> = {
   pdf: 'Summary by category and month, then every receipt',
-  csv: 'One row per receipt, for a spreadsheet',
-  json: 'Full backup of these receipts, with line items',
+  csv: 'One row per receipt, opens in Excel or Numbers',
 };
 
 const presetRange = (preset: Exclude<Preset, 'custom'>) => {
@@ -29,7 +28,7 @@ const presetRange = (preset: Exclude<Preset, 'custom'>) => {
   return { from: toDay(r.start), to: toDay(new Date(r.end.getFullYear(), r.end.getMonth(), r.end.getDate() - 1)) };
 };
 
-/** D4 · Export for accountant: PDF summary, CSV or JSON for a period. */
+/** D4 · Export for accountant: PDF summary or CSV for a period. */
 export default function ExportScreen({ route, navigation }: any) {
   const { user } = useAuth();
   const { receipts, categories, userProfile } = useReceipts();
@@ -39,7 +38,7 @@ export default function ExportScreen({ route, navigation }: any) {
   } : null;
   const [preset, setPreset] = useState<Preset>(passed ? 'custom' : 'year');
   const [{ from, to }, setRange] = useState(passed ?? presetRange('year'));
-  const [format, setFormat] = useState<Format>('pdf');
+  const [format, setFormat] = useState<Format>(route.params?.format === 'csv' ? 'csv' : 'pdf');
   const [images, setImages] = useState(false);
   const [lineItems, setLineItems] = useState(true);
   const [noHst, setNoHst] = useState(true);
@@ -76,7 +75,6 @@ export default function ExportScreen({ route, navigation }: any) {
     try {
       const list = rows.map(t => t.receipt);
       if (format === 'csv') await shareCSV(buildCsv(rows), fileName);
-      else if (format === 'json') await shareJSON({ exportedAt: new Date().toISOString(), from, to, hstTotal: hstCents / 100, receipts: list }, fileName);
       else {
         const html = buildReportHtml(rows, {
           title: 'Maplestub · HST summary', periodLabel: cat === 'all' ? periodLabel : `${periodLabel} · ${cat}`, preparedFor: user?.name, lineItems,
@@ -129,7 +127,7 @@ export default function ExportScreen({ route, navigation }: any) {
             <View style={{ marginHorizontal: -16 }}><Chips options={catOptions} value={cat} onChange={setCat} tint={colors.accentFill} /></View>
 
             <Text style={[kit.sectionLabel, styles.label]}>Format</Text>
-            <Segmented options={[{ value: 'pdf', label: 'PDF' }, { value: 'csv', label: 'CSV' }, { value: 'json', label: 'JSON' }]} value={format} onChange={setFormat} />
+            <Segmented options={[{ value: 'pdf', label: 'PDF' }, { value: 'csv', label: 'CSV (Excel)' }]} value={format} onChange={setFormat} />
 
             <Text style={[kit.sectionLabel, styles.label]}>Include</Text>
             <View style={kit.card}>

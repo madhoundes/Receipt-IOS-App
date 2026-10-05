@@ -82,6 +82,22 @@ export function findDate(rawText: string, now = new Date()): Date | null {
 // Stores people in Canada scan most. `match` is checked against the lowercase text.
 export type Brand = { match: RegExp; name: string; category: string; subcategory: string };
 export const BRANDS: Brand[] = [
+  { match: /amazon\s*prime|prime\s*video|\bprime\s*member/, name: 'Amazon Prime', category: 'Entertainment', subcategory: 'Movies' },
+  { match: /^apple\b|\bapple\s*(store|\.com|canada|inc\b)/, name: 'Apple', category: 'Electronics', subcategory: 'Gadgets' },
+  { match: /chipotle/, name: 'Chipotle', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /disney\s*(\+|plus)/, name: 'Disney+', category: 'Entertainment', subcategory: 'Movies' },
+  { match: /\bgoodwill\b/, name: 'Goodwill', category: 'Clothing', subcategory: 'Apparel' },
+  { match: /\bhulu\b/, name: 'Hulu', category: 'Entertainment', subcategory: 'Movies' },
+  { match: /^indigo\b|indigo\s*(books|\.ca)|chapters\s*indigo|^chapters\b/, name: 'Indigo', category: 'Other', subcategory: 'General' },
+  { match: /netflix/, name: 'Netflix', category: 'Entertainment', subcategory: 'Movies' },
+  { match: /osmow/, name: 'Osmow’s', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /pizza\s*hut/, name: 'Pizza Hut', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /pizza\s*pizza/, name: 'Pizza Pizza', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /\bshein\b/, name: 'Shein', category: 'Clothing', subcategory: 'Apparel' },
+  { match: /shopify/, name: 'Shopify', category: 'Services', subcategory: 'Professional' },
+  { match: /spotify/, name: 'Spotify', category: 'Entertainment', subcategory: 'Movies' },
+  { match: /\btemu\b/, name: 'Temu', category: 'Other', subcategory: 'General' },
+  { match: /word\s*press/, name: 'WordPress', category: 'Services', subcategory: 'Professional' },
   { match: /uber\s*[-.]?\s*eats/, name: 'Uber Eats', category: 'Restaurant', subcategory: 'Fast Food' },
   { match: /tim\s*hortons?/, name: 'Tim Hortons', category: 'Restaurant', subcategory: 'Cafe' },
   { match: /starbucks/, name: 'Starbucks', category: 'Restaurant', subcategory: 'Cafe' },

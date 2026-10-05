@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Info, RotateLeft, Share as ShareIcon, Sparkles, Trash, X } from '../components/icons';
 import { ocr } from '../services/ocr';
 import { RoundButton, shortDate } from '../components/kit';
+import { ZoomableImage } from '../components/ZoomableImage';
 import { useReceipts } from '../context/ReceiptContext';
 import { confirmAction, shareImage, triggerHaptic } from '../utils/nativeUtils';
 import { deleteReceiptPhoto } from '../utils/photos';
 import { font, themedStyles } from '../theme';
 
-/** C6 · Original photo, full screen. Rotating only turns the view; the stored file is never edited. */
+/** C6 · Original photo, full screen, with pinch and double tap zoom. Rotating and zooming only change the view; the stored file is never edited. */
 export default function OriginalPhotoScreen({ route, navigation }: any) {
   const { receipts, updateReceipt } = useReceipts();
   const receipt = receipts.find(r => r.id === route.params?.receiptId);
   const [turns, setTurns] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
   const [reading, setReading] = useState(false);
   const [error, setError] = useState<string>();
   if (!receipt?.imageName) return <View style={styles.container} />;
@@ -46,8 +48,8 @@ export default function OriginalPhotoScreen({ route, navigation }: any) {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <Image source={{ uri: receipt.imageName }} resizeMode="contain"
-        style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${turns * -90}deg` }] }]} accessibilityLabel={`Original photo of the ${receipt.storeName} receipt`} />
+      <ZoomableImage uri={receipt.imageName} turns={turns} onZoomChange={setZoomed}
+        label={`Original photo of the ${receipt.storeName} receipt. Pinch or double tap to zoom`} />
       <SafeAreaView style={styles.ui} pointerEvents="box-none">
         <View style={styles.top}>
           <RoundButton dark label="Close" onPress={() => navigation.goBack()}><X size={20} color="#FFFFFF" /></RoundButton>
@@ -58,7 +60,7 @@ export default function OriginalPhotoScreen({ route, navigation }: any) {
           <RoundButton dark label="Share photo" onPress={() => shareImage(receipt.imageName)}><ShareIcon size={20} color="#FFFFFF" /></RoundButton>
         </View>
         <View style={{ alignItems: 'center', gap: 14 }}>
-          <View style={styles.pill} accessibilityLiveRegion="polite"><Info size={15} color="#FFFFFF" /><Text style={styles.pillText}>{error ?? (reading ? 'Reading the receipt again…' : 'Original kept for returns and tax records')}</Text></View>
+          <View style={styles.pill} accessibilityLiveRegion="polite"><Info size={15} color="#FFFFFF" /><Text style={styles.pillText}>{error ?? (reading ? 'Reading the receipt again…' : zoomed ? 'Double tap to zoom back out' : 'Pinch or double tap to zoom in')}</Text></View>
           <View style={styles.bar}>
             <Tool label="Rotate" onPress={() => setTurns(t => (t + 1) % 4)}><RotateLeft size={22} color="#FFFFFF" /></Tool>
             <Tool label={reading ? 'Reading' : 'Re-read'} onPress={reRead}>{reading ? <ActivityIndicator color="#FFFFFF" /> : <Sparkles size={22} color="#FFFFFF" />}</Tool>
