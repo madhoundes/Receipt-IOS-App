@@ -1,4 +1,4 @@
-# Receipt TaX (V2)
+# Maplestub
 
 Snap a receipt, read the total and HST with OCR, keep the original photo, and see HST totals by week, month, quarter or year for tax time.
 
@@ -45,7 +45,7 @@ Saved but not acted on yet: **Auto-Crop**, **Show Brand Logos**, **OCR Confidenc
 | **Profile / password** | `auth.updateProfile()`, `auth.sendPasswordReset()` | Edit Profile and Change Password call these. |
 | **Support & legal** | `src/config.ts` | `supportEmail`, `termsUrl`, `privacyUrl` are placeholders. |
 | **Demo data** | `src/config.ts` → `seedDemoData` | Turn off for production. |
-| **App identity** | `app.json` | `bundleIdentifier` / `package` are placeholders (`com.receiptfy.app`). Add icon and splash images. |
+| **App identity** | `app.json` | `bundleIdentifier` / `package` are placeholders (`com.maplestub.app`). |
 
 ## Project layout
 

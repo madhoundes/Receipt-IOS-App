@@ -1,28 +1,28 @@
 {
   "expo": {
-    "name": "Receipt TaX",
-    "slug": "receiptfy",
-    "scheme": "receiptfy",
+    "name": "Maplestub",
+    "slug": "maplestub",
+    "scheme": "maplestub",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.receiptfy.app",
+      "bundleIdentifier": "com.maplestub.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Receipt TaX uses the camera to scan your receipts.",
-        "NSPhotoLibraryUsageDescription": "Receipt TaX imports receipt photos from your library."
+        "NSCameraUsageDescription": "Maplestub uses the camera to scan your receipts.",
+        "NSPhotoLibraryUsageDescription": "Maplestub imports receipt photos from your library."
       },
       "buildNumber": "1"
     },
     "android": {
-      "package": "com.receiptfy.app",
+      "package": "com.maplestub.app",
       "permissions": [
         "CAMERA"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B7A55"
+        "backgroundColor": "#FFFFFF"
       },
       "versionCode": 1
     },
@@ -30,13 +30,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Receipt TaX uses the camera to scan your receipts."
+          "cameraPermission": "Maplestub uses the camera to scan your receipts."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Receipt TaX imports receipt photos from your library."
+          "photosPermission": "Maplestub imports receipt photos from your library."
         }
       ],
       [
@@ -49,8 +49,8 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 220,
-          "backgroundColor": "#0B7A55"
+          "imageWidth": 240,
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ],

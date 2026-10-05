@@ -6,6 +6,7 @@ import { CategoryIcon } from '../components/CategoryIcon';
 import { Illustration } from '../components/Illustration';
 import { LargeHeader, ProgressBar, RoundButton, TAB_BAR_SPACE, kit } from '../components/kit';
 import { Segmented } from '../components/ui';
+import { MerchantAvatar } from '../components/MerchantAvatar';
 import { useReceipts } from '../context/ReceiptContext';
 import { triggerHaptic } from '../utils/nativeUtils';
 import {
@@ -86,11 +87,14 @@ export default function TaxSummaryScreen({ navigation }: any) {
             </View>
             {summary.needsReview.map(t => (
               <View key={t.receipt.id} style={styles.reviewRow}>
-                <Pressable style={{ flex: 1, minWidth: 0 }} onPress={() => navigation.navigate('ReceiptDetail', { receiptId: t.receipt.id })} accessibilityRole="button">
-                  <Text style={styles.reviewStore} numberOfLines={1}>{t.receipt.storeName}</Text>
-                  <Text style={styles.reviewMeta} numberOfLines={1}>
-                    {formatCents(toCents(t.receipt.totalAmount))} · {t.reason === 'taxIncluded' ? 'Tax included' : 'No tax line'}
-                  </Text>
+                <Pressable style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={() => navigation.navigate('ReceiptDetail', { receiptId: t.receipt.id })} accessibilityRole="button">
+                  <MerchantAvatar name={t.receipt.storeName} category={t.receipt.category} size={36} badge={false} />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.reviewStore} numberOfLines={1}>{t.receipt.storeName}</Text>
+                    <Text style={styles.reviewMeta} numberOfLines={1}>
+                      {formatCents(toCents(t.receipt.totalAmount))} · {t.reason === 'taxIncluded' ? 'Tax included' : 'No tax line'}
+                    </Text>
+                  </View>
                 </Pressable>
                 <Pressable style={styles.applyBtn} onPress={() => applySuggestion(t)} accessibilityRole="button">
                   <Text style={styles.applyText}>Add {formatCents(t.suggestedHstCents ?? 0)}</Text>

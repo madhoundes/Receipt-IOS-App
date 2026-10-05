@@ -17,6 +17,10 @@ export const ocrEngineHtml = `<!doctype html><html><head><meta charset="utf-8"><
   let workerPromise;
   const getWorker = () => workerPromise || (workerPromise = Tesseract.createWorker('eng', 1, {
     langPath: 'https://cdn.jsdelivr.net/npm/${LANG_PACK}',
+  }).then(async w => {
+    // One column of text, and keep the gap between an item and its price so the two stay on the same line.
+    try { await w.setParameters({ tessedit_pageseg_mode: '4', preserve_interword_spaces: '1' }); } catch (_) { /* keep the defaults */ }
+    return w;
   }));
 
   // Grayscale, stretch contrast and make sure the photo is wide enough for small receipt print.

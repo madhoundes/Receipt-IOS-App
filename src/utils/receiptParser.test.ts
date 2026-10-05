@@ -93,3 +93,89 @@ HST 13% 155,87`, NOW)!;
   assert.equal(r.totalAmount, 1354.87);
   assert.equal(r.hstAmount, 155.87);
 });
+
+test('look-alike letters inside prices and dates are fixed', () => {
+  const r = parseReceiptText(`Maple Hardware Ltd
+2O26-1O-O3  09:12
+Hammer 1O.99
+Nails 4.5O
+SUBTOTAL 15.49
+HST 13% 2.O1
+TOTAL 17.5O`, NOW)!;
+  assert.equal(r.purchaseDate.slice(0, 10), '2026-10-03');
+  assert.equal(r.subtotal, 15.49);
+  assert.equal(r.hstAmount, 2.01);
+  assert.equal(r.totalAmount, 17.5);
+  assert.equal(r.items[0].amount, 10.99);
+});
+
+test('a misread total is corrected when subtotal plus tax appears on the card line', () => {
+  const r = parseReceiptText(`Corner Market
+Item A 5.00
+Item B 3.00
+SUBTOTAL 8.00
+HST 13% 1.04
+TOTAL 6.04
+VISA 9.04`, NOW)!;
+  assert.equal(r.totalAmount, 9.04);
+});
+
+test('tax is worked out from subtotal and total when no tax line was read', () => {
+  const r = parseReceiptText(`Corner Market
+Item A 5.00
+Item B 3.00
+SUBTOTAL 8.00
+TOTAL 9.04`, NOW)!;
+  assert.equal(r.hstAmount, 1.04);
+  assert.equal(r.hstInferred, true);
+});
+
+test('no tax is guessed when there is a tip or the gap is not a tax rate', () => {
+  const tip = parseReceiptText(`Grill House
+Pasta 20.00
+SUBTOTAL 20.00
+Tip 3.00
+TOTAL 23.00`, NOW)!;
+  assert.equal(tip.hstAmount, undefined);
+  const odd = parseReceiptText(`Shop Place
+Thing 20.00
+SUBTOTAL 20.00
+TOTAL 30.00`, NOW)!;
+  assert.equal(odd.hstAmount, undefined);
+});
+
+test('a store name with look-alike characters and spaces still matches the brand', () => {
+  const r = parseReceiptText(`T1M H0RT0NS
+2026-10-03
+Coffee 2.00
+Subtotal 2.00
+HST 13% 0.26
+Total 2.26`, NOW)!;
+  assert.equal(r.storeName, 'Tim Hortons');
+});
+
+test('dates with spaces around the separators', () => {
+  assert.equal(findDate('Date: 2026 - 10 - 03', NOW)?.getDate(), 3);
+  assert.equal(findDate('10 / 03 / 26', NOW)?.getMonth(), 9);
+});
+
+test('every store the reader knows maps to a category and subcategory the app has', async () => {
+  const { BRANDS } = await import('./receiptParser.ts');
+  const { readFileSync } = await import('node:fs');
+  const constants = readFileSync('src/constants.ts', 'utf8');
+  for (const b of BRANDS) {
+    assert.ok(constants.includes(`name: "${b.category}"`) || b.category === 'Other', `${b.name}: category ${b.category}`);
+    assert.ok(b.category === 'Other' || constants.includes(`name: "${b.subcategory}"`), `${b.name}: subcategory ${b.subcategory}`);
+  }
+});
+
+test('a total that cannot fit the subtotal is replaced by the amount on the card line', () => {
+  const r = parseReceiptText(`Loblaws
+Milk 5.99
+Bread 3.49
+SUBTOTAL 32.44
+HST 13% 2.61
+TOTAL 98.08
+VISA ****4821 35.05`, NOW)!;
+  assert.equal(r.totalAmount, 35.05);
+});

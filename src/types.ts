@@ -128,6 +128,8 @@ export interface OcrResult {
   items: ReceiptItem[];
   category: string;
   subcategory?: string;
+  /** The tax was worked out from subtotal and total because no tax line was read. */
+  hstInferred?: boolean;
   /** 0 to 1: how sure the reader is about the key values. */
   confidence: number;
 }

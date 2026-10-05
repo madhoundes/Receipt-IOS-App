@@ -1,4 +1,4 @@
-// Design tokens from the Receipt TaX V2 canvas (design/tokens.json), in Light and Dark.
+// Design tokens from the Maplestub V2 canvas (design/tokens.json), in Light and Dark.
 // Screens read `colors` and build their styles with `themedStyles`, so both follow the active scheme.
 import { ImageStyle, Platform, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 

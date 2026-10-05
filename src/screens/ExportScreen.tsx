@@ -8,6 +8,7 @@ import { Chips, kit, shortDate } from '../components/kit';
 import { Button, Segmented, SettingRow } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
+import { buildCsv } from '../utils/csv';
 import { photosAsDataUris, shareCSV, shareJSON, sharePDF } from '../utils/nativeUtils';
 import { buildReportHtml } from '../utils/report';
 import { formatCents, getPeriodRange, resolveReceiptTax } from '../utils/tax';
@@ -42,6 +43,7 @@ export default function ExportScreen({ route, navigation }: any) {
   const [images, setImages] = useState(false);
   const [lineItems, setLineItems] = useState(true);
   const [noHst, setNoHst] = useState(true);
+  const [cat, setCat] = useState<string>('all');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string>();
@@ -54,12 +56,15 @@ export default function ExportScreen({ route, navigation }: any) {
     const start = new Date(`${from}T00:00:00`), end = new Date(`${to}T23:59:59.999`);
     const rows = receipts
       .filter(r => { const d = new Date(r.purchaseDate); return d >= start && d <= end; })
+      .filter(r => cat === 'all' || r.category === cat)
       .map(r => resolveReceiptTax(r, categories, userProfile.hstDefaultPercent))
       .filter(t => noHst || t.status !== 'noTax');
     return { rows, hstCents: rows.reduce((s, t) => s + t.hstCents, 0), photoCount: rows.filter(t => t.receipt.imageName).length };
-  }, [receipts, categories, userProfile.hstDefaultPercent, from, to, noHst]);
+  }, [receipts, categories, userProfile.hstDefaultPercent, from, to, noHst, cat]);
 
-  const fileName = `ReceiptTaX_${from}_${to}.${format}`;
+  const catSlug = cat === 'all' ? '' : `_${cat.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+  const fileName = `Maplestub_${from}_${to}${catSlug}.${format}`;
+  const catOptions: { value: string; label: string }[] = [{ value: 'all', label: 'All Categories' }, ...categories.map(c => ({ value: c.name, label: c.name }))];
   const periodLabel = `${shortDate(fromDay(from).toISOString(), true)} to ${shortDate(fromDay(to).toISOString(), true)}`;
   const presets: { value: Preset; label: string }[] = [
     { value: 'year', label: 'This Year' }, { value: 'lastYear', label: 'Last Year' }, { value: 'quarter', label: 'This Quarter' },
@@ -70,11 +75,11 @@ export default function ExportScreen({ route, navigation }: any) {
     setBusy(true); setError(undefined);
     try {
       const list = rows.map(t => t.receipt);
-      if (format === 'csv') await shareCSV(list, fileName);
+      if (format === 'csv') await shareCSV(buildCsv(rows), fileName);
       else if (format === 'json') await shareJSON({ exportedAt: new Date().toISOString(), from, to, hstTotal: hstCents / 100, receipts: list }, fileName);
       else {
         const html = buildReportHtml(rows, {
-          title: 'Receipt TaX · HST summary', periodLabel, preparedFor: user?.name, lineItems,
+          title: 'Maplestub · HST summary', periodLabel: cat === 'all' ? periodLabel : `${periodLabel} · ${cat}`, preparedFor: user?.name, lineItems,
           images: images ? await photosAsDataUris(list) : undefined,
         });
         await sharePDF(html, fileName);
@@ -119,6 +124,9 @@ export default function ExportScreen({ route, navigation }: any) {
               <View style={styles.dateRow}><Text style={type.body}>From</Text><DateField label="From" value={from} onChange={setFrom} /></View>
               <View style={[styles.dateRow, kit.rowBorder]}><Text style={type.body}>To</Text><DateField label="To" value={to} onChange={setTo} /></View>
             </View>
+
+            <Text style={[kit.sectionLabel, styles.label]}>Category</Text>
+            <View style={{ marginHorizontal: -16 }}><Chips options={catOptions} value={cat} onChange={setCat} tint={colors.accentFill} /></View>
 
             <Text style={[kit.sectionLabel, styles.label]}>Format</Text>
             <Segmented options={[{ value: 'pdf', label: 'PDF' }, { value: 'csv', label: 'CSV' }, { value: 'json', label: 'JSON' }]} value={format} onChange={setFormat} />

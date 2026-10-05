@@ -24,6 +24,16 @@ const amountsIn = (line: string): Amount[] => {
 };
 const lastAmount = (line: string): number | undefined => amountsIn(line).at(-1)?.value;
 
+// The reader often turns digits into look-alike letters inside prices and dates (1O.99, 8.4S, 2O26-1O-O3).
+const LOOKALIKE: Record<string, string> = { O: '0', o: '0', I: '1', l: '1', S: '5', B: '8' };
+const fixLookalikes = (token: string) => token.replace(/[OoIlSB]/g, c => LOOKALIKE[c]);
+const fixPriceTokens = (line: string) =>
+  line.replace(/(?<![A-Za-z0-9])[0-9OoIlSB]{1,6}\s?[.,]\s?[0-9OoIlSB]{2}(?![A-Za-z0-9])/g, t => (/\d/.test(t) && /^\d{1,6}\s?[.,]\s?\d{2}$/.test(fixLookalikes(t)) ? fixLookalikes(t) : t));
+const fixDateTokens = (text: string) =>
+  text
+    .replace(/(?<![A-Za-z0-9])[0-9OoIl]{1,4}(?:\s?[-/.]\s?[0-9OoIl]{1,4}){2}(?![A-Za-z0-9])/g, t => (/\d/.test(t) ? fixLookalikes(t) : t))
+    .replace(/(\d)\s*([/.-])\s*(?=\d)/g, '$1$2');
+
 const RE_SUBTOTAL = /sub\s*-?\s*total|merchandise\s+total|total\s+before\s+tax/i;
 const RE_TOTAL_STRONG = /grand\s*total|total\s*due|amount\s*due|balance\s*due|total\s*sale|total\s*amount|amount\s*paid|total\s*paid/i;
 const RE_TOTAL = /\btotal\b/i;
@@ -44,7 +54,8 @@ const validDate = (y: number, m: number, d: number, now: Date): Date | null => {
   return date;
 };
 
-export function findDate(text: string, now = new Date()): Date | null {
+export function findDate(rawText: string, now = new Date()): Date | null {
+  const text = fixDateTokens(rawText);
   let m: RegExpMatchArray | null;
   // 2026-10-03 or 2026/10/03
   if ((m = text.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/))) {
@@ -69,8 +80,9 @@ export function findDate(text: string, now = new Date()): Date | null {
 }
 
 // Stores people in Canada scan most. `match` is checked against the lowercase text.
-type Brand = { match: RegExp; name: string; category: string; subcategory: string };
-const BRANDS: Brand[] = [
+export type Brand = { match: RegExp; name: string; category: string; subcategory: string };
+export const BRANDS: Brand[] = [
+  { match: /uber\s*[-.]?\s*eats/, name: 'Uber Eats', category: 'Restaurant', subcategory: 'Fast Food' },
   { match: /tim\s*hortons?/, name: 'Tim Hortons', category: 'Restaurant', subcategory: 'Cafe' },
   { match: /starbucks/, name: 'Starbucks', category: 'Restaurant', subcategory: 'Cafe' },
   { match: /mcdonald/, name: 'McDonald’s', category: 'Restaurant', subcategory: 'Fast Food' },
@@ -79,7 +91,20 @@ const BRANDS: Brand[] = [
   { match: /\besso\b/, name: 'Esso', category: 'Gas/Fuel', subcategory: 'Gasoline' },
   { match: /petro[\s-]*canada/, name: 'Petro-Canada', category: 'Gas/Fuel', subcategory: 'Gasoline' },
   { match: /\bshell\b/, name: 'Shell', category: 'Gas/Fuel', subcategory: 'Gasoline' },
-  { match: /pioneer|husky/, name: 'Gas Station', category: 'Gas/Fuel', subcategory: 'Gasoline' },
+  { match: /\bpioneer\b/, name: 'Pioneer', category: 'Gas/Fuel', subcategory: 'Gasoline' },
+  { match: /\bhusky\b/, name: 'Husky', category: 'Gas/Fuel', subcategory: 'Gasoline' },
+  { match: /\bmobil\b/, name: 'Mobil', category: 'Gas/Fuel', subcategory: 'Gasoline' },
+  { match: /\bkfc\b|kentucky\s*fried/, name: 'KFC', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /chick[\s-]*fil[\s-]*a/, name: 'Chick-fil-A', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /taco\s*bell/, name: 'Taco Bell', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /door\s*dash/, name: 'DoorDash', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /skip\s*the\s*dishes/, name: 'Skip', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /\badonis\b/, name: 'Adonis', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /\bamazon\b/, name: 'Amazon', category: 'Household', subcategory: 'Supplies' },
+  { match: /\bnike\b/, name: 'Nike', category: 'Clothing', subcategory: 'Footwear' },
+  { match: /\bh\s*&\s*m\b/, name: 'H&M', category: 'Clothing', subcategory: 'Apparel' },
+  { match: /london\s*hydro/, name: 'London Hydro', category: 'Utilities', subcategory: 'Electricity' },
+  { match: /enbridge/, name: 'Enbridge', category: 'Utilities', subcategory: 'Electricity' },
   { match: /costco/, name: 'Costco', category: 'Groceries', subcategory: 'Food Retail' },
   { match: /loblaws?/, name: 'Loblaws', category: 'Groceries', subcategory: 'Food Retail' },
   { match: /no\s*frills/, name: 'No Frills', category: 'Groceries', subcategory: 'Food Retail' },
@@ -99,7 +124,38 @@ const BRANDS: Brand[] = [
   { match: /staples/, name: 'Staples', category: 'Electronics', subcategory: 'Accessories' },
   { match: /\buber\b/, name: 'Uber', category: 'Transport', subcategory: 'Rideshare' },
   { match: /lcbo/, name: 'LCBO', category: 'Other', subcategory: 'General' },
+  { match: /giant\s*tiger/, name: 'Giant Tiger', category: 'Household', subcategory: 'Supplies' },
+  { match: /lowe'?s/, name: 'Lowe’s', category: 'Household', subcategory: 'Supplies' },
+  { match: /\brona\b/, name: 'RONA', category: 'Household', subcategory: 'Supplies' },
+  { match: /\bmichaels\b/, name: 'Michaels', category: 'Household', subcategory: 'Supplies' },
+  { match: /bulk\s*barn/, name: 'Bulk Barn', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /whole\s*foods/, name: 'Whole Foods', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /superstore/, name: 'Real Canadian Superstore', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /save[\s-]*on[\s-]*foods/, name: 'Save-On-Foods', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /safeway/, name: 'Safeway', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /longo'?s/, name: 'Longo’s', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /t\s*&\s*t\s*supermarket/, name: 'T&T Supermarket', category: 'Groceries', subcategory: 'Food Retail' },
+  { match: /pharmasave/, name: 'Pharmasave', category: 'Pharmacy/Health', subcategory: 'Personal Care' },
+  { match: /circle\s*k/, name: 'Circle K', category: 'Gas/Fuel', subcategory: 'Gasoline' },
+  { match: /mr\.?\s*lube/, name: 'Mr. Lube', category: 'Services', subcategory: 'Repair' },
+  { match: /\bwendy'?s\b/, name: 'Wendy’s', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /harvey'?s/, name: 'Harvey’s', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /popeyes/, name: 'Popeyes', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /pizza\s*pizza/, name: 'Pizza Pizza', category: 'Restaurant', subcategory: 'Fast Food' },
+  { match: /swiss\s*chalet/, name: 'Swiss Chalet', category: 'Restaurant', subcategory: 'Dine-In' },
+  { match: /boston\s*pizza/, name: 'Boston Pizza', category: 'Restaurant', subcategory: 'Dine-In' },
+  { match: /lyft/, name: 'Lyft', category: 'Transport', subcategory: 'Rideshare' },
+  { match: /green\s*p\b|impark|indigo\s*park/, name: 'Parking', category: 'Transport', subcategory: 'Parking' },
+  { match: /\brogers\b/, name: 'Rogers', category: 'Utilities', subcategory: 'Internet' },
+  { match: /\bbell\s*(canada|mobility)/, name: 'Bell', category: 'Utilities', subcategory: 'Internet' },
+  { match: /\btelus\b/, name: 'Telus', category: 'Utilities', subcategory: 'Internet' },
+  { match: /\bfido\b|koodo/, name: 'Mobile Plan', category: 'Utilities', subcategory: 'Mobile' },
+  { match: /hydro\s*one/, name: 'Hydro One', category: 'Utilities', subcategory: 'Electricity' },
 ];
+
+// Header text with look-alike characters fixed and the spaces removed, so "T1M H0RT0NS" still finds Tim Hortons.
+const squashed = (text: string) => text.toLowerCase().replace(/[01|5$]/g, c => ({ '0': 'o', '1': 'l', '|': 'l', '5': 's', '$': 's' }[c] as string)).replace(/[^a-z]/g, '').replace(/i/g, 'l');
+const brandKey = (b: Brand) => b.name.toLowerCase().replace(/[^a-z]/g, '').replace(/i/g, 'l');
 
 // Words that point to a category when the store is not a known one.
 const KEYWORDS: { match: RegExp; category: string; subcategory: string }[] = [
@@ -128,7 +184,7 @@ const looksLikeStoreName = (line: string): boolean => {
 };
 
 export function parseReceiptText(raw: string, now = new Date()): OcrResult | null {
-  const lines = raw.split(/\r?\n/).map(l => l.replace(/[|_~]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const lines = raw.split(/\r?\n/).map(l => fixPriceTokens(l.replace(/[|_~]+/g, ' ').replace(/\s+/g, ' ').trim())).filter(Boolean);
   if (lines.length === 0) return null;
   const lower = raw.toLowerCase();
 
@@ -153,6 +209,15 @@ export function parseReceiptText(raw: string, now = new Date()): OcrResult | nul
   }
   if (total == null) return null;
 
+  // A total far outside what the subtotal allows (below it, or more than 40% above it) is a misread. The card or debit
+  // line repeats the amount paid, so take it from there when it fits.
+  let totalFixed = false;
+  if (subtotal != null && (total < subtotal - 0.005 || total > subtotal * 1.4)) {
+    const paid = lines.filter(l => /\b(visa|mastercard|master\s*card|amex|debit|credit|interac|card|paid|payment)\b/i.test(l))
+      .map(l => lastAmount(l)).filter((v): v is number => v != null && v >= subtotal! - 0.005 && v <= subtotal! * 1.4);
+    if (paid.length) { total = paid[paid.length - 1]; totalFixed = true; }
+  }
+
   // Tax: one "total tax" line wins, otherwise add the separate lines (for example GST + PST).
   let taxLines = lines.filter(l => RE_TAX.test(l) && !RE_TAX_ID.test(l) && !RE_SUBTOTAL.test(l) && !/\btotal\b.*\bpaid\b/i.test(l));
   taxLines = taxLines.filter(l => { const a = lastAmount(l); return a != null && a > 0 && a < total!; });
@@ -168,12 +233,27 @@ export function parseReceiptText(raw: string, now = new Date()): OcrResult | nul
   // A tax amount that cannot fit the receipt (bigger than the subtotal) is a misread.
   if (hstAmount != null && subtotal != null && hstAmount > subtotal) { hstAmount = undefined; hstPercent = undefined; }
 
+  // The receipt's own arithmetic is the best check. If subtotal + tax disagrees with the total we read, and the sum
+  // shows up somewhere else on the receipt (for example on the card line), the total was misread.
+  if (subtotal != null && hstAmount != null) {
+    const expected = Math.round((subtotal + hstAmount) * 100) / 100;
+    if (Math.abs(expected - total) > 0.02 && lines.some(l => amountsIn(l).some(a => Math.abs(a.value - expected) < 0.005))) { total = expected; totalFixed = true; }
+  }
+  // No tax line was read but subtotal and total are: the gap is the tax, if it is a believable rate and there is no tip.
+  let hstInferred = false;
+  if (hstAmount == null && subtotal != null && total > subtotal && !/\b(tip|gratuity)\b/i.test(raw)) {
+    const gap = Math.round((total - subtotal) * 100) / 100;
+    const rate = gap / subtotal;
+    if (rate >= 0.04 && rate <= 0.16) { hstAmount = gap; hstInferred = true; }
+  }
+
   // Date
   const dateFound = findDate(raw, now);
   const purchaseDate = (dateFound ?? now).toISOString();
 
   // Store
-  const brand = BRANDS.find(b => b.match.test(lower));
+  const header = squashed(lines.slice(0, 8).join(' '));
+  const brand = BRANDS.find(b => b.match.test(lower)) ?? BRANDS.find(b => brandKey(b).length >= 5 && header.includes(brandKey(b)));
   let storeName = brand?.name ?? '';
   if (!storeName) {
     const head = lines.slice(0, 8).find(looksLikeStoreName);
@@ -208,13 +288,13 @@ export function parseReceiptText(raw: string, now = new Date()): OcrResult | nul
 
   // How sure are we? Every key value found adds trust; values that agree with each other add more.
   let confidence = 0.3;
-  if (strong != null) confidence += 0.2; else confidence += 0.1;
+  if (strong != null || totalFixed) confidence += 0.2; else confidence += 0.1;
   if (storeName) confidence += brand ? 0.15 : 0.1;
   if (dateFound) confidence += 0.1;
-  if (hstAmount != null) confidence += 0.1;
+  if (hstAmount != null) confidence += hstInferred ? 0.05 : 0.1;
   if (subtotal != null && hstAmount != null && Math.abs(subtotal + hstAmount - total) <= 0.02) confidence += 0.15;
   else if (subtotal != null && hstAmount == null && Math.abs(subtotal - total) <= 0.02) confidence += 0.05;
   confidence = Math.min(0.97, confidence);
 
-  return { storeName, purchaseDate, totalAmount: total, subtotal, hstAmount, hstPercent, items, category, subcategory, confidence: Math.round(confidence * 100) / 100 };
+  return { storeName, purchaseDate, totalAmount: total, subtotal, hstAmount, hstPercent, hstInferred: hstInferred || undefined, items, category, subcategory, confidence: Math.round(confidence * 100) / 100 };
 }

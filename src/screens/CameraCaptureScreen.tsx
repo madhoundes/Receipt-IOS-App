@@ -180,8 +180,8 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
             <Text style={styles.permTitle} accessibilityRole="header">{blocked ? 'Camera Is Turned Off' : 'Camera Access Needed'}</Text>
             <Text style={styles.permText}>
               {blocked
-                ? 'Turn the camera on for Receipt TaX in Settings, or import a photo or type the receipt in.'
-                : 'Receipt TaX uses the camera only to photograph receipts. Photos stay in the app.'}
+                ? 'Turn the camera on for Maplestub in Settings, or import a photo or type the receipt in.'
+                : 'Maplestub uses the camera only to photograph receipts. Photos stay in the app.'}
             </Text>
           </View>
 

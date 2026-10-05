@@ -48,16 +48,16 @@ export default function ProfileScreen({ navigation }: any) {
   const toggleWeekly = async (on: boolean) => {
     const scheduled = await setWeeklyInsights(on);
     set({ notifications: { ...p.notifications, insights: on && scheduled } });
-    if (on && !scheduled && Platform.OS !== 'web') Alert.alert('Notifications are off', 'Turn on notifications for Receipt TaX in Settings to get the weekly summary.');
+    if (on && !scheduled && Platform.OS !== 'web') Alert.alert('Notifications are off', 'Turn on notifications for Maplestub in Settings to get the weekly summary.');
   };
-  const exportJson = () => shareJSON({ exportedAt: new Date().toISOString(), profile: p, categories, receipts }, 'receipt-tax-backup.json');
+  const exportJson = () => shareJSON({ exportedAt: new Date().toISOString(), profile: p, categories, receipts }, 'maplestub-backup.json');
   const changePassword = () => user && confirmAction('Reset password?', `We'll email a reset link to ${user.email}.`, 'Send Link', async () => {
     await sendPasswordReset(user.email);
     triggerHaptic('success');
   });
   const about = () => {
     const text = `Version ${appJson.expo.version}\nTotals come from the tax read on each receipt. Check with your accountant before filing.`;
-    if (Platform.OS === 'web') window.alert(`Receipt TaX\n${text}`); else Alert.alert('Receipt TaX', text);
+    if (Platform.OS === 'web') window.alert(`Maplestub\n${text}`); else Alert.alert('Maplestub', text);
   };
 
   return (

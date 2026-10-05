@@ -38,6 +38,13 @@ export function buildReportHtml(rows: ReceiptTax[], o: ReportOptions): string {
     ${list.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${v.count}</td><td class="n">${formatCents(v.spend)}</td><td class="n">${formatCents(v.hst)}</td></tr>`).join('')}
     </tbody></table>`;
   const hstCell = (t: ReceiptTax) => (t.status === 'needsReview' ? 'To review' : formatCents(t.hstCents));
+  const reviewRows = sorted.filter(t => t.status === 'needsReview');
+  const reviewTable = reviewRows.length ? `
+    <h2>Receipts to review</h2>
+    <table><thead><tr><th>Date</th><th>Store</th><th class="n">Total</th><th class="n">HST if ${reviewRows.length === 1 ? 'it was' : 'they were'} taxed</th></tr></thead><tbody>
+    ${reviewRows.map(t => `<tr><td>${day(t.receipt.purchaseDate)}</td><td>${esc(t.receipt.storeName)}</td><td class="n">${formatCents(toCents(t.receipt.totalAmount))}</td><td class="n">${t.suggestedHstCents != null ? `about ${formatCents(t.suggestedHstCents)}` : ''}</td></tr>`).join('')}
+    </tbody></table>
+    <p class="muted">These receipts have no tax amount yet, so they are not in the HST total above. The last column is only an estimate.</p>` : '';
   const photos = sorted.filter(t => o.images?.[t.receipt.id]);
 
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(o.title)}</title><style>
@@ -58,6 +65,7 @@ export function buildReportHtml(rows: ReceiptTax[], o: ReportOptions): string {
     ${review ? `<div class="hst">${review} ${review === 1 ? 'receipt has' : 'receipts have'} no tax amount yet and ${review === 1 ? 'is' : 'are'} not in the HST total.</div>` : ''}
     ${group('HST by category', byCat)}
     ${group('HST by month', byMonth)}
+    ${reviewTable}
     <h2>Receipts</h2>
     <table><thead><tr><th>Date</th><th>Store</th><th>Category</th><th class="n">Subtotal</th><th class="n">HST</th><th class="n">Total</th></tr></thead><tbody>
     ${sorted.map(t => {

@@ -18,7 +18,7 @@ export function OcrHost() {
   return (
     <View pointerEvents="none" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }} accessible={false} importantForAccessibility="no-hide-descendants">
       <WebView
-        key={key} ref={ref} originWhitelist={['*']} source={{ html: ocrEngineHtml, baseUrl: 'https://receipt-tax.local/' }}
+        key={key} ref={ref} originWhitelist={['*']} source={{ html: ocrEngineHtml, baseUrl: 'https://maplestub.local/' }}
         javaScriptEnabled onMessage={e => engineHost.message(e.nativeEvent.data)} cacheEnabled
         onError={() => engineHost.message(JSON.stringify({ type: 'loadError' }))}
         onHttpError={() => engineHost.message(JSON.stringify({ type: 'loadError' }))}
