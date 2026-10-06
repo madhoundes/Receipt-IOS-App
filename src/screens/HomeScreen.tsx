@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight, FileDown, Sparkles, TrendUp } from '../components/icons';
 import { categoryColor } from '../components/CategoryIcon';
@@ -25,6 +25,7 @@ const FORMATS: { value: Format; label: string; sub: string }[] = [
   { value: 'pdf', label: 'PDF report', sub: 'Totals by category and month, then every receipt' },
   { value: 'csv', label: 'CSV for Excel', sub: 'One row per receipt, opens in Excel or Numbers' },
 ];
+const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 const day = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /** D1 · Home: what was spent and how much HST was paid in a week, month or year, with a download for the accountant. */
@@ -35,6 +36,7 @@ export default function HomeScreen({ navigation }: any) {
   const [anchor, setAnchor] = useState(() => new Date());
   const [sheet, setSheet] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [downloadError, setDownloadError] = useState<string>();
   const now = new Date();
 
   const data = useMemo(() => {
@@ -59,18 +61,19 @@ export default function HomeScreen({ navigation }: any) {
     setSheet(false);
     if (busy || count === 0) return;
     setBusy(true);
-    try {
-      const rows = data.inPeriod.map(r => resolveReceiptTax(r, categories, userProfile.hstDefaultPercent));
-      const last = new Date(tax.range.end.getFullYear(), tax.range.end.getMonth(), tax.range.end.getDate() - 1);
-      const name = `Maplestub_${day(tax.range.start)}_${day(last)}.${format}`;
-      if (format === 'csv') await shareCSV(buildCsv(rows), name);
-      else await sharePDF(buildReportHtml(rows, { title: 'Maplestub · HST summary', periodLabel: label, preparedFor: user?.name, lineItems: true }), name);
-      triggerHaptic('success');
-    } catch {
-      triggerHaptic('error');
-    } finally {
-      setBusy(false);
-    }
+    setDownloadError(undefined);
+    // iOS cannot open the share sheet while the option sheet is still closing: the call would never come back.
+    await wait(Platform.OS === 'ios' ? 650 : 250);
+    const rows = data.inPeriod.map(r => resolveReceiptTax(r, categories, userProfile.hstDefaultPercent));
+    const last = new Date(tax.range.end.getFullYear(), tax.range.end.getMonth(), tax.range.end.getDate() - 1);
+    const name = `Maplestub_${day(tax.range.start)}_${day(last)}.${format}`;
+    const job = (format === 'csv'
+      ? shareCSV(buildCsv(rows), name)
+      : sharePDF(buildReportHtml(rows, { title: 'Maplestub · HST summary', periodLabel: label, preparedFor: user?.name, lineItems: true }), name)
+    ).then(() => true, () => { triggerHaptic('error'); setDownloadError('The file could not be created. Please try again.'); return false; });
+    // The spinner covers building the file only. It never waits for the share sheet to be closed, and never spins forever.
+    await Promise.race([job, wait(4000)]);
+    setBusy(false);
   };
 
   return (
@@ -138,6 +141,7 @@ export default function HomeScreen({ navigation }: any) {
                 <Text style={styles.lineValue}>{count}</Text>
               </View>
 
+              {!!downloadError && <Text style={[styles.none, { color: colors.danger }]} accessibilityLiveRegion="polite">{downloadError}</Text>}
               {count === 0 ? (
                 <Text style={styles.none}>No receipts in this period.</Text>
               ) : data.shares.length > 0 && (

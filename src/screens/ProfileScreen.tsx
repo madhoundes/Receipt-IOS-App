@@ -9,6 +9,7 @@ import { OptionSheet, kit } from '../components/kit';
 import { NavBar, Section, SettingRow } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
+import { config } from '../config';
 import { isDemoReceipt } from '../data/demoReceipts';
 import { confirmAction, shareJSON, triggerHaptic } from '../utils/nativeUtils';
 import { cancelReturnReminder, setWeeklyInsights } from '../utils/reminders';
@@ -77,6 +78,17 @@ export default function ProfileScreen({ navigation }: any) {
           <ChevronRight size={16} color={colors.chevron} />
         </Pressable>
 
+        {config.showDeveloperTools && (
+          <Section title="Developer · testing" footer="Temporary testing tools. Turn off showDeveloperTools in src/config.ts before release.">
+            <SettingRow first label="Replay Onboarding" sub="Signs out and starts from the first screen. Receipts are kept." icon={<Tile bg="#5A3CC2" Icon={RotateLeft} />}
+              onPress={() => confirmAction('Replay onboarding?', 'You will be signed out and see the app from its first screen. Your receipts stay on this device.', 'Replay', () => { triggerHaptic('medium'); replayOnboarding(); })} />
+            <SettingRow label="Load Sample Receipts" sub={`${samples} loaded. Covers every category and store logo.`} icon={<Tile bg={colors.accentFill} Icon={ReceiptText} />}
+              onPress={() => { loadDemoReceipts(); triggerHaptic('success'); }} />
+            <SettingRow label="Remove Sample Receipts" sub="Your own receipts are not touched." icon={<Tile bg="#636366" Icon={Trash} />}
+              onPress={() => { removeDemoReceipts(); triggerHaptic('medium'); }} />
+          </Section>
+        )}
+
         <Section title="Preferences">
           <SettingRow first label="Default tax" value={TAX_NAME[p.hstDefaultPercent] ?? `${p.hstDefaultPercent}%`} onPress={() => setSheet('tax')} icon={<Tile bg={colors.taxFill} Icon={Percent} />} />
           <SettingRow label="Currency" value={p.currency} onPress={() => setSheet('currency')} icon={<Tile bg="#0A5BC4" Icon={CreditCard} />} />
@@ -108,17 +120,6 @@ export default function ProfileScreen({ navigation }: any) {
           <SettingRow label="Privacy Policy" onPress={() => navigation.navigate('Info', { kind: 'privacy' })} icon={<Tile bg="#0B6E77" Icon={Lock} />} />
           <SettingRow label="About" value={`v${appJson.expo.version}`} onPress={about} icon={<Tile bg="#636366" Icon={ReceiptText} />} />
         </Section>
-
-        {__DEV__ && (
-          <Section title="Developer" footer="Only shown while developing with Expo. Hidden in App Store and TestFlight builds.">
-            <SettingRow first label="Replay Onboarding" sub="Signs out and starts from the first screen. Receipts are kept." icon={<Tile bg="#5A3CC2" Icon={RotateLeft} />}
-              onPress={() => confirmAction('Replay onboarding?', 'You will be signed out and see the app from its first screen. Your receipts stay on this device.', 'Replay', () => { triggerHaptic('medium'); replayOnboarding(); })} />
-            <SettingRow label="Load Sample Receipts" sub={`${samples} loaded. Covers every category and store logo.`} icon={<Tile bg={colors.accentFill} Icon={ReceiptText} />}
-              onPress={() => { loadDemoReceipts(); triggerHaptic('success'); }} />
-            <SettingRow label="Remove Sample Receipts" sub="Your own receipts are not touched." icon={<Tile bg="#636366" Icon={Trash} />}
-              onPress={() => { removeDemoReceipts(); triggerHaptic('medium'); }} />
-          </Section>
-        )}
 
         <View style={kit.card}>
           <SettingRow first label="Sign Out" danger onPress={() => confirmAction('Sign out?', undefined, 'Sign Out', signOut)} />

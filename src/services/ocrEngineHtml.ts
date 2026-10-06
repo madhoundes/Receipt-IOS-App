@@ -14,6 +14,8 @@ export const ocrEngineHtml = `<!doctype html><html><head><meta charset="utf-8"><
 </script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/tesseract.min.js" onerror="__loadFailed()"></script>
 <script>
+  // Tell the app this page is up, so scans are not sent into a page that is still loading after a restart.
+  if (typeof Tesseract !== 'undefined') send({ type: 'loaded' });
   let workerPromise;
   const getWorker = () => workerPromise || (workerPromise = Tesseract.createWorker('eng', 1, {
     langPath: 'https://cdn.jsdelivr.net/npm/${LANG_PACK}',

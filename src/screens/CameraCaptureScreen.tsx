@@ -93,6 +93,22 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   }, [sweep]);
   const lineStyle = useAnimatedStyle(() => ({ top: `${6 + sweep.value * 88}%` }));
 
+  // Some devices never report that the camera is ready. Do not wait for that report forever.
+  useEffect(() => {
+    if (phase !== 'camera' || cameraReady || !permission?.granted) return;
+    const timer = setTimeout(() => setCameraReady(true), 2500);
+    return () => clearTimeout(timer);
+  }, [phase, cameraReady, cameraKey, permission?.granted]);
+
+  // After a while, say that the read is still going, so a slow first read does not look stuck.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    if (phase !== 'reading') return;
+    const timer = setTimeout(() => setSlow(true), 12000);
+    return () => clearTimeout(timer);
+  }, [phase, photoUri]);
+
   // Leaving the screen cancels a read in flight; coming back to it always starts from a clean state.
   useEffect(() => () => { run.current += 1; }, []);
   useFocusEffect(useCallback(() => {
@@ -329,7 +345,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
           <Animated.View entering={FadeIn} style={styles.center} accessibilityLiveRegion="polite" accessibilityRole="progressbar" accessibilityLabel={STAGE_TEXT[stage]}>
             <ReadingSpinner />
             <Text style={styles.stageText}>{STAGE_TEXT[stage]}</Text>
-            <Text style={styles.stageSub}>Read on this phone. The photo is not uploaded.</Text>
+            <Text style={styles.stageSub}>{slow ? 'Still reading. The first read after opening the app takes longer. Tap X to cancel.' : 'Read on this phone. The photo is not uploaded.'}</Text>
           </Animated.View>
         )}
 
