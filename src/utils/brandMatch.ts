@@ -6,6 +6,23 @@
 export interface BrandMatch { slug: string; name: string }
 
 const BRANDS: { slug: string; name: string; match: RegExp }[] = [
+  // Amazon Prime comes before Amazon further down.
+  { slug: 'amazon-prime', name: 'Amazon Prime', match: /amazon\s*prime|prime\s*video|\bprime\s*member/ },
+  { slug: 'apple', name: 'Apple', match: /^apple\b|\bapple\s*(store|\.com|canada|inc\b)/ },
+  { slug: 'chipotle', name: 'Chipotle', match: /chipotle/ },
+  { slug: 'disney-plus', name: 'Disney+', match: /disney\s*(\+|plus)/ },
+  { slug: 'goodwill', name: 'Goodwill', match: /\bgoodwill\b/ },
+  { slug: 'hulu', name: 'Hulu', match: /\bhulu\b/ },
+  { slug: 'indigo', name: 'Indigo', match: /\bindigo\b|\bchapters\b/ },
+  { slug: 'netflix', name: 'Netflix', match: /netflix/ },
+  { slug: 'osmows', name: 'Osmow’s', match: /osmow/ },
+  { slug: 'pizza-hut', name: 'Pizza Hut', match: /pizza\s*hut/ },
+  { slug: 'pizza-pizza', name: 'Pizza Pizza', match: /pizza\s*pizza/ },
+  { slug: 'shein', name: 'Shein', match: /\bshein\b/ },
+  { slug: 'shopify', name: 'Shopify', match: /shopify/ },
+  { slug: 'spotify', name: 'Spotify', match: /spotify/ },
+  { slug: 'temu', name: 'Temu', match: /\btemu\b/ },
+  { slug: 'wordpress', name: 'WordPress', match: /word\s*press/ },
   { slug: 'uber-eats', name: 'Uber Eats', match: /uber\s*[-.]?\s*eats/ },
   { slug: 'taco-bell', name: 'Taco Bell', match: /taco\s*bell/ },
   { slug: 'tim-hortons', name: 'Tim Hortons', match: /tim\s*hortons?|\btims\b/ },

@@ -1,51 +1,96 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useFocusEffect } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Accelerometer } from 'expo-sensors';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import Svg, { Circle } from 'react-native-svg';
 import Animated, {
-  Easing, FadeIn, FadeInDown, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming,
+  Easing, FadeIn, FadeInDown, SlideInDown, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming,
 } from 'react-native-reanimated';
 import {
-  Camera, Check, CircleSlash, Edit, Image as ImageIcon, Lightbulb, Scan, Sparkles, Sun, X, Zap, ZapOff,
+  Camera, ChevronRight, CircleSlash, Edit, Image as ImageIcon, Lightbulb, Maximize2, ReceiptText, Scan, Sparkles, Sun, Trash, X, Zap, ZapOff,
 } from '../components/icons';
+import { CategoryIcon, categoryColor } from '../components/CategoryIcon';
+import { CategoryPickerSheet } from '../components/CategoryPickerSheet';
 import { Illustration } from '../components/Illustration';
+import { MerchantAvatar } from '../components/MerchantAvatar';
+import { OptionSheet, shortDate } from '../components/kit';
 import { Button } from '../components/ui';
-import { ocr, OcrError } from '../services/ocr';
+import { ZoomableImage } from '../components/ZoomableImage';
+import { useReceipts } from '../context/ReceiptContext';
+import { ocr, OcrError, OcrResult } from '../services/ocr';
+import { onReaderProgress } from '../services/ocrEngine';
 import { triggerHaptic } from '../utils/nativeUtils';
-import { colors, font, themedStyles } from '../theme';
+import { persistReceiptPhoto } from '../utils/photos';
+import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
+import { colors, font, radius, soft, themedStyles } from '../theme';
+import type { Receipt } from '../types';
 
 const BRAND_DARK = '#34C98E';
-const STEPS = ['Store and date', 'Total and HST', 'Line items', 'Category and payment'];
 
-type Phase = 'camera' | 'reading' | 'failed';
+type Phase = 'camera' | 'reading' | 'summary' | 'failed';
+type Stage = 'reading' | 'matching';
+const STAGE_TEXT: Record<Stage, string> = { reading: 'Reading the receipt', matching: 'Matching store, total and HST' };
 
 // Auto capture: the shot is taken once the phone has been held still for this long.
 const STEADY_MS = 1300;
 const STEADY_DELTA = 0.035; // change in acceleration (in g) between two readings that still counts as still
 const RETRY_COOLDOWN_MS = 6000;
 const MAX_MISSES = 3;
+/** If the camera has not delivered the photo by then, it is restarted instead of leaving the screen stuck. */
+const SHOT_TIMEOUT_MS = 8000;
+
+const PAYMENTS = [
+  { value: 'Credit card', label: 'Credit card' }, { value: 'Debit', label: 'Debit' }, { value: 'Cash', label: 'Cash' },
+  { value: '', label: 'Not set' },
+];
+const confidenceLabel = (c: number) => (c >= 0.9 ? 'High' : c >= 0.75 ? 'Medium' : 'Low');
 
 export default function CameraCaptureScreen({ navigation, route }: any) {
+  const { categories, userProfile, addReceipt } = useReceipts();
   const [permission, requestPermission] = useCameraPermissions();
+  // The top controls must clear the clock and battery. Measured here and applied by hand, with a floor for iPhones,
+  // so the controls can never slide under the status bar.
+  const insets = useSafeAreaInsets();
+  const topPad = Math.max(insets.top, Platform.OS === 'ios' ? 50 : 0) + 8;
+  const [percent, setPercent] = useState<number>();
+  useEffect(() => onReaderProgress(p => { if (/recogniz/i.test(p.status)) setPercent(Math.round(p.progress * 100)); }), []);
   const [torch, setTorch] = useState(false);
   const [phase, setPhase] = useState<Phase>('camera');
   const [photoUri, setPhotoUri] = useState<string>();
-  const [step, setStep] = useState(0);
-  const [done, setDone] = useState(false);
+  const [stage, setStage] = useState<Stage>('reading');
+  // A camera shot fills the screen like the live view did; an imported photo is shown whole.
+  const [fromCam, setFromCam] = useState(false);
+  const [result, setResult] = useState<OcrResult>();
   const [error, setError] = useState<string>();
   const [failure, setFailure] = useState<'not-receipt' | 'unreachable' | 'failed'>('failed');
   const [auto, setAuto] = useState(true);
   const [holding, setHolding] = useState(false);
+  // The camera has to say it is ready before a photo is asked for; a photo asked for too early never arrives.
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
   const busy = useRef(false);
   const misses = useRef(0);
   const cooldownUntil = useRef(0);
   const cameraRef = useRef<CameraView>(null);
   // Bumped when the user backs out, so a late OCR result is ignored.
   const run = useRef(0);
+
+  // Summary sheet (after a successful read)
+  const [category, setCategory] = useState('Other');
+  const [subcategory, setSubcategory] = useState<string>();
+  const [payment, setPayment] = useState('');
+  const [notes, setNotes] = useState('');
+  const [picker, setPicker] = useState(false);
+  const [paySheet, setPaySheet] = useState(false);
+  const [viewer, setViewer] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string>();
 
   // Soft scan line sweeping the frame (position only, as the motion rules allow).
   const sweep = useSharedValue(0);
@@ -55,22 +100,55 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   }, [sweep]);
   const lineStyle = useAnimatedStyle(() => ({ top: `${6 + sweep.value * 88}%` }));
 
+  // Some devices never report that the camera is ready. Do not wait for that report forever.
+  useEffect(() => {
+    if (phase !== 'camera' || cameraReady || !permission?.granted) return;
+    const timer = setTimeout(() => setCameraReady(true), 2500);
+    return () => clearTimeout(timer);
+  }, [phase, cameraReady, cameraKey, permission?.granted]);
+
+  // After a while, say that the read is still going, so a slow first read does not look stuck.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    if (phase !== 'reading') return;
+    const timer = setTimeout(() => setSlow(true), 12000);
+    return () => clearTimeout(timer);
+  }, [phase, photoUri]);
+
+  // Leaving the screen cancels a read in flight; coming back to it always starts from a clean state.
+  useEffect(() => () => { run.current += 1; }, []);
+  useFocusEffect(useCallback(() => {
+    busy.current = false;
+    cooldownUntil.current = Date.now() + 1200;
+    return () => { busy.current = false; };
+  }, []));
+
   const manualEntry = () => navigation.replace('ScanResult', { photoUri: null, result: null });
 
   const analyze = async (uri: string, fromCamera = false) => {
     const id = ++run.current;
     setError(undefined);
     setPhotoUri(uri);
+    setFromCam(fromCamera);
+    setResult(undefined);
+    setStage('reading');
+    setPercent(undefined);
+    setCameraReady(false);
     setPhase('reading');
-    setStep(0);
-    setDone(false);
-    const timer = setInterval(() => setStep(s => Math.min(s + 1, STEPS.length - 1)), 700);
     try {
-      const result = await ocr.scanReceipt(uri);
+      const read = await ocr.scanReceipt(uri, s => { if (id === run.current) setStage(s); });
       if (id !== run.current) return;
-      setDone(true);
+      // Let the "matching" line be seen for a moment before the summary slides in.
+      await new Promise(resolve => setTimeout(resolve, 400));
+      if (id !== run.current) return;
       triggerHaptic('success');
-      setTimeout(() => { if (id === run.current) navigation.replace('ScanResult', { photoUri: uri, result }); }, 350);
+      setResult(read);
+      // With auto-categorize off, the user always picks the category.
+      setCategory(userProfile.autoCategorize ? read.category : 'Other');
+      setSubcategory(userProfile.autoCategorize ? read.subcategory : undefined);
+      setPayment(''); setNotes(''); setSaveError(undefined); setSaving(false);
+      setPhase('summary');
     } catch (e) {
       if (id !== run.current) return;
       triggerHaptic('error');
@@ -91,38 +169,53 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
       }
       setFailure(code);
       setPhase('failed');
-    } finally {
-      clearInterval(timer);
     }
   };
 
   const capture = async () => {
-    if (!cameraRef.current || phase !== 'camera' || busy.current) return;
+    if (!cameraRef.current || phase !== 'camera' || busy.current || !cameraReady) return;
     busy.current = true;
     triggerHaptic('medium');
+    let uri: string | undefined;
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
-      if (!photo) return;
+      const photo = await Promise.race([
+        cameraRef.current.takePictureAsync({ quality: 0.85 }),
+        new Promise<undefined>(resolve => setTimeout(() => resolve(undefined), SHOT_TIMEOUT_MS)),
+      ]);
+      if (!photo) {
+        // The camera went quiet: start it again so the next try works.
+        setCameraReady(false);
+        setCameraKey(k => k + 1);
+        setError('The camera did not respond. Try again.');
+        cooldownUntil.current = Date.now() + 2000;
+        return;
+      }
       const small = await ImageManipulator.manipulateAsync(photo.uri, [{ resize: { width: 1400 } }], {
         compress: 0.8, format: ImageManipulator.SaveFormat.JPEG,
       });
-      await analyze(small.uri, true);
+      uri = small.uri;
     } catch {
       setError('The camera could not take a photo. Please try again.');
+      cooldownUntil.current = Date.now() + 2000;
     } finally {
+      // Free the shutter before the read starts, so nothing can leave it locked.
       busy.current = false;
     }
+    if (uri) await analyze(uri, true);
   };
 
   // Auto capture: watch how much the phone moves; once it has been still for a moment, take the shot.
   const captureRef = useRef(capture);
   captureRef.current = capture;
   useEffect(() => {
-    if (!auto || phase !== 'camera' || !permission?.granted) { setHolding(false); return; }
+    if (!auto || phase !== 'camera' || !permission?.granted || !cameraReady) { setHolding(false); return; }
     let last: { x: number; y: number; z: number } | undefined;
     let stillSince = 0;
-    Accelerometer.setUpdateInterval(120);
-    const sub = Accelerometer.addListener(a => {
+    // No motion sensor (the browser preview, some simulators): the shutter button still works.
+    let sub: { remove: () => void } | undefined;
+    try {
+      Accelerometer.setUpdateInterval(120);
+      sub = Accelerometer.addListener(a => {
       const moved = last ? Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z) : 1;
       last = a;
       const now = Date.now();
@@ -134,9 +227,10 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
         setHolding(false);
         captureRef.current();
       }
-    });
-    return () => sub.remove();
-  }, [auto, phase, permission?.granted]);
+      });
+    } catch { setHolding(false); }
+    return () => { try { sub?.remove(); } catch { /* already gone */ } };
+  }, [auto, phase, permission?.granted, cameraReady, cameraKey]);
 
   const importPhoto = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
@@ -145,8 +239,11 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
 
   const backToCamera = () => {
     run.current += 1;
+    busy.current = false;
+    setCameraReady(false);
     setPhase('camera');
     setPhotoUri(undefined);
+    setResult(undefined);
     setError(undefined);
     cooldownUntil.current = Date.now() + 2000;
   };
@@ -157,6 +254,35 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     if (importUri) analyze(importUri);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [importUri]);
+
+  // ----- summary sheet -----
+  const draft: Receipt | undefined = useMemo(() => result && ({
+    id: 'draft', imageName: photoUri ?? '', storeName: result.storeName.trim(), purchaseDate: result.purchaseDate,
+    totalAmount: result.totalAmount, subtotal: result.subtotal, hstAmount: result.hstAmount, hstPercent: result.hstPercent,
+    category, subcategory, items: result.items, taxReviewed: false,
+    paymentMethod: payment || undefined, notes: notes.trim() || undefined,
+  }), [result, photoUri, category, subcategory, payment, notes]);
+  const canSave = !!draft && !!draft.storeName && draft.totalAmount > 0;
+
+  const edit = () => navigation.replace('ScanResult', {
+    photoUri, result: result && { ...result, category, subcategory }, payment, notes,
+  });
+  const save = async () => {
+    if (!draft || !photoUri || saving) return;
+    if (!canSave) { edit(); return; }
+    setSaving(true); setSaveError(undefined);
+    try {
+      const id = `r_${Date.now()}`;
+      // The original photo is stored once, as captured, and never edited.
+      const imageName = await persistReceiptPhoto(photoUri, id);
+      addReceipt({ ...draft, id, imageName });
+      triggerHaptic('success');
+      navigation.replace('ScanSaved', { receiptId: id });
+    } catch {
+      setSaveError('Could not save the receipt. Please try again.');
+      setSaving(false);
+    }
+  };
 
   if (!permission) return <View style={styles.container} />;
 
@@ -204,22 +330,36 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     );
   }
 
-  // B3 · Reading Receipt (and the failed state)
+
+  // B3 · Reading, the summary, and the failed state: all on top of the photo that was just taken.
   if (phase !== 'camera' && photoUri) {
-    const progress = done ? 1 : (step + 0.5) / STEPS.length;
+    const tax = draft ? resolveReceiptTax(draft, categories, userProfile.hstDefaultPercent) : undefined;
+    const color = categoryColor(categories, category);
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
-        <Image source={{ uri: photoUri }} style={styles.readPhoto} resizeMode="contain" />
-        <SafeAreaView style={styles.readTop} edges={['top']}>
-          <Pressable onPress={backToCamera} style={styles.round} accessibilityRole="button" accessibilityLabel="Cancel">
+        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode={fromCam ? 'cover' : 'contain'} />
+        <View style={styles.dim} />
+        <View style={[styles.readTop, { paddingTop: topPad }]}>
+          <Pressable onPress={backToCamera} style={styles.round} accessibilityRole="button" accessibilityLabel={phase === 'reading' ? 'Cancel' : 'Close and scan again'}>
             <X size={20} color="#FFFFFF" />
           </Pressable>
-        </SafeAreaView>
+          <View style={styles.modeBadge}>
+            <Text style={styles.modeText}>Auto Capture: <Text style={{ color: BRAND_DARK }}>{auto ? 'On' : 'Off'}</Text></Text>
+          </View>
+        </View>
 
-        <Animated.View entering={FadeInDown} style={styles.sheet}>
-          <View style={styles.grabber} />
-          {phase === 'failed' ? (
+        {phase === 'reading' && (
+          <Animated.View entering={FadeIn} style={styles.center} accessibilityLiveRegion="polite" accessibilityRole="progressbar" accessibilityLabel={STAGE_TEXT[stage]}>
+            <ReadingSpinner />
+            <Text style={styles.stageText}>{STAGE_TEXT[stage]}{stage === 'reading' && percent != null && percent < 100 ? ` ${percent}%` : ''}</Text>
+            <Text style={styles.stageSub}>{slow ? 'Still reading. The first read after opening the app takes longer. Tap X to cancel.' : 'Read on this phone. The photo is not uploaded.'}</Text>
+          </Animated.View>
+        )}
+
+        {phase === 'failed' && (
+          <Animated.View entering={FadeInDown} style={styles.sheet}>
+            <View style={styles.grabber} />
             <View style={{ alignItems: 'center', gap: 6 }} accessibilityLiveRegion="polite">
               <Illustration name="scanFailed" size={140} label="We could not read the receipt" />
               <Text style={styles.failTitle}>{failure === 'unreachable' ? 'The reader couldn’t start' : failure === 'not-receipt' ? 'No receipt in that photo' : 'We couldn’t read that receipt'}</Text>
@@ -230,41 +370,102 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
               </Text>
               <View style={{ alignSelf: 'stretch', gap: 10, marginTop: 14 }}>
                 <Button title="Try Again" onPress={() => analyze(photoUri)} />
-                <Button title="Enter Manually" variant="tinted" onPress={manualEntry} />
+                <Button title="Scan Again" variant="tinted" onPress={backToCamera} />
+                <Button title="Enter Manually" variant="ghost" onPress={manualEntry} />
               </View>
             </View>
-          ) : (
-            <>
-              <View style={styles.readHead} accessibilityLiveRegion="polite">
-                <View style={styles.sparkle}><Sparkles size={20} color={colors.accent} /></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.readTitle}>Reading receipt</Text>
-                  <Text style={styles.readSub}>This usually takes a few seconds</Text>
+          </Animated.View>
+        )}
+
+        {phase === 'summary' && draft && tax && (
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetHost} pointerEvents="box-none">
+            <Animated.View entering={SlideInDown.duration(320)} style={[styles.sheet, styles.sheetFlow]}>
+              <View style={styles.grabber} />
+              <View style={styles.sumTop}>
+                <Pressable onPress={() => setViewer(true)} style={styles.thumb} accessibilityRole="button" accessibilityLabel="Open the original photo to zoom in">
+                  <Image source={{ uri: photoUri }} style={styles.thumbImg} resizeMode="cover" />
+                  <View style={styles.thumbBadge}><Maximize2 size={13} color="#FFFFFF" /></View>
+                </Pressable>
+                <View style={{ flex: 1, minWidth: 0, gap: 8 }}>
+                  <View style={styles.storeRow}>
+                    <MerchantAvatar name={draft.storeName || '?'} category={category} size={36} badge={false} />
+                    <Text style={styles.store} numberOfLines={2} accessibilityRole="header">{draft.storeName || 'Store not found'}</Text>
+                  </View>
+                  <Pressable onPress={() => setPicker(true)} style={[styles.catChip, { backgroundColor: soft(color) }]} accessibilityRole="button" accessibilityLabel={`Category ${category}. Change`}>
+                    <CategoryIcon category={category} size={18} />
+                    <Text style={[styles.catText, { color }]} numberOfLines={1}>{category}</Text>
+                    <ChevronRight size={14} color={color} />
+                  </Pressable>
+                  <View style={styles.conf}>
+                    <Sparkles size={13} color={colors.accent} />
+                    <Text style={styles.confText} numberOfLines={1}>Read automatically · {confidenceLabel(result!.confidence)} confidence</Text>
+                  </View>
                 </View>
               </View>
-              <View style={styles.track}><View style={[styles.fill, { width: `${progress * 100}%` }]} /></View>
-              <View style={styles.stepsCard}>
-                {STEPS.map((s, i) => {
-                  const complete = done || i < step;
-                  const active = !complete && i === step;
-                  return (
-                    <View key={s} style={[styles.stepRow, i > 0 && styles.stepBorder]}>
-                      {complete ? (
-                        <View style={styles.stepDone}><Check size={14} color="#FFFFFF" strokeWidth={2.6} /></View>
-                      ) : active ? (
-                        <ActivityIndicator size="small" color={colors.accent} style={styles.stepSpin} />
-                      ) : (
-                        <View style={styles.stepIdle} />
-                      )}
-                      <Text style={[styles.stepText, !complete && !active && { color: colors.placeholder }]}>{s}</Text>
-                    </View>
-                  );
-                })}
+
+              <View style={styles.rows}>
+                <Pressable onPress={() => setPaySheet(true)} style={styles.sumRow} accessibilityRole="button" accessibilityLabel={`Payment method ${payment || 'not set'}. Change`}>
+                  <Text style={styles.sumLabel}>Payment Method</Text>
+                  <Text style={[styles.sumValue, !payment && { color: colors.placeholder }]}>{payment || 'Not set'}</Text>
+                  <ChevronRight size={16} color={colors.chevron} />
+                </Pressable>
+                <View style={[styles.sumRow, styles.sumBorder]}>
+                  <Text style={styles.sumLabel}>Total</Text>
+                  <Text style={[styles.sumValue, font.bold, !(draft.totalAmount > 0) && { color: colors.tax }]}>{draft.totalAmount > 0 ? formatCents(toCents(draft.totalAmount)) : 'Not found'}</Text>
+                </View>
+                <View style={[styles.sumRow, styles.sumBorder]}>
+                  <Text style={styles.sumLabel}>HST{tax.status === 'taxed' && draft.hstPercent ? ` ${draft.hstPercent}%` : ''}</Text>
+                  <Text style={[styles.sumValue, font.bold, { color: colors.tax }]}>
+                    {tax.status === 'taxed' ? formatCents(tax.hstCents) : tax.status === 'noTax' ? 'No HST' : 'To review'}
+                  </Text>
+                </View>
+                <View style={[styles.sumRow, styles.sumBorder]}>
+                  <Text style={styles.sumLabel}>Date</Text>
+                  <Text style={styles.sumValue}>{shortDate(draft.purchaseDate, true)}</Text>
+                </View>
               </View>
-              <Button title="Review Details" onPress={() => {}} loading={!done} disabled={!done} />
-            </>
-          )}
-        </Animated.View>
+
+              <TextInput value={notes} onChangeText={setNotes} placeholder="Notes for your accountant (optional)" placeholderTextColor={colors.placeholder}
+                style={styles.notes} accessibilityLabel="Notes" returnKeyType="done" />
+
+              {(!canSave || tax.status === 'needsReview' || !!saveError) && (
+                <Text style={[styles.sumHint, !!saveError && { color: colors.danger }]} accessibilityLiveRegion="polite">
+                  {saveError ?? (!canSave ? 'The store or the total was not found. Tap Edit to add it.' : 'No tax line was read. You can save now and confirm the HST later, or tap Edit.')}
+                </Text>
+              )}
+
+              <View style={styles.sumActions}>
+                <Pressable onPress={backToCamera} style={({ pressed }) => [styles.sumBtn, { backgroundColor: colors.dangerSoft }, pressed && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel="Delete this scan">
+                  <Trash size={18} color={colors.danger} />
+                  <Text style={[styles.sumBtnText, { color: colors.danger }]}>Delete</Text>
+                </Pressable>
+                <Pressable onPress={edit} style={({ pressed }) => [styles.sumBtn, { backgroundColor: colors.fill }, pressed && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel="Edit the details">
+                  <Edit size={18} color={colors.text} />
+                  <Text style={[styles.sumBtnText, { color: colors.text }]}>Edit</Text>
+                </Pressable>
+                <View style={{ flex: 1.5 }}>
+                  <Button title="Save" onPress={save} loading={saving} disabled={!canSave} />
+                </View>
+              </View>
+            </Animated.View>
+          </KeyboardAvoidingView>
+        )}
+
+        <CategoryPickerSheet visible={picker} category={category} subcategory={subcategory} onClose={() => setPicker(false)}
+          onDone={(c, sub) => { setCategory(c); setSubcategory(sub); setPicker(false); }} />
+        <OptionSheet visible={paySheet} title="Payment Method" options={PAYMENTS} value={payment}
+          onPick={v => { setPayment(v); setPaySheet(false); }} onClose={() => setPaySheet(false)} />
+        <Modal visible={viewer} animationType="fade" onRequestClose={() => setViewer(false)}>
+          <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
+            <ZoomableImage uri={photoUri} label="Original receipt photo. Pinch or double tap to zoom" />
+            <View style={[styles.viewerTop, { paddingTop: topPad }]} pointerEvents="box-none">
+              <Pressable onPress={() => setViewer(false)} style={styles.round} accessibilityRole="button" accessibilityLabel="Close photo">
+                <X size={20} color="#FFFFFF" />
+              </Pressable>
+              <View style={styles.modeBadge}><Text style={styles.modeText}>Pinch or double tap to zoom</Text></View>
+            </View>
+          </GestureHandlerRootView>
+        </Modal>
       </View>
     );
   }
@@ -273,17 +474,18 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} enableTorch={torch} />
+      <CameraView key={cameraKey} ref={cameraRef} style={StyleSheet.absoluteFill} enableTorch={torch} onCameraReady={() => setCameraReady(true)}
+        onMountError={() => setError('The camera could not start. Close this screen and open it again.')} />
 
-      <SafeAreaView style={styles.ui}>
-        <View style={styles.topBar}>
+      <SafeAreaView style={styles.ui} edges={['bottom']}>
+        <View style={[styles.topBar, { paddingTop: topPad }]}>
           <Pressable onPress={() => navigation.goBack()} style={styles.round} accessibilityRole="button" accessibilityLabel="Close">
             <X size={20} color="#FFFFFF" />
           </Pressable>
           <Pressable onPress={() => { setAuto(a => !a); setError(undefined); misses.current = 0; }} style={[styles.autoPill, auto && styles.autoPillOn]}
             accessibilityRole="button" accessibilityLabel={auto ? 'Turn auto capture off' : 'Turn auto capture on'} accessibilityState={{ selected: auto }}>
             <Scan size={16} color={auto ? '#0C0C0D' : '#FFFFFF'} />
-            <Text style={[styles.autoText, auto && { color: '#0C0C0D' }]}>{auto ? 'Auto' : 'Manual'}</Text>
+            <Text style={[styles.autoText, auto && { color: '#0C0C0D' }]}>{auto ? 'Auto Capture: On' : 'Auto Capture: Off'}</Text>
           </Pressable>
           <Pressable onPress={() => setTorch(t => !t)} style={styles.round} accessibilityRole="button"
             accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'} accessibilityState={{ selected: torch }}>
@@ -301,7 +503,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
           </View>
           <Animated.View entering={FadeIn} style={styles.hint} accessibilityLiveRegion="polite">
             {error ? <Sun size={16} color="#FFB057" /> : <Scan size={16} color={BRAND_DARK} />}
-            <Text style={styles.hintText}>{error ?? (auto ? (holding ? 'Hold steady, capturing…' : 'Point at the receipt and hold still') : 'Fit the whole receipt in the frame')}</Text>
+            <Text style={styles.hintText}>{error ?? (auto ? (!cameraReady ? 'Starting the camera…' : holding ? 'Hold steady, capturing…' : 'Point at the receipt and hold still') : 'Fit the whole receipt in the frame')}</Text>
           </Animated.View>
         </View>
 
@@ -321,6 +523,30 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
   );
 }
 
+
+const RING = 132, RING_R = 60, RING_LEN = 2 * Math.PI * RING_R;
+
+/** White disc with a receipt in it and an arc that keeps turning while the photo is read. */
+function ReadingSpinner() {
+  const turn = useSharedValue(0);
+  useEffect(() => {
+    turn.value = withRepeat(withTiming(1, { duration: 1100, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(turn);
+  }, [turn]);
+  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 360}deg` }] }));
+  return (
+    <View style={styles.disc}>
+      <Animated.View style={[StyleSheet.absoluteFill, style]}>
+        <Svg width={RING} height={RING}>
+          <Circle cx={RING / 2} cy={RING / 2} r={RING_R} stroke="#0B7A55" strokeWidth={7} strokeLinecap="round" fill="none"
+            strokeDasharray={`${RING_LEN * 0.24} ${RING_LEN}`} />
+        </Svg>
+      </Animated.View>
+      <ReceiptText size={48} color="#111113" />
+    </View>
+  );
+}
+
 const Tip = ({ Icon, title, text }: { Icon: typeof Sun; title: string; text: string }) => (
   <View style={styles.tip}>
     <View style={styles.tipIcon}><Icon size={20} color="#FFFFFF" /></View>
@@ -332,6 +558,7 @@ const Tip = ({ Icon, title, text }: { Icon: typeof Sun; title: string; text: str
 );
 
 const GLASS = 'rgba(40,40,42,0.7)';
+const FILL = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as const;
 
 const styles = themedStyles(() => ({
   container: { flex: 1, backgroundColor: colors.dark },
@@ -382,26 +609,46 @@ const styles = themedStyles(() => ({
   shutter: { width: 78, height: 78, borderRadius: 39, borderWidth: 4, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   shutterInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#FFFFFF' },
   // B3
-  readPhoto: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%' },
-  readTop: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 16, paddingTop: 8 },
+  dim: { ...FILL, backgroundColor: 'rgba(0,0,0,0.55)' },
+  readTop: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  modeBadge: { height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: GLASS, justifyContent: 'center' },
+  modeText: { ...font.semibold, fontSize: 14, color: '#FFFFFF' },
+  center: { ...FILL, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 32 },
+  disc: {
+    width: RING, height: RING, borderRadius: RING / 2, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8,
+  },
+  stageText: { ...font.bold, fontSize: 20, color: '#FFFFFF', textAlign: 'center' },
+  stageSub: { ...font.regular, fontSize: 14, color: 'rgba(255,255,255,0.8)', textAlign: 'center' },
+  sheetHost: { ...FILL, justifyContent: 'flex-end' },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 34, gap: 14,
   },
-  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: '#C7C7CC' },
-  readHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  sparkle: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  readTitle: { ...font.bold, fontSize: 22, lineHeight: 28, color: colors.text },
-  readSub: { ...font.regular, fontSize: 13, color: colors.textSecondary },
-  track: { height: 4, borderRadius: 2, backgroundColor: colors.fill, overflow: 'hidden' },
-  fill: { height: 4, borderRadius: 2, backgroundColor: colors.accent },
-  stepsCard: { backgroundColor: colors.card, borderRadius: 14, overflow: 'hidden' },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, minHeight: 46 },
-  stepBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
-  stepDone: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  stepSpin: { width: 22, height: 22 },
-  stepIdle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#D1D1D6' },
-  stepText: { ...font.regular, fontSize: 17, color: colors.text },
+  // Inside the keyboard-avoiding host the sheet sits in the normal flow, so it moves up with the keyboard.
+  sheetFlow: { position: 'relative' },
+  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: colors.grabber },
+  sumTop: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  thumb: { width: 84, height: 112, borderRadius: 12, overflow: 'hidden', backgroundColor: '#26262B', borderWidth: 1, borderColor: colors.separator },
+  thumbImg: { width: '100%', height: '100%' },
+  thumbBadge: { position: 'absolute', right: 5, bottom: 5, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
+  storeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  store: { flex: 1, ...font.bold, fontSize: 22, lineHeight: 26, color: colors.text },
+  catChip: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, height: 32, paddingHorizontal: 10, borderRadius: 16, maxWidth: '100%' },
+  catText: { ...font.semibold, fontSize: 15, flexShrink: 1 },
+  conf: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  confText: { ...font.medium, fontSize: 12, color: colors.accent, flexShrink: 1 },
+  rows: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden' },
+  sumRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, minHeight: 48 },
+  sumBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+  sumLabel: { flex: 1, ...font.regular, fontSize: 17, color: colors.textSecondary },
+  sumValue: { ...font.regular, fontSize: 17, color: colors.text, fontVariant: ['tabular-nums'] },
+  notes: { ...font.regular, fontSize: 17, color: colors.text, backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: 16, height: 48 },
+  sumHint: { ...font.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, paddingHorizontal: 4, marginTop: -4 },
+  sumActions: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  sumBtn: { flex: 1, height: 50, borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  sumBtnText: { ...font.semibold, fontSize: 16 },
+  viewerTop: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   failTitle: { ...font.bold, fontSize: 22, lineHeight: 28, color: colors.text, textAlign: 'center' },
   failText: { ...font.regular, fontSize: 15, lineHeight: 20, color: colors.textSecondary, textAlign: 'center', maxWidth: 300 },
 }));

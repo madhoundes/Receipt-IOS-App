@@ -50,7 +50,9 @@ function MainTabs() {
 }
 
 const modal = { presentation: 'modal', animation: 'slide_from_bottom' } as const;
-const fullScreen = { presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false } as const;
+// These used to be full-screen modals. iOS takes everything behind a full-screen modal off the screen, including the hidden
+// page that reads receipts, and then freezes it, so a read started from the camera never finished. A plain screen keeps it alive.
+const fullScreen = { animation: 'fade', gestureEnabled: false } as const;
 
 /** Everything a signed-in user can reach. */
 export function AppStack() {
@@ -58,12 +60,12 @@ export function AppStack() {
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="Main" component={MainTabs} />
       {/* B · Capture */}
-      <Stack.Screen name="CameraModal" component={CameraCaptureScreen} options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="CameraModal" component={CameraCaptureScreen} options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
       <Stack.Screen name="ScanResult" component={ScanResultScreen} options={fullScreen} />
       <Stack.Screen name="ScanSaved" component={ScanSavedScreen} options={fullScreen} />
       {/* C · Receipts */}
       <Stack.Screen name="ReceiptDetail" component={ReceiptDetailScreen} />
-      <Stack.Screen name="OriginalPhoto" component={OriginalPhotoScreen} options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+      <Stack.Screen name="OriginalPhoto" component={OriginalPhotoScreen} options={{ animation: 'fade' }} />
       <Stack.Screen name="Reminders" component={RemindersScreen} />
       {/* D · Insights and HST */}
       <Stack.Screen name="Insights" component={InsightsScreen} />

@@ -5,6 +5,11 @@ export const config = {
    * On while developing (`npx expo start`), off in App Store and TestFlight builds.
    */
   seedDemoData: __DEV__,
+  /**
+   * Shows the Developer section in Profile (Replay Onboarding, sample receipts).
+   * TODO(release): set to false before submitting to the App Store.
+   */
+  showDeveloperTools: true,
   // TODO(release): your real support address. While it is an example.com address, the app hides "Email Support".
   supportEmail: 'support@example.com',
   // TODO(release): the public web pages the App Store listing needs. The app itself shows these texts on its own screens.

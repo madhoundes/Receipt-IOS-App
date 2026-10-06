@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Receipt, UserProfile, CategoryDefinition } from '../types';
 import { DEFAULT_USER_PROFILE, DEFAULT_CATEGORIES } from '../constants';
 import { config } from '../config';
-import { buildDemoReceipts } from '../data/demoReceipts';
+import { buildDemoReceipts, isDemoReceipt } from '../data/demoReceipts';
 import { setHapticsEnabled } from '../utils/nativeUtils';
 
 interface ReceiptContextType {
@@ -22,6 +22,9 @@ interface ReceiptContextType {
   /** Remove a category; its receipts move to "Other". */
   deleteCategory: (id: string) => void;
   deleteAllReceipts: () => void;
+  /** Developer tools: put the sample receipts in (replacing older samples) or take them out. The user's own receipts stay. */
+  loadDemoReceipts: () => void;
+  removeDemoReceipts: () => void;
   loading: boolean;
 }
 
@@ -109,6 +112,8 @@ export const ReceiptProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteAllReceipts = () => setAndPersistReceipts(() => []);
+  const loadDemoReceipts = () => setAndPersistReceipts(prev => [...prev.filter(r => !isDemoReceipt(r)), ...buildDemoReceipts()]);
+  const removeDemoReceipts = () => setAndPersistReceipts(prev => prev.filter(r => !isDemoReceipt(r)));
 
   const updateCategories = (c: CategoryDefinition[]) => {
     setCategories(c);
@@ -116,7 +121,7 @@ export const ReceiptProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ReceiptContext.Provider value={{ receipts, addReceipt, updateReceipt, deleteReceipt, userProfile, updateProfile, categories, updateCategories, saveCategory, mergeCategory, deleteCategory, deleteAllReceipts, loading }}>
+    <ReceiptContext.Provider value={{ receipts, addReceipt, updateReceipt, deleteReceipt, userProfile, updateProfile, categories, updateCategories, saveCategory, mergeCategory, deleteCategory, deleteAllReceipts, loadDemoReceipts, removeDemoReceipts, loading }}>
       {children}
     </ReceiptContext.Provider>
   );

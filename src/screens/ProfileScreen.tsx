@@ -3,12 +3,14 @@ import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Tex
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   BarChart3, Bell, ChevronRight, CreditCard, FileDown, FileText, Info, LayoutGrid, Lock, Percent, ReceiptText, Scan, Sparkles, Sun,
-  TrendUp, Undo, AppIcon,
+  TrendUp, RotateLeft, Trash, AppIcon,
 } from '../components/icons';
 import { OptionSheet, kit } from '../components/kit';
 import { NavBar, Section, SettingRow } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useReceipts } from '../context/ReceiptContext';
+import { config } from '../config';
+import { isDemoReceipt } from '../data/demoReceipts';
 import { confirmAction, shareJSON, triggerHaptic } from '../utils/nativeUtils';
 import { cancelReturnReminder, setWeeklyInsights } from '../utils/reminders';
 import { colors, font, radius, themedStyles } from '../theme';
@@ -36,12 +38,13 @@ const OCR_LEVELS: Option<number>[] = [
 
 /** F1 · Profile and settings. Opens from the avatar on Home. */
 export default function ProfileScreen({ navigation }: any) {
-  const { user, signOut, sendPasswordReset } = useAuth();
-  const { userProfile: p, updateProfile, receipts, categories, deleteAllReceipts } = useReceipts();
+  const { user, signOut, sendPasswordReset, replayOnboarding } = useAuth();
+  const { userProfile: p, updateProfile, receipts, categories, deleteAllReceipts, loadDemoReceipts, removeDemoReceipts } = useReceipts();
   const [sheet, setSheet] = useState<null | 'currency' | 'tax' | 'ocr' | 'appearance'>(null);
   const set = (patch: Partial<UserProfile>) => updateProfile({ ...p, ...patch });
   const photos = receipts.filter(r => r.imageName).length;
   const ocrLabel = OCR_LEVELS.find(o => o.value === p.ocrThreshold)?.label ?? `${Math.round(p.ocrThreshold * 100)}%`;
+  const samples = receipts.filter(isDemoReceipt).length;
   const visible = categories.filter(c => c.visibility === 'visible').length;
 
   // The switch only stays on if the weekly notification was really scheduled.
@@ -75,6 +78,17 @@ export default function ProfileScreen({ navigation }: any) {
           <ChevronRight size={16} color={colors.chevron} />
         </Pressable>
 
+        {config.showDeveloperTools && (
+          <Section title="Developer · testing" footer="Temporary testing tools. Turn off showDeveloperTools in src/config.ts before release.">
+            <SettingRow first label="Replay Onboarding" sub="Signs out and starts from the first screen. Receipts are kept." icon={<Tile bg="#5A3CC2" Icon={RotateLeft} />}
+              onPress={() => confirmAction('Replay onboarding?', 'You will be signed out and see the app from its first screen. Your receipts stay on this device.', 'Replay', () => { triggerHaptic('medium'); replayOnboarding(); })} />
+            <SettingRow label="Load Sample Receipts" sub={`${samples} loaded. Covers every category and store logo.`} icon={<Tile bg={colors.accentFill} Icon={ReceiptText} />}
+              onPress={() => { loadDemoReceipts(); triggerHaptic('success'); }} />
+            <SettingRow label="Remove Sample Receipts" sub="Your own receipts are not touched." icon={<Tile bg="#636366" Icon={Trash} />}
+              onPress={() => { removeDemoReceipts(); triggerHaptic('medium'); }} />
+          </Section>
+        )}
+
         <Section title="Preferences">
           <SettingRow first label="Default tax" value={TAX_NAME[p.hstDefaultPercent] ?? `${p.hstDefaultPercent}%`} onPress={() => setSheet('tax')} icon={<Tile bg={colors.taxFill} Icon={Percent} />} />
           <SettingRow label="Currency" value={p.currency} onPress={() => setSheet('currency')} icon={<Tile bg="#0A5BC4" Icon={CreditCard} />} />
@@ -88,8 +102,7 @@ export default function ProfileScreen({ navigation }: any) {
         </Section>
 
         <Section title="Notifications & haptics">
-          <SettingRow first label="Return Reminders" value={`${p.remindDaysBefore ?? 2} days before`} onPress={() => navigation.navigate('Reminders')} icon={<Tile bg={colors.danger} Icon={Undo} />} />
-          <SettingRow label="Weekly Insights" toggle={p.notifications.insights} onToggle={toggleWeekly} sub="Sundays at 6 p.m." icon={<Tile bg="#C2560A" Icon={Bell} />} />
+          <SettingRow first label="Weekly Insights" toggle={p.notifications.insights} onToggle={toggleWeekly} sub="Sundays at 6 p.m." icon={<Tile bg="#C2560A" Icon={Bell} />} />
           <SettingRow label="Haptic Feedback" toggle={p.hapticsEnabled} onToggle={v => set({ hapticsEnabled: v })} icon={<Tile bg="#636366" Icon={Info} />} />
           <SettingRow label="Reduce Motion" toggle={p.reduceMotion} onToggle={v => set({ reduceMotion: v })} icon={<Tile bg="#636366" Icon={TrendUp} />} />
         </Section>

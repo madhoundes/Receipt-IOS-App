@@ -8,7 +8,8 @@ export type { OcrResult };
 
 /** Turns a receipt photo into structured data. The app only depends on this interface. */
 export interface OcrService {
-  scanReceipt(imageUri: string): Promise<OcrResult>;
+  /** `onStage` is told when the text has been read and the fields are being picked out. */
+  scanReceipt(imageUri: string, onStage?: (stage: 'reading' | 'matching') => void): Promise<OcrResult>;
 }
 
 /** `not-receipt`: the photo shows no receipt. `unreachable`: the text reader could not start (it needs the internet the first time). `failed`: anything else. */
@@ -31,13 +32,15 @@ const readBase64 = async (uri: string): Promise<string> => {
 
 /** Reads the text on the device (no account, no server, no AI), then picks out the receipt fields with plain rules. */
 export const ocr: OcrService = {
-  async scanReceipt(imageUri) {
+  async scanReceipt(imageUri, onStage) {
     let text: string;
+    onStage?.('reading');
     try {
       text = await readText(await readBase64(imageUri));
     } catch (e: any) {
       throw new OcrError(e?.name === 'EngineUnavailable' || e?.constructor?.name === 'EngineUnavailable' ? 'unreachable' : 'failed');
     }
+    onStage?.('matching');
     const result = parseReceiptText(text);
     if (!result) throw new OcrError('not-receipt');
     return result;

@@ -9,6 +9,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   hasOnboarded: boolean;
   completeOnboarding: () => Promise<void>;
+  /** Developer tool: sign out and show the app from its very first screen again. Receipts are kept. */
+  replayOnboarding: () => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithApple: () => Promise<void>;
@@ -41,18 +43,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setHasOnboarded(true);
   }, []);
 
+  const replayOnboarding = useCallback(async () => {
+    await AsyncStorage.removeItem(ONBOARDED_KEY);
+    await auth.signOut();
+    setHasOnboarded(false);
+    setUser(null);
+  }, []);
+
   const value = useMemo<AuthContextValue>(() => ({
     loading,
     user,
     hasOnboarded,
     completeOnboarding,
+    replayOnboarding,
     signUp: async (name, email, password) => setUser(await auth.signUp(name, email, password)),
     signIn: async (email, password) => setUser(await auth.signIn(email, password)),
     signInWithApple: async () => setUser(await auth.signInWithApple()),
     sendPasswordReset: email => auth.sendPasswordReset(email),
     updateProfile: async changes => setUser(await auth.updateProfile(changes)),
     signOut: async () => { await auth.signOut(); setUser(null); },
-  }), [loading, user, hasOnboarded, completeOnboarding]);
+  }), [loading, user, hasOnboarded, completeOnboarding, replayOnboarding]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

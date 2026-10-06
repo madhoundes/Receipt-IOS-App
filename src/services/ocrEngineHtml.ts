@@ -14,8 +14,12 @@ export const ocrEngineHtml = `<!doctype html><html><head><meta charset="utf-8"><
 </script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/tesseract.min.js" onerror="__loadFailed()"></script>
 <script>
+  // Tell the app this page is up, so scans are not sent into a page that is still loading after a restart.
+  if (typeof Tesseract !== 'undefined') send({ type: 'loaded' });
   let workerPromise;
   const getWorker = () => workerPromise || (workerPromise = Tesseract.createWorker('eng', 1, {
+    // Progress keeps the app informed, so a long read is never mistaken for a dead page.
+    logger: m => send({ type: 'progress', status: String(m.status || ''), progress: Number(m.progress) || 0 }),
     langPath: 'https://cdn.jsdelivr.net/npm/${LANG_PACK}',
   }).then(async w => {
     // One column of text, and keep the gap between an item and its price so the two stay on the same line.
@@ -51,15 +55,21 @@ export const ocrEngineHtml = `<!doctype html><html><head><meta charset="utf-8"><
   });
 
   async function scan(id, b64) {
+    let canvas;
+    // Tell the app the photo arrived, so it knows this page is alive.
+    send({ type: 'started', id });
     try {
       if (typeof Tesseract === 'undefined') throw new Error('engine missing');
       const worker = await getWorker();
-      const canvas = await prepare(b64);
+      canvas = await prepare(b64);
       const { data } = await worker.recognize(canvas);
       send({ type: 'result', id, text: data.text });
     } catch (e) {
       workerPromise = undefined;
       send({ type: 'error', id, message: String((e && e.message) || e) });
+    } finally {
+      // Give the picture memory back right away, so a second and third scan have room.
+      if (canvas) { canvas.width = 0; canvas.height = 0; }
     }
   }
   window.__scan = (id, b64) => { scan(id, b64); true; };
