@@ -72,7 +72,7 @@ export function buildReportHtml(rows: ReceiptTax[], o: ReportOptions): string {
       const r = t.receipt;
       const total = toCents(r.totalAmount);
       const items = o.lineItems && r.items?.length
-        ? `<div class="items">${r.items.map(i => `${i.qty > 1 ? `${i.qty} × ` : ''}${esc(i.name)} ${formatCents(toCents(i.amount))}`).join('<br>')}</div>` : '';
+        ? `<div class="items">${r.items.map(i => `${i.qty > 1 ? `${i.qty} × ` : ''}${esc(i.name)}${i.amount ? ` ${formatCents(toCents(i.amount))}` : ''}`).join('<br>')}</div>` : '';
       return `<tr><td>${day(r.purchaseDate)}</td><td>${esc(r.storeName)}${items}${r.notes ? `<div class="items">Note: ${esc(r.notes)}</div>` : ''}</td>
         <td>${esc(r.category)}${r.subcategory ? ` / ${esc(r.subcategory)}` : ''}</td>
         <td class="n">${formatCents(total - t.hstCents)}</td><td class="n">${hstCell(t)}</td><td class="n">${formatCents(total)}</td></tr>`;

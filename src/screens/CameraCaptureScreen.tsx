@@ -34,8 +34,8 @@ import type { Receipt } from '../types';
 const BRAND_DARK = '#34C98E';
 
 type Phase = 'camera' | 'reading' | 'summary' | 'failed';
-type Stage = 'reading' | 'matching';
-const STAGE_TEXT: Record<Stage, string> = { reading: 'Reading the receipt', matching: 'Matching store, total and HST' };
+type Stage = 'reading' | 'rereading' | 'matching';
+const STAGE_TEXT: Record<Stage, string> = { reading: 'Reading the receipt', rereading: 'Reading once more', matching: 'Matching store, total and HST' };
 
 // Auto capture: the shot is taken once the phone has been held still for this long.
 const STEADY_MS = 1300;
@@ -137,7 +137,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     setCameraReady(false);
     setPhase('reading');
     try {
-      const read = await ocr.scanReceipt(uri, s => { if (id === run.current) setStage(s); });
+      const read = await ocr.scanReceipt(uri, s => { if (id === run.current) { setStage(s); setPercent(undefined); } });
       if (id !== run.current) return;
       // Let the "matching" line be seen for a moment before the summary slides in.
       await new Promise(resolve => setTimeout(resolve, 400));
@@ -147,7 +147,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
       // With auto-categorize off, the user always picks the category.
       setCategory(userProfile.autoCategorize ? read.category : 'Other');
       setSubcategory(userProfile.autoCategorize ? read.subcategory : undefined);
-      setPayment(''); setNotes(''); setSaveError(undefined); setSaving(false);
+      setPayment(read.paymentMethod ?? ''); setNotes(''); setSaveError(undefined); setSaving(false);
       setPhase('summary');
     } catch (e) {
       if (id !== run.current) return;
@@ -352,7 +352,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
         {phase === 'reading' && (
           <Animated.View entering={FadeIn} style={styles.center} accessibilityLiveRegion="polite" accessibilityRole="progressbar" accessibilityLabel={STAGE_TEXT[stage]}>
             <ReadingSpinner />
-            <Text style={styles.stageText}>{STAGE_TEXT[stage]}{stage === 'reading' && percent != null && percent < 100 ? ` ${percent}%` : ''}</Text>
+            <Text style={styles.stageText}>{STAGE_TEXT[stage]}{stage !== 'matching' && percent != null && percent < 100 ? ` ${percent}%` : ''}</Text>
             <Text style={styles.stageSub}>{slow ? 'Still reading. The first read after opening the app takes longer. Tap X to cancel.' : 'Read on this phone. The photo is not uploaded.'}</Text>
           </Animated.View>
         )}

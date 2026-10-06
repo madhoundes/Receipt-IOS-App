@@ -46,7 +46,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
   // With auto-categorize off, the user always picks the category.
   const [category, setCategory] = useState(result && userProfile.autoCategorize ? result.category : 'Other');
   const [subcategory, setSubcategory] = useState(userProfile.autoCategorize ? result?.subcategory : undefined);
-  const [payment, setPayment] = useState<string>(route.params?.payment ?? '');
+  const [payment, setPayment] = useState<string>(route.params?.payment ?? result?.paymentMethod ?? '');
   const [notes, setNotes] = useState<string>(route.params?.notes ?? '');
   const [subtotal, setSubtotal] = useState(toInput(result?.subtotal));
   const [hst, setHst] = useState(toInput(result?.hstAmount));
@@ -297,7 +297,7 @@ export default function ScanResultScreen({ route, navigation }: any) {
                       <View key={i} style={[styles.row, i > 0 && styles.rowBorder]}>
                         <Text style={styles.qty}>{it.qty}×</Text>
                         <Text style={[styles.rowLabel, { flex: 1 }]} numberOfLines={1}>{it.name}</Text>
-                        <Text style={styles.money}>{formatCents(toCents(it.amount))}</Text>
+                        <Text style={styles.money}>{it.amount ? formatCents(toCents(it.amount)) : ''}</Text>
                       </View>
                     ))}
                   </View>

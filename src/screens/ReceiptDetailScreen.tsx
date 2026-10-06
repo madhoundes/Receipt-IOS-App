@@ -121,7 +121,7 @@ export default function ReceiptDetailScreen({ route, navigation }: any) {
               {(receipt.items ?? []).map((it, i) => (
                 <View key={i} style={styles.paperRow}>
                   <Text style={[styles.paperText, { flex: 1 }]} numberOfLines={1}>{it.qty > 1 ? `${it.qty} × ` : ''}{it.name}</Text>
-                  <Text style={styles.paperText}>{(toCents(it.amount) / 100).toFixed(2)}</Text>
+                  <Text style={styles.paperText}>{it.amount ? (toCents(it.amount) / 100).toFixed(2) : ''}</Text>
                 </View>
               ))}
               <View style={styles.dash} />
