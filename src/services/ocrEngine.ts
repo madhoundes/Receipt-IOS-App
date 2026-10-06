@@ -31,6 +31,11 @@ let seq = 0;
 const pending = new Map<number, Pending>();
 let aliveWaiters: ((ok: boolean) => void)[] = [];
 
+export type ReaderProgress = { status: string; progress: number };
+const progressListeners = new Set<(p: ReaderProgress) => void>();
+/** Follow what the reader is doing (loading, recognizing) and how far along it is, 0 to 1. Returns the unsubscribe function. */
+export const onReaderProgress = (cb: (p: ReaderProgress) => void) => { progressListeners.add(cb); return () => { progressListeners.delete(cb); }; };
+
 const settleAlive = (ok: boolean) => {
   const list = aliveWaiters;
   aliveWaiters = [];
@@ -63,6 +68,11 @@ export const engineHost = {
       restart();
     } else if (m.type === 'loaded' || m.type === 'ready') {
       pageIsAlive();
+    } else if (m.type === 'progress') {
+      pageIsAlive();
+      // Any progress proves the page is working: stop the silence timers of the reads in flight.
+      pending.forEach(p => clearTimeout(p.quiet));
+      progressListeners.forEach(cb => cb({ status: String(m.status ?? ''), progress: Number(m.progress) || 0 }));
     } else if (m.type === 'started') {
       pageIsAlive();
       const p = pending.get(m.id);
@@ -79,7 +89,8 @@ export const engineHost = {
 
 /** Only waits when a reload is in progress. A fresh page takes scans right away and queues them itself. */
 const whenAlive = (): Promise<void> => {
-  if (loadFailed) { loadFailed = false; restart(); }
+  // The reader could not be downloaded: say so at once (the screen explains it needs the internet once) and load it again for the next try.
+  if (loadFailed) { loadFailed = false; restart(); return Promise.reject(new EngineUnavailable()); }
   if (!reloading) return Promise.resolve();
   return new Promise<void>((resolve, reject) => {
     const waiter = (ok: boolean) => { clearTimeout(timer); ok ? resolve() : reject(new EngineUnavailable()); };

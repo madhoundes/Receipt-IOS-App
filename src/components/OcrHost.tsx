@@ -16,7 +16,7 @@ export function OcrHost() {
     return () => engineHost.detach();
   }, []);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }} accessible={false} importantForAccessibility="no-hide-descendants">
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, bottom: 0, width: 2, height: 2, opacity: 0.02 }} accessible={false} importantForAccessibility="no-hide-descendants">
       <WebView
         key={key} ref={ref} originWhitelist={['*']} source={{ html: ocrEngineHtml, baseUrl: 'https://maplestub.local/' }}
         javaScriptEnabled onMessage={e => engineHost.message(e.nativeEvent.data)} cacheEnabled

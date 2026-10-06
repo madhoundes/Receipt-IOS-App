@@ -18,6 +18,8 @@ export const ocrEngineHtml = `<!doctype html><html><head><meta charset="utf-8"><
   if (typeof Tesseract !== 'undefined') send({ type: 'loaded' });
   let workerPromise;
   const getWorker = () => workerPromise || (workerPromise = Tesseract.createWorker('eng', 1, {
+    // Progress keeps the app informed, so a long read is never mistaken for a dead page.
+    logger: m => send({ type: 'progress', status: String(m.status || ''), progress: Number(m.progress) || 0 }),
     langPath: 'https://cdn.jsdelivr.net/npm/${LANG_PACK}',
   }).then(async w => {
     // One column of text, and keep the gap between an item and its price so the two stay on the same line.

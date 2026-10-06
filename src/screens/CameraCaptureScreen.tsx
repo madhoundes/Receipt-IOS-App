@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -24,6 +24,7 @@ import { Button } from '../components/ui';
 import { ZoomableImage } from '../components/ZoomableImage';
 import { useReceipts } from '../context/ReceiptContext';
 import { ocr, OcrError, OcrResult } from '../services/ocr';
+import { onReaderProgress } from '../services/ocrEngine';
 import { triggerHaptic } from '../utils/nativeUtils';
 import { persistReceiptPhoto } from '../utils/photos';
 import { formatCents, resolveReceiptTax, toCents } from '../utils/tax';
@@ -53,6 +54,12 @@ const confidenceLabel = (c: number) => (c >= 0.9 ? 'High' : c >= 0.75 ? 'Medium'
 export default function CameraCaptureScreen({ navigation, route }: any) {
   const { categories, userProfile, addReceipt } = useReceipts();
   const [permission, requestPermission] = useCameraPermissions();
+  // The top controls must clear the clock and battery. Measured here and applied by hand, with a floor for iPhones,
+  // so the controls can never slide under the status bar.
+  const insets = useSafeAreaInsets();
+  const topPad = Math.max(insets.top, Platform.OS === 'ios' ? 50 : 0) + 8;
+  const [percent, setPercent] = useState<number>();
+  useEffect(() => onReaderProgress(p => { if (/recogniz/i.test(p.status)) setPercent(Math.round(p.progress * 100)); }), []);
   const [torch, setTorch] = useState(false);
   const [phase, setPhase] = useState<Phase>('camera');
   const [photoUri, setPhotoUri] = useState<string>();
@@ -126,6 +133,7 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
     setFromCam(fromCamera);
     setResult(undefined);
     setStage('reading');
+    setPercent(undefined);
     setCameraReady(false);
     setPhase('reading');
     try {
@@ -332,19 +340,19 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
         <StatusBar style="light" />
         <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode={fromCam ? 'cover' : 'contain'} />
         <View style={styles.dim} />
-        <SafeAreaView style={styles.readTop} edges={['top']}>
+        <View style={[styles.readTop, { paddingTop: topPad }]}>
           <Pressable onPress={backToCamera} style={styles.round} accessibilityRole="button" accessibilityLabel={phase === 'reading' ? 'Cancel' : 'Close and scan again'}>
             <X size={20} color="#FFFFFF" />
           </Pressable>
           <View style={styles.modeBadge}>
             <Text style={styles.modeText}>Auto Capture: <Text style={{ color: BRAND_DARK }}>{auto ? 'On' : 'Off'}</Text></Text>
           </View>
-        </SafeAreaView>
+        </View>
 
         {phase === 'reading' && (
           <Animated.View entering={FadeIn} style={styles.center} accessibilityLiveRegion="polite" accessibilityRole="progressbar" accessibilityLabel={STAGE_TEXT[stage]}>
             <ReadingSpinner />
-            <Text style={styles.stageText}>{STAGE_TEXT[stage]}</Text>
+            <Text style={styles.stageText}>{STAGE_TEXT[stage]}{stage === 'reading' && percent != null && percent < 100 ? ` ${percent}%` : ''}</Text>
             <Text style={styles.stageSub}>{slow ? 'Still reading. The first read after opening the app takes longer. Tap X to cancel.' : 'Read on this phone. The photo is not uploaded.'}</Text>
           </Animated.View>
         )}
@@ -450,12 +458,12 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
         <Modal visible={viewer} animationType="fade" onRequestClose={() => setViewer(false)}>
           <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
             <ZoomableImage uri={photoUri} label="Original receipt photo. Pinch or double tap to zoom" />
-            <SafeAreaView style={styles.viewerTop} edges={['top']} pointerEvents="box-none">
+            <View style={[styles.viewerTop, { paddingTop: topPad }]} pointerEvents="box-none">
               <Pressable onPress={() => setViewer(false)} style={styles.round} accessibilityRole="button" accessibilityLabel="Close photo">
                 <X size={20} color="#FFFFFF" />
               </Pressable>
               <View style={styles.modeBadge}><Text style={styles.modeText}>Pinch or double tap to zoom</Text></View>
-            </SafeAreaView>
+            </View>
           </GestureHandlerRootView>
         </Modal>
       </View>
@@ -469,8 +477,8 @@ export default function CameraCaptureScreen({ navigation, route }: any) {
       <CameraView key={cameraKey} ref={cameraRef} style={StyleSheet.absoluteFill} enableTorch={torch} onCameraReady={() => setCameraReady(true)}
         onMountError={() => setError('The camera could not start. Close this screen and open it again.')} />
 
-      <SafeAreaView style={styles.ui}>
-        <View style={styles.topBar}>
+      <SafeAreaView style={styles.ui} edges={['bottom']}>
+        <View style={[styles.topBar, { paddingTop: topPad }]}>
           <Pressable onPress={() => navigation.goBack()} style={styles.round} accessibilityRole="button" accessibilityLabel="Close">
             <X size={20} color="#FFFFFF" />
           </Pressable>
